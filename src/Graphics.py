@@ -22,7 +22,7 @@ class Graphics:
         pygame.init()
         pygame.display.set_caption(self.caption)
 
-    def updateDisplay(self, board, legal_moves, selected_piece):
+    def updateDisplay(self, board, legalMovements, selectedPiece):
         """
         This updates the current display.
         """
@@ -30,6 +30,7 @@ class Graphics:
 
         # self.highlight_squares(legal_moves, selected_piece)
         self.drawBoardPieces(board)
+        self.drawPossibleMovements(board, selectedPiece)
 
         if self.message:
             self.screen.blit(self.text_surface_obj, self.text_rect_obj)
@@ -57,6 +58,22 @@ class Graphics:
                     whitePiece = pygame.image.load("../graphics-proto/piece_white.png")
                     self.screen.blit(whitePiece, (x * 90, y * 90))
 
+    def drawPossibleMovements(self, board, selectedPiece):
+        if selectedPiece != None:
+            goldPiece = pygame.image.load("../graphics-proto/gold.png")
+            if (selectedPiece.x > 0 and selectedPiece.y > 0) and board.matrix[selectedPiece.x-1][selectedPiece.y-1].occupant is None:
+                self.screen.blit(goldPiece, ((selectedPiece.x-1) * 90, (selectedPiece.y-1) * 90))
+            if (selectedPiece.x < 7 and selectedPiece.y > 0) and board.matrix[selectedPiece.x+1][selectedPiece.y-1].occupant is None:
+                self.screen.blit(goldPiece, ((selectedPiece.x+1) * 90, (selectedPiece.y-1) * 90))
+
+            #CASO EXISTA UMA PEÇA EM VERMELHO PARA ATACAR
+            if (selectedPiece.x-1 > 0 and selectedPiece.y-1 > 0) and board.matrix[selectedPiece.x-1][selectedPiece.y-1].occupant is not None and board.matrix[selectedPiece.x-1][selectedPiece.y-1].occupant.color == board.matrix[selectedPiece.x-1][selectedPiece.y-1].occupant.getEnemyColor():
+                self.screen.blit(goldPiece, ((selectedPiece.x-2) * 90, (selectedPiece.y-2) * 90))
+            if (selectedPiece.x-1 > 7 and selectedPiece.y-1 > 0) and board.matrix[selectedPiece.x+1][selectedPiece.y-1].occupant is not None and board.matrix[selectedPiece.x-1][selectedPiece.y-1].occupant.color == board.matrix[selectedPiece.x-1][selectedPiece.y-1].occupant.getEnemyColor():
+                self.screen.blit(goldPiece, ((selectedPiece.x+2) * 90, (selectedPiece.y-2) * 90))
+
+
+
     def pixelCoords(self, boardCoords):
         """
             Takes in a tuple of board coordinates (x,y)
@@ -64,6 +81,13 @@ class Graphics:
         """
         return (
             boardCoords[0] * self.squareSize + self.pieceSize, boardCoords[1] * self.squareSize + self.pieceSize)
+
+    def boardCoords(self, pixelCoordinate):
+        """
+           Does the reverse of pixel_coords(). Takes in a tuple of of pixel coordinates and returns what square they are in.
+        """
+        return Coordinate(int(pixelCoordinate[0] / self.squareSize), int(pixelCoordinate[1] / self.squareSize))
+
 
     def pixelToSquarePosition(self, pixelCoordinate):
         """

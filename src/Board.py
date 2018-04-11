@@ -52,6 +52,7 @@ class Board:
 
         return boardString
 
+
     def rel(self, dir, coordinate):
         """
         Returns the coordinates one square in a different direction to (x,y).
@@ -106,6 +107,8 @@ class Board:
             blindLegalMoves = []
 
         return blindLegalMoves
+
+
 
     def legalMoves(self, coordinate, hop=False):
         """
@@ -201,6 +204,12 @@ class Piece:
     def __init__(self, color, king=False):
         self.color = color
         self.king = king
+
+    def getPlayerColor(self):
+        return WHITE
+
+    def getEnemyColor(self):
+        return RED
 
 
 class Square:
