@@ -15,7 +15,7 @@ Será criada uma implementação do jogo de Damas, em que um jogador poderá jog
 - Indentação será feita com quatro espaços por marca de indentação.
 - Nomes de variáveis e funções serão grafados em `camelCase`.
 - Nomes de variáveis/funções/whatever serão todos em INGLÊS. A única exceção será para textos a serem impressos na tela, obviamente.
-- Deve-se deixar as linhas de código muito grandes sempre que possível. Principalmente quando se tratar de programação funcional.
+- Deve-se evitar deixar as linhas de código muito grandes sempre que possível. Principalmente quando se tratar de programação funcional.
 - É uma boa ideia evitar comentários em português sempre que possível.
 
 # Componentes básicos do projeto
