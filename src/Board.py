@@ -1,4 +1,4 @@
-from src.Constants import *
+from Constants import *
 
 
 class Board:

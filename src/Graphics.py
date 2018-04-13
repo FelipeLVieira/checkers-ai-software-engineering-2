@@ -1,5 +1,5 @@
 import pygame
-from src.Board import *
+from Board import *
 
 
 class Graphics:
@@ -38,12 +38,12 @@ class Graphics:
         pygame.display.update()
         self.clock.tick(self.fps)
 
-"""-----------------------------------------------------------------------------+
-|  Victor: I don't think these routines are supposed to be here...              |
-|  they're all related to the GameBoard class and should be called from there,  |
-|  with the Graphics class handling low level graphical functions.              |
-|  We'll discuss this in the next meetup so we can define where these go.       |
-+-----------------------------------------------------------------------------"""
+    """-----------------------------------------------------------------------------+
+    |  Victor: I don't think these routines are supposed to be here...              |
+    |  they're all related to the GameBoard class and should be called from there,  |
+    |  with the Graphics class handling low level graphical functions.              |
+    |  We'll discuss this in the next meetup so we can define where these go.       |
+    +-----------------------------------------------------------------------------"""
 
     def drawBoardSquares(self, board):
         """

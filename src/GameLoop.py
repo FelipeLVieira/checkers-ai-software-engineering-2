@@ -1,7 +1,7 @@
 import pygame, sys
-from src.Graphics import Graphics
-from src.Board import Board
-from src.Constants import *
+from Graphics import Graphics
+from Board import Board
+from Constants import *
 from pygame.locals import *
 
 pygame.font.init()  # Victor: Just to make it clear, we won't use system fonts in the final version.
