@@ -38,6 +38,13 @@ class Graphics:
         pygame.display.update()
         self.clock.tick(self.fps)
 
+"""-----------------------------------------------------------------------------+
+|  Victor: I don't think these routines are supposed to be here...              |
+|  they're all related to the GameBoard class and should be called from there,  |
+|  with the Graphics class handling low level graphical functions.              |
+|  We'll discuss this in the next meetup so we can define where these go.       |
++-----------------------------------------------------------------------------"""
+
     def drawBoardSquares(self, board):
         """
             Takes a board object and draws all of its squares to the display
@@ -66,7 +73,7 @@ class Graphics:
             if (selectedPiece.x < 7 and selectedPiece.y > 0) and board.matrix[selectedPiece.x+1][selectedPiece.y-1].occupant is None:
                 self.screen.blit(goldPiece, ((selectedPiece.x+1) * 90, (selectedPiece.y-1) * 90))
 
-            #CASO EXISTA UMA PEÇA EM VERMELHO PARA ATACAR
+            # If there's an enemy piece to attack:
             if (selectedPiece.x-1 > 0 and selectedPiece.y-1 > 0) and board.matrix[selectedPiece.x-1][selectedPiece.y-1].occupant is not None and board.matrix[selectedPiece.x-1][selectedPiece.y-1].occupant.color == board.matrix[selectedPiece.x-1][selectedPiece.y-1].occupant.getEnemyColor():
                 self.screen.blit(goldPiece, ((selectedPiece.x-2) * 90, (selectedPiece.y-2) * 90))
             if (selectedPiece.x-1 > 7 and selectedPiece.y-1 > 0) and board.matrix[selectedPiece.x+1][selectedPiece.y-1].occupant is not None and board.matrix[selectedPiece.x-1][selectedPiece.y-1].occupant.color == board.matrix[selectedPiece.x-1][selectedPiece.y-1].occupant.getEnemyColor():

@@ -4,7 +4,8 @@ from src.Board import Board
 from src.Constants import *
 from pygame.locals import *
 
-pygame.font.init()
+pygame.font.init()  # Victor: Just to make it clear, we won't use system fonts in the final version.
+                    # TODO: Create a class to handle blitting text on the screen!
 
 
 class GameLoop:
@@ -26,7 +27,7 @@ class GameLoop:
     def eventLoop(self):
         self.mousePos = self.graphics.boardCoords(pygame.mouse.get_pos())  # what square is the mouse in?
         for event in pygame.event.get():
-            # ESC encerra o jogo (temporário)
+            # ESC quits the game (just for now)... (by the way, closing the window works too because of pygame.QUIT)
             if (event.type == pygame.QUIT) or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                 self.terminateGame()
 
