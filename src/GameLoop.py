@@ -16,11 +16,11 @@ class GameLoop:
         self.graphics = Graphics()
         self.board = Board()
 
-        self.turn = BLUE
+        self.turn = WHITE
         self.selectedPiece = None
+
         self.hop = False
         self.selectedLegalMoves = []
-
         self.done = False
 
     def setup(self):
@@ -36,7 +36,7 @@ class GameLoop:
             # Select piece
             if event.type == pygame.MOUSEBUTTONDOWN and self.selectedPiece is None:
                 boardLocation = self.board.location(self.mousePos)
-                if boardLocation.occupant != None and boardLocation.occupant.color == boardLocation.occupant.getPlayerColor():
+                if boardLocation.occupant != None and boardLocation.occupant.color == self.turn:
                     self.selectedPiece = self.mousePos
             elif event.type == pygame.MOUSEBUTTONDOWN \
                     and self.board.location(self.selectedPiece) == self.board.location(self.mousePos):
@@ -45,9 +45,11 @@ class GameLoop:
             # Move piece
             if event.type == pygame.MOUSEBUTTONDOWN and self.selectedPiece is not None:
                 destination = self.board.location(self.mousePos)
-                if destination.occupant is None and destination.color is BLACK:
+                if destination.occupant is None and destination.color is BLACK \
+                        and self.board.location(self.selectedPiece).occupant.color == self.turn:
                     self.board.movePiece(self.selectedPiece, self.mousePos)
                     self.selectedPiece = None
+                    self.endTurn()
 
     def update(self):
         self.graphics.updateDisplay(self.board, self.selectedLegalMoves, self.selectedPiece)
@@ -58,6 +60,12 @@ class GameLoop:
             return True
 
     def checkForEndgame(self):
+
+        if self.turn is WHITE:
+            self.turn = RED
+        else:
+            self.turn = WHITE
+
         return True
 
     def terminateGame(self):
