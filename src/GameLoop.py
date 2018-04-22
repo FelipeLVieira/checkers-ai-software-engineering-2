@@ -5,7 +5,9 @@ from Constants import *
 from pygame.locals import *
 
 pygame.font.init()  # Victor: Just to make it clear, we won't use system fonts in the final version.
-                    # TODO: Create a class to handle blitting text on the screen!
+
+
+# TODO: Create a class to handle blitting text on the screen!
 
 
 class GameLoop:
@@ -31,14 +33,21 @@ class GameLoop:
             if (event.type == pygame.QUIT) or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                 self.terminateGame()
 
-            if event.type == pygame.MOUSEBUTTONDOWN:
+            # Select piece
+            if event.type == pygame.MOUSEBUTTONDOWN and self.selectedPiece is None:
                 boardLocation = self.board.location(self.mousePos)
-                if boardLocation.occupant !=  None and boardLocation.occupant.color == boardLocation.occupant.getPlayerColor():
+                if boardLocation.occupant != None and boardLocation.occupant.color == boardLocation.occupant.getPlayerColor():
                     self.selectedPiece = self.mousePos
+            elif event.type == pygame.MOUSEBUTTONDOWN \
+                    and self.board.location(self.selectedPiece) == self.board.location(self.mousePos):
+                self.selectedPiece = None
 
-
-
-
+            # Move piece
+            if event.type == pygame.MOUSEBUTTONDOWN and self.selectedPiece is not None:
+                destination = self.board.location(self.mousePos)
+                if destination.occupant is None and destination.color is BLACK:
+                    self.board.movePiece(self.selectedPiece, self.mousePos)
+                    self.selectedPiece = None
 
     def update(self):
         self.graphics.updateDisplay(self.board, self.selectedLegalMoves, self.selectedPiece)
@@ -58,7 +67,6 @@ class GameLoop:
     def main(self):
         self.setup()
 
-        print(self.board.matrix)
         while True:
             self.eventLoop()
             self.update()
@@ -67,6 +75,7 @@ class GameLoop:
 def main():
     game = GameLoop()
     game.main()
+
 
 if __name__ == "__main__":
     main()

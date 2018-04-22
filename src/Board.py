@@ -116,11 +116,11 @@ class Board:
         If that location is empty, then legal_moves() returns an empty list.
         """
 
-        blind_legal_moves = self.blind_legal_moves((coordinate.x, coordinate.y))
+        blind_legal_moves = self.blindLegalMoves(coordinate)
         legalMoves = []
 
         if hop == False:
-            for move in blind_legal_moves:
+            for move in blindLegalMoves:
                 if hop == False:
                     if self.on_board(move):
                         if self.location(move).occupant == None:
@@ -144,22 +144,22 @@ class Board:
 
         return legalMoves
 
-    def remove_piece(self, coordinate):
+    def removePiece(self, coordinate):
         """
         Removes a piece from the board at position (x,y).
         """
         self.matrix[coordinate.x][coordinate.y].occupant = None
 
-    def move_piece(self, startCoordinate, endCoordinate):
+    def movePiece(self, startCoordinate, endCoordinate):
         """
         Move a piece from (start_x, start_y) to (end_x, end_y).
         """
 
         self.matrix[endCoordinate.x][endCoordinate.y].occupant = self.matrix[startCoordinate.x][
             startCoordinate.y].occupant
-        self.remove_piece((startCoordinate.x, startCoordinate.y))
+        self.removePiece(startCoordinate)
 
-        self.king((endCoordinate.x, endCoordinate.y))
+        # self.king(endCoordinate)
 
     def isEndSquare(self, coords):
         """
