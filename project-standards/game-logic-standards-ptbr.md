@@ -43,7 +43,7 @@ Caso a jogada não seja possível, a função retorna um resultado negativo.
 
 O jogador pode solicitar ao jogo que simule uma jogada para ele e mostre como ficará o tabuleiro. Isto é necessário para depois implementarmos a função de IA, pois é assim que ela irá poder atuar recursivamente.
 
-- A função recebe o objeto "jogador", o tabuleiro sobre o qual se deseja simular uma possível jogada
+- A função recebe o objeto "jogador", e o "tabuleiro" sobre o qual se deseja simular uma possível jogada
 - A função verifica se a jogada está dentre a lista de possíveis movimentações (novamente, a função levanta uma exceção caso a lista não tenha sido computada previamente)
 
 Caso a jogada seja possível:
