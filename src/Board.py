@@ -16,16 +16,15 @@ class Board:
         for x in range(8):
             for y in range(8):
                 if (x % 2 != 0) and (y % 2 == 0):
-                    matrix[y][x] = Square(BLACK)
+                    matrix[x][y] = Square(BLACK)
                 elif (x % 2 != 0) and (y % 2 != 0):
-                    matrix[y][x] = Square(WHITE)
+                    matrix[x][y] = Square(WHITE)
                 elif (x % 2 == 0) and (y % 2 != 0):
-                    matrix[y][x] = Square(BLACK)
+                    matrix[x][y] = Square(BLACK)
                 elif (x % 2 == 0) and (y % 2 == 0):
-                    matrix[y][x] = Square(WHITE)
+                    matrix[x][y] = Square(WHITE)
 
         # initialize the pieces and put them in the appropriate squares
-
         for x in range(8):
             for y in range(3):
                 if matrix[x][y].color == BLACK:
@@ -41,30 +40,38 @@ class Board:
         Takes a board and returns a matrix of the board space colors. Used for testing new_board()
         """
 
-        boardString = [[None] * 8] * 8
+        boardString = [[None] * 8 for i in range(8)]
 
-        for x in range(8):
-            for y in range(8):
-                if board[x][y].color == WHITE:
-                    boardString[x][y] = "WHITE"
+        for x in range(0, 8):
+            for y in range(0, 8):
+                if board[x][y].color is BLACK:
+                    if board[x][y].occupant is None:
+                        boardString[x][y] = "B"
+                        continue
+                    elif board[x][y].occupant.color is WHITE:
+                        boardString[x][y] = "WHITE"
+                        continue
+                    elif board[x][y].occupant.color is RED:
+                        boardString[x][y] = "RED"
+                        continue
                 else:
-                    boardString[x][y] = "BLACK"
+                    boardString[x][y] = "W"
+                    continue
 
         return boardString
-
 
     def rel(self, dir, coordinate):
         """
         Returns the coordinates one square in a different direction to (x,y).
         """
         if dir == NORTHWEST:
-            return (coordinate.x - 1, coordinate.y - 1)
+            return Coordinate(coordinate.x - 1, coordinate.y - 1)
         elif dir == NORTHEAST:
-            return (coordinate.x + 1, coordinate.y - 1)
+            return Coordinate(coordinate.x + 1, coordinate.y - 1)
         elif dir == SOUTHWEST:
-            return (coordinate.x - 1, coordinate.y + 1)
+            return Coordinate(coordinate.x - 1, coordinate.y + 1)
         elif dir == SOUTHEAST:
-            return (coordinate.x + 1, coordinate.y + 1)
+            return Coordinate(coordinate.x + 1, coordinate.y + 1)
         else:
             return 0
 
@@ -82,6 +89,8 @@ class Board:
         Takes a set of coordinates as arguments and returns self.matrix[x][y]
         This can be faster than writing something like self.matrix[coords[0]][coords[1]]
         """
+        if coordinate is None:
+            return
 
         return self.matrix[coordinate.x][coordinate.y]
 
@@ -91,57 +100,120 @@ class Board:
         If that location is empty, then blind_legal_moves() return an empty list.
         """
 
-        if self.matrix[coordinate.x][coordinate.y].occupant != None:
+        blindLegalMoves = []
 
-            if self.matrix[coordinate.x][coordinate.y].occupant.king == False and self.matrix[coordinate.x][coordinate.y].occupant.color == BLUE:
-                blindLegalMoves = [self.rel(NORTHWEST, coordinate), self.rel(NORTHEAST, coordinate)]
+        if self.matrix[coordinate.x][coordinate.y].occupant is not None:
 
-            elif self.matrix[coordinate.x][coordinate.y].occupant.king == False and self.matrix[coordinate.x][coordinate.y].occupant.color == RED:
-                blindLegalMoves = [self.rel(SOUTHWEST, coordinate), self.rel(SOUTHEAST, coordinate)]
+            if self.matrix[coordinate.x][coordinate.y].occupant.king is False \
+                    and self.matrix[coordinate.x][coordinate.y].occupant.color is WHITE:
+                if self.onBoard(self.rel(NORTHWEST, coordinate)):
+                    blindLegalMoves.append(self.rel(NORTHWEST, coordinate))
+                if self.onBoard( self.rel(NORTHEAST, coordinate)):
+                    blindLegalMoves.append( self.rel(NORTHEAST, coordinate))
+
+            elif self.matrix[coordinate.x][coordinate.y].occupant.king is False \
+                    and self.matrix[coordinate.x][coordinate.y].occupant.color == RED:
+                if self.onBoard(self.rel(SOUTHWEST, coordinate)):
+                    blindLegalMoves.append(self.rel(SOUTHWEST, coordinate))
+                if self.onBoard(self.rel(SOUTHEAST, coordinate)):
+                    blindLegalMoves.append(self.rel(SOUTHEAST, coordinate))
 
             else:
-                blindLegalMoves = [self.rel(NORTHWEST, coordinate), self.rel(NORTHEAST, coordinate),
-                                     self.rel(SOUTHWEST, coordinate), self.rel(SOUTHEAST, coordinate)]
+                if self.onBoard(self.rel(NORTHWEST, coordinate)):
+                    blindLegalMoves.append(self.rel(NORTHWEST, coordinate))
+                if self.onBoard( self.rel(NORTHEAST, coordinate)):
+                    blindLegalMoves.append( self.rel(NORTHEAST, coordinate))
+                if self.onBoard(self.rel(SOUTHWEST, coordinate)):
+                    blindLegalMoves.append(self.rel(SOUTHWEST, coordinate))
+                if self.onBoard(self.rel(SOUTHEAST, coordinate)):
+                    blindLegalMoves.append(self.rel(SOUTHEAST, coordinate))
 
         else:
             blindLegalMoves = []
 
         return blindLegalMoves
 
-
-
-    def legalMoves(self, coordinate, hop=False):
+    def legalMoves(self, playerTurn, coordinate):
         """
         Returns a list of legal move locations from a given set of coordinates (x,y) on the board.
         If that location is empty, then legal_moves() returns an empty list.
         """
 
-        blind_legal_moves = self.blindLegalMoves(coordinate)
+        blindLegalMoves = self.blindLegalMoves(coordinate)
         legalMoves = []
 
-        if hop == False:
-            for move in blindLegalMoves:
-                if hop == False:
-                    if self.on_board(move):
-                        if self.location(move).occupant == None:
-                            legalMoves.append(move)
+        if self.location(coordinate).occupant.king is False:
+            for moveCoordinate in blindLegalMoves:
+                if playerTurn is WHITE:
+                    # Check if the two next squares are occupied
+                    if self.location(moveCoordinate).occupant is not None \
+                            and self.location(self.rel(NORTHWEST, moveCoordinate)).occupant is not None \
+                            and self.location(self.rel(NORTHEAST, moveCoordinate)).occupant is not None:
+                        # There's nowhere to jump or move
+                        continue
+                # RED turn
+                else:
+                    # Check if the two next squares are occupied
+                    if self.location(moveCoordinate).occupant is not None \
+                            and self.location(self.rel(SOUTHWEST, moveCoordinate)).occupant is not None \
+                            and self.location(self.rel(SOUTHEAST, moveCoordinate)).occupant is not None:
+                        # There's nowhere to jump or move
+                        continue
 
-                        elif self.location(move).occupant.color != self.location(
-                                (coordinate.x, coordinate.y)).occupant.color and self.on_board(
-                                (move[0] + (move[0] - coordinate.x), move[1] + (move[1] - coordinate.y))) and self.location((move[0] + (
-                            move[0] - coordinate.x), move[1] + (
-                            move[1] - coordinate.y))).occupant == None:  # is this location filled by an enemy piece?
-                            legalMoves.append((move[0] + (move[0] - coordinate.x), move[1] + (move[1] - coordinate.y)))
+            # There are spots to go
+            legalMoves = self.checkNextLegalMove(playerTurn, [coordinate])
+        else:
+            # TODO king actions
+            return legalMoves
 
-        else:  # hop == True
-            for move in blind_legal_moves:
-                if self.on_board(move) and self.location(move).occupant != None:
-                    if self.location(move).occupant.color != self.location((coordinate.x, coordinate.y)).occupant.color and self.on_board(
-                            (move[0] + (move[0] - coordinate.x), move[1] + (move[1] - coordinate.y))) and self.location((move[0] + (
-                        move[0] - coordinate.x), move[1] + (
-                        move[1] - coordinate.y))).occupant == None:  # is this location filled by an enemy piece?
-                        legalMoves.append((move[0] + (move[0] - coordinate.x), move[1] + (move[1] - coordinate.y)))
+        return legalMoves
 
+    def checkNextLegalMove(self, playerTurn, moveCoordinates):
+
+        blindMoves = self.blindLegalMoves(moveCoordinates[-1])
+        legalMoves = []
+
+        # Player WHITE
+        if playerTurn is WHITE:
+            for move in blindMoves:
+                # Next square is empty, add move
+                if self.location(move).occupant is None:
+                    legalMoves.append([move])
+                    continue
+                # Next northwest square is occupied but after this one is empty
+                if self.location(move).occupant is not None and \
+                        self.location(self.rel(NORTHWEST, move)).occupant is None:
+                    aux = [move, self.rel(NORTHWEST, move)]
+                    legalMoves.append(aux)
+                    continue
+                # Next northeast square is occupied but after this one is empty
+                if self.location(move).occupant is not None and \
+                        self.location(self.rel(NORTHEAST, move)).occupant is None:
+                    aux = [move, self.rel(NORTHEAST, move)]
+                    legalMoves.append(aux)
+                    continue
+            # Call recursivity
+            # self.checkNextLegalMove(playerTurn, moveCoordinates)
+        else:
+            for move in blindMoves:
+                # Next square is empty, add move
+                if self.location(move).occupant is None:
+                    legalMoves.append([move])
+                    continue
+                # Next northwest square is occupied but after this one is empty
+                if self.location(move).occupant is not None and \
+                        self.location(self.rel(SOUTHWEST, move)).occupant is None:
+                    aux = [move, self.rel(SOUTHWEST, move)]
+                    legalMoves.append(aux)
+                    continue
+                # Next northeast square is occupied but after this one is empty
+                if self.location(move).occupant is not None and \
+                        self.location(self.rel(SOUTHEAST, move)).occupant is None:
+                    aux = [move, self.rel(SOUTHEAST, move)]
+                    legalMoves.append(aux)
+                    continue
+            # Call recursivity
+            # self.checkNextLegalMove(playerTurn, moveCoordinates)
         return legalMoves
 
     def removePiece(self, coordinate):
@@ -161,18 +233,18 @@ class Board:
 
         # self.king(endCoordinate)
 
-    def isEndSquare(self, coords):
+    def isEndSquare(self, coordinate):
         """
         Is passed a coordinate tuple (x,y), and returns true or
         false depending on if that square on the board is an end square.
         """
 
-        if coords[1] == 0 or coords[1] == 7:
+        if coordinate.x == 0 or coordinate.x == 7:
             return True
         else:
             return False
 
-    def on_board(self, coordinate):
+    def onBoard(self, coordinate):
         """
         Checks to see if the given square (x,y) lies on the board.
         If it does, then on_board() return True. Otherwise it returns false.

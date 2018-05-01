@@ -1,8 +1,10 @@
 import pygame, sys
 from Graphics import Graphics
-from Board import Board
+from Board import *
 from Constants import *
 from pygame.locals import *
+
+# Using 'import numpy as np' to have a better view of printed array
 
 pygame.font.init()  # Victor: Just to make it clear, we won't use system fonts in the final version.
 
@@ -16,8 +18,18 @@ class GameLoop:
         self.graphics = Graphics()
         self.board = Board()
 
+        """print(np.array(self.board.boardString(self.board.matrix)))
+
+        for x in range(0,8):
+            for y in range(0,8):
+                if self.board.matrix[x][y].occupant is not None:
+                    print(self.board.matrix[x][y].occupant.color)
+                else:
+                    print("empty")
+            print("\n")"""
+
         self.turn = WHITE
-        self.selectedPiece = None
+        self.selectedPieceCoordinate = None
 
         self.hop = False
         self.selectedLegalMoves = []
@@ -33,26 +45,42 @@ class GameLoop:
             if (event.type == pygame.QUIT) or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                 self.terminateGame()
 
-            # Select piece
-            if event.type == pygame.MOUSEBUTTONDOWN and self.selectedPiece is None:
-                boardLocation = self.board.location(self.mousePos)
-                if boardLocation.occupant != None and boardLocation.occupant.color == self.turn:
-                    self.selectedPiece = self.mousePos
-            elif event.type == pygame.MOUSEBUTTONDOWN \
-                    and self.board.location(self.selectedPiece) == self.board.location(self.mousePos):
-                self.selectedPiece = None
+            # Main variables
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                # Get selected square object
+                selectedSquare = self.board.location(self.mousePos)
+                # Get coordinates
+                selectedSquareCoordinate = Coordinate(self.mousePos.x, self.mousePos.y)
 
-            # Move piece
-            if event.type == pygame.MOUSEBUTTONDOWN and self.selectedPiece is not None:
-                destination = self.board.location(self.mousePos)
-                if destination.occupant is None and destination.color is BLACK \
-                        and self.board.location(self.selectedPiece).occupant.color == self.turn:
-                    self.board.movePiece(self.selectedPiece, self.mousePos)
-                    self.selectedPiece = None
-                    self.endTurn()
+                # Select piece and get legal moves
+                if self.selectedPieceCoordinate is None and self.board.location(self.mousePos).occupant is not None:
+
+                    # Get legal moves
+                    self.selectedLegalMoves = self.board.legalMoves(self.turn, selectedSquareCoordinate)
+
+                    # Validate selection
+                    if selectedSquare.occupant is not None and selectedSquare.occupant.color is self.turn:
+                        self.selectedPieceCoordinate = self.mousePos
+
+                # Cancel piece selection
+                elif self.board.location(self.selectedPieceCoordinate) == self.board.location(self.mousePos):
+                    self.selectedPieceCoordinate = None
+
+                # Move piece
+                if self.board.location(self.mousePos).occupant is None and self.selectedPieceCoordinate is not None:
+                    selectedSquareCoordinate = Coordinate(self.mousePos.x, self.mousePos.y)
+                    # List of legal paths
+                    for movepath in self.selectedLegalMoves:
+                        # Coordinates of a legal path
+                        for move in movepath:
+                            if move.x == selectedSquareCoordinate.x and move.y == selectedSquareCoordinate.y:
+                                self.board.movePiece(self.selectedPieceCoordinate, self.mousePos)
+                                self.selectedPieceCoordinate = None
+                                self.selectedLegalMoves = None
+                                self.endTurn()
 
     def update(self):
-        self.graphics.updateDisplay(self.board, self.selectedLegalMoves, self.selectedPiece)
+        self.graphics.updateDisplay(self.board, self.selectedLegalMoves, self.selectedPieceCoordinate)
         pygame.display.flip()
 
     def endTurn(self):
