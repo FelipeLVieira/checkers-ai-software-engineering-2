@@ -77,8 +77,9 @@ class Graphics:
             goldPiece = pygame.image.load("../graphics-proto/gold.png")
 
             for movePath in legalMoves:
-                for square in movePath:
-                    self.screen.blit(goldPiece, (square.x * 90, square.y * 90))
+                self.screen.blit(goldPiece, (movePath.x * 90, movePath.y * 90))
+                #for square in movePath:
+                    #self.screen.blit(goldPiece, (square.x * 90, square.y * 90))
 
     def pixelCoords(self, boardCoords):
         """

@@ -56,7 +56,7 @@ class GameLoop:
                 if self.selectedPieceCoordinate is None and self.board.location(self.mousePos).occupant is not None:
 
                     # Get legal moves
-                    self.selectedLegalMoves = self.board.legalMoves(self.turn, selectedSquareCoordinate)
+                    self.selectedLegalMoves = self.board.legalMoves(selectedSquareCoordinate)
 
                     # Validate selection
                     if selectedSquare.occupant is not None and selectedSquare.occupant.color is self.turn:
@@ -71,13 +71,18 @@ class GameLoop:
                     selectedSquareCoordinate = Coordinate(self.mousePos.x, self.mousePos.y)
                     # List of legal paths
                     for movepath in self.selectedLegalMoves:
+                        if movepath.x == selectedSquareCoordinate.x and movepath.y == selectedSquareCoordinate.y:
+                            self.board.movePiece(self.selectedPieceCoordinate, self.mousePos)
+                            self.selectedPieceCoordinate = None
+                            self.selectedLegalMoves = None
+                            self.endTurn()
                         # Coordinates of a legal path
-                        for move in movepath:
+                        """for move in movepath:
                             if move.x == selectedSquareCoordinate.x and move.y == selectedSquareCoordinate.y:
                                 self.board.movePiece(self.selectedPieceCoordinate, self.mousePos)
                                 self.selectedPieceCoordinate = None
                                 self.selectedLegalMoves = None
-                                self.endTurn()
+                                self.endTurn()"""
 
     def update(self):
         self.graphics.updateDisplay(self.board, self.selectedLegalMoves, self.selectedPieceCoordinate)
