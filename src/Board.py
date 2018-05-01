@@ -91,7 +91,6 @@ class Board:
         """
         if coordinate is None:
             return
-
         return self.matrix[coordinate.x][coordinate.y]
 
     def blindLegalMoves(self, coordinate):
@@ -230,8 +229,7 @@ class Board:
         self.matrix[endCoordinate.x][endCoordinate.y].occupant = self.matrix[startCoordinate.x][
             startCoordinate.y].occupant
         self.removePiece(startCoordinate)
-
-        # self.king(endCoordinate)
+        self.king(endCoordinate)
 
     def isEndSquare(self, coordinate):
         """
@@ -260,11 +258,10 @@ class Board:
         Takes in (x,y), the coordinates of square to be considered for kinging.
         If it meets the criteria, then king() kings the piece in that square and kings it.
         """
-        if self.location(coordinate.x, coordinate.y).occupant != None:
-            if (self.location(coordinate.x, coordinate.y).occupant.color == BLUE and coordinate.y == 0) or (
-                    self.location(coordinate.x, coordinate.y).occupant.color == RED and coordinate.y == 7):
-                self.location(coordinate.x, coordinate.y).occupant.king = True
-
+        if self.location(coordinate).occupant != None:
+            if (self.location(coordinate).occupant.color == WHITE and coordinate.y == 0) or (
+                    self.location(coordinate).occupant.color == RED and coordinate.y == 7):
+                self.location(coordinate).occupant.king = True
 
 class Coordinate:
     def __init__(self, x, y):

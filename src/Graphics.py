@@ -30,6 +30,7 @@ class Graphics:
         # self.highlight_squares(legal_moves, selected_piece)
         self.drawBoardPieces(board)
         self.highlightLegalMoves(legalMovements, selectedPiece)
+        self.drawBoardKings(board)
 
         if self.message:
             self.screen.blit(self.text_surface_obj, self.text_rect_obj)
@@ -63,6 +64,13 @@ class Graphics:
                 if board.matrix[x][y].occupant is not None and board.matrix[x][y].color is BLACK and board.matrix[x][y].occupant.color is WHITE:
                     whitePiece = pygame.image.load("../graphics-proto/piece_white.png")
                     self.screen.blit(whitePiece, (x * 90, y * 90))
+
+    def drawBoardKings(self, board):
+        for x in range(8):
+            for y in range(8):
+                if board.matrix[x][y].occupant is not None and board.matrix[x][y].occupant.king == True:
+                    kingPiece = pygame.image.load("../graphics-proto/crown.png")
+                    self.screen.blit(kingPiece, (x * 90, y * 90))
 
     def highlightLegalMoves(self, legalMoves, selectedPiece):
         if selectedPiece != None:
