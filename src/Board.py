@@ -75,6 +75,21 @@ class Board:
         else:
             return 0
 
+    def relIncrement(self, dir, coordinate):
+        """
+        Returns the coordinates one square in a different direction to (x,y).
+        """
+        if dir == NORTHWEST:
+            return Coordinate(coordinate.x - 2, coordinate.y - 2)
+        elif dir == NORTHEAST:
+            return Coordinate(coordinate.x + 2, coordinate.y - 2)
+        elif dir == SOUTHWEST:
+            return Coordinate(coordinate.x - 2, coordinate.y + 2)
+        elif dir == SOUTHEAST:
+            return Coordinate(coordinate.x + 2, coordinate.y + 2)
+        else:
+            return 0
+
     def adjacent(self, coordinate):
         """
         Returns a list of squares locations that are adjacent (on a diagonal) to (x,y).
@@ -93,107 +108,58 @@ class Board:
             return
         return self.matrix[coordinate.x][coordinate.y]
 
-    def blindLegalMoves(self, coordinate):
-        """
-        Returns a list of blind legal move locations from a set of coordinates (x,y) on the board.
-        If that location is empty, then blind_legal_moves() return an empty list.
-        """
+    def legalMoves(self, playerTurn, selectedSquareCoordinate, jump, king):
 
-        blindLegalMoves = []
-
-        if self.matrix[coordinate.x][coordinate.y].occupant is not None:
-
-            if self.matrix[coordinate.x][coordinate.y].occupant.king is False \
-                    and self.matrix[coordinate.x][coordinate.y].occupant.color is WHITE:
-                if self.onBoard(self.rel(NORTHWEST, coordinate)):
-                    blindLegalMoves.append(
-                        Direction(self.rel(NORTHWEST, coordinate).x, self.rel(NORTHWEST, coordinate).y, NORTHWEST))
-                if self.onBoard(self.rel(NORTHEAST, coordinate)):
-                    blindLegalMoves.append(
-                        Direction(self.rel(NORTHEAST, coordinate).x, self.rel(NORTHEAST, coordinate).y, NORTHEAST))
-
-            elif self.matrix[coordinate.x][coordinate.y].occupant.king is False \
-                    and self.matrix[coordinate.x][coordinate.y].occupant.color == RED:
-                if self.onBoard(self.rel(SOUTHWEST, coordinate)):
-                    blindLegalMoves.append(
-                        Direction(self.rel(SOUTHWEST, coordinate).x, self.rel(SOUTHWEST, coordinate).y, SOUTHWEST))
-                if self.onBoard(self.rel(SOUTHEAST, coordinate)):
-                    blindLegalMoves.append(
-                        Direction(self.rel(SOUTHEAST, coordinate).x, self.rel(SOUTHEAST, coordinate).y, SOUTHEAST))
-
-            else:
-                aux = self.rel(NORTHWEST, coordinate)
-                while self.onBoard(aux):
-                    blindLegalMoves.append(
-                        Direction(aux.x, aux.y, NORTHWEST))
-                    aux = self.rel(NORTHWEST, aux)
-
-                aux = self.rel(NORTHEAST, coordinate)
-                while self.onBoard(aux):
-                    blindLegalMoves.append(
-                        Direction(aux.x, aux.y, NORTHEAST))
-                    aux = self.rel(NORTHEAST, aux)
-
-                aux = self.rel(SOUTHWEST, coordinate)
-                while self.onBoard(aux):
-                    blindLegalMoves.append(
-                        Direction(aux.x, aux.y, SOUTHWEST))
-                    aux = self.rel(SOUTHWEST, aux)
-
-                aux = self.rel(SOUTHEAST, coordinate)
-                while self.onBoard(aux):
-                    blindLegalMoves.append(
-                        Direction(aux.x, aux.y, SOUTHEAST))
-                    aux = self.rel(SOUTHEAST, aux)
-
-        return blindLegalMoves
-
-    def legalMoves(self, coordinate):
-        """
-        Returns a list of legal move locations from a given set of coordinates (x,y) on the board.
-        If that location is empty, then legal_moves() returns an empty list.
-        """
-
-        blindLegalMoves = self.blindLegalMoves(coordinate)
-        for moveCoordinate in blindLegalMoves:
-            # Check if the two next squares are occupied
-            if self.location(Coordinate(moveCoordinate.x, moveCoordinate.y)).occupant is not None:
-                # There's nowhere to jump or move
-                continue
-        # There are spots to go
-        legalMoves = self.checkNextLegalMove(coordinate)
-
-        return legalMoves
-
-    def checkNextLegalMove(self, moveCoordinates):
-
-        blindMoves = self.blindLegalMoves(moveCoordinates)
         legalMoves = []
 
-        for move in blindMoves:
-            # Next square is empty, add move
-            coordinate = Coordinate(move.x, move.y)
-            if self.location(coordinate).occupant is None:
-                legalMoves.append(coordinate)
-                continue
-            else:
-                if self.matrix[moveCoordinates.x][moveCoordinates.y].occupant.color is WHITE \
-                    and self.matrix[move.x][move.y].occupant.color is RED:
+        if not jump:
+            if playerTurn is WHITE or king is True:
+                # Check if there is a empty square to move forward
+                if self.onBoard(self.rel(NORTHWEST, selectedSquareCoordinate)):
+                    if self.location(self.rel(NORTHWEST, selectedSquareCoordinate)).occupant is None:
+                        legalMoves.append([self.rel(NORTHWEST, selectedSquareCoordinate)])
+                if self.onBoard(self.rel(NORTHEAST, selectedSquareCoordinate)):
+                    if self.location(self.rel(NORTHEAST, selectedSquareCoordinate)).occupant is None:
+                        legalMoves.append([self.rel(NORTHEAST, selectedSquareCoordinate)])
+            elif playerTurn is RED or king is True:
+                if self.onBoard(self.rel(SOUTHWEST, selectedSquareCoordinate)):
+                    if self.location(self.rel(SOUTHWEST, selectedSquareCoordinate)).occupant is None:
+                        legalMoves.append([self.rel(SOUTHWEST, selectedSquareCoordinate)])
+                if self.onBoard(self.rel(SOUTHEAST, selectedSquareCoordinate)):
+                    if self.location(self.rel(SOUTHEAST, selectedSquareCoordinate)).occupant is None:
+                        legalMoves.append([self.rel(SOUTHEAST, selectedSquareCoordinate)])
 
-                    output = Coordinate(self.rel(move.direction, coordinate).x, self.rel(move.direction, coordinate).y)
-                    if self.onBoard(output) and self.matrix[output.x][output.y].occupant is None:
-                        legalMoves.append(output)
+            # Any peace can jump over an opponent for any position
 
-                elif self.matrix[moveCoordinates.x][moveCoordinates.y].occupant.color is RED \
-                    and self.matrix[move.x][move.y].occupant.color is WHITE:
+            # Check if there's a piece to jump over
+            if self.onBoard(self.rel(NORTHWEST, selectedSquareCoordinate)) \
+                and self.onBoard(self.relIncrement(NORTHWEST, selectedSquareCoordinate)) \
+                and self.location(self.rel(NORTHWEST, selectedSquareCoordinate)).occupant is not None \
+                and self.location(self.relIncrement(NORTHWEST, selectedSquareCoordinate)).occupant is None \
+                and playerTurn is not self.location(self.rel(NORTHWEST, selectedSquareCoordinate)).occupant.color:
+                    legalMoves.append([self.relIncrement(NORTHWEST, selectedSquareCoordinate)])
 
-                    output = Coordinate(self.rel(move.direction, coordinate).x, self.rel(move.direction, coordinate).y)
+            if self.onBoard(self.rel(NORTHEAST, selectedSquareCoordinate)) \
+                and self.onBoard(self.relIncrement(NORTHEAST, selectedSquareCoordinate)) \
+                and self.location(self.rel(NORTHEAST, selectedSquareCoordinate)).occupant is not None \
+                and self.location(self.relIncrement(NORTHEAST, selectedSquareCoordinate)).occupant is None \
+                and playerTurn is not self.location(self.rel(NORTHEAST, selectedSquareCoordinate)).occupant.color:
+                    legalMoves.append([self.relIncrement(NORTHEAST, selectedSquareCoordinate)])
 
-                    if self.onBoard(output) and self.matrix[output.x][output.y].occupant is None:
-                        legalMoves.append(output)
+            if self.onBoard(self.rel(SOUTHWEST, selectedSquareCoordinate)) \
+                and self.onBoard(self.relIncrement(SOUTHWEST, selectedSquareCoordinate)) \
+                and self.location(self.rel(SOUTHWEST, selectedSquareCoordinate)).occupant is not None \
+                and self.location(self.relIncrement(SOUTHWEST, selectedSquareCoordinate)).occupant is None \
+                and playerTurn is not self.location(self.rel(SOUTHWEST, selectedSquareCoordinate)).occupant.color:
+                    legalMoves.append([self.relIncrement(SOUTHWEST, selectedSquareCoordinate)])
 
-            # Call recursivity
-            # self.checkNextLegalMove(playerTurn, moveCoordinates)
+            if self.onBoard(self.rel(SOUTHEAST, selectedSquareCoordinate)) \
+                and self.onBoard(self.relIncrement(SOUTHEAST, selectedSquareCoordinate)) \
+                and self.location(self.rel(SOUTHEAST, selectedSquareCoordinate)).occupant is not None \
+                and self.location(self.relIncrement(SOUTHEAST, selectedSquareCoordinate)).occupant is None \
+                and playerTurn is not self.location(self.rel(SOUTHEAST, selectedSquareCoordinate)).occupant.color:
+                    legalMoves.append([self.relIncrement(SOUTHEAST, selectedSquareCoordinate)])
+
         return legalMoves
 
     def removePiece(self, coordinate):
@@ -244,6 +210,7 @@ class Board:
                     self.location(coordinate).occupant.color == RED and coordinate.y == 7):
                 self.location(coordinate).occupant.king = True
 
+
 class Coordinate:
     def __init__(self, x, y):
         self.x = x
@@ -266,6 +233,7 @@ class Square:
     def __init__(self, color, occupant=None):
         self.color = color  # color is either BLACK or WHITE
         self.occupant = occupant  # occupant is a Square object
+
 
 class Direction:
     def __init__(self, x, y, direction):

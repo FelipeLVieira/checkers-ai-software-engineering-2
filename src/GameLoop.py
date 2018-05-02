@@ -47,42 +47,45 @@ class GameLoop:
 
             # Main variables
             if event.type == pygame.MOUSEBUTTONDOWN:
+                print(self.mousePos.x, self.mousePos.y)
                 # Get selected square object
                 selectedSquare = self.board.location(self.mousePos)
                 # Get coordinates
                 selectedSquareCoordinate = Coordinate(self.mousePos.x, self.mousePos.y)
 
                 # Select piece and get legal moves
-                if self.selectedPieceCoordinate is None and self.board.location(self.mousePos).occupant is not None:
-
+                if self.selectedPieceCoordinate is None and self.board.location(self.mousePos).occupant is not None \
+                        and selectedSquare.occupant.color is self.turn:
+                    self.selectedPieceCoordinate = self.mousePos
                     # Get legal moves
-                    self.selectedLegalMoves = self.board.legalMoves(selectedSquareCoordinate)
-
-                    # Validate selection
-                    if selectedSquare.occupant is not None and selectedSquare.occupant.color is self.turn:
-                        self.selectedPieceCoordinate = self.mousePos
+                    self.selectedLegalMoves = self.board.legalMoves(self.turn, selectedSquareCoordinate, False, False)
+                    if len(self.selectedLegalMoves) == 0:
+                        self.selectedPieceCoordinate = None
+                        self.selectedLegalMoves = None
 
                 # Cancel piece selection
-                elif self.board.location(self.selectedPieceCoordinate) == self.board.location(self.mousePos):
+                elif self.board.location(self.mousePos) == self.board.location(self.selectedPieceCoordinate):
                     self.selectedPieceCoordinate = None
+                    self.selectedLegalMoves = None
 
                 # Move piece
                 if self.board.location(self.mousePos).occupant is None and self.selectedPieceCoordinate is not None:
                     selectedSquareCoordinate = Coordinate(self.mousePos.x, self.mousePos.y)
                     # List of legal paths
-                    for movepath in self.selectedLegalMoves:
+                    """for movepath in self.selectedLegalMoves:
                         if movepath.x == selectedSquareCoordinate.x and movepath.y == selectedSquareCoordinate.y:
                             self.board.movePiece(self.selectedPieceCoordinate, self.mousePos)
                             self.selectedPieceCoordinate = None
                             self.selectedLegalMoves = None
                             self.endTurn()
-                        # Coordinates of a legal path
-                        """for move in movepath:
+                        # Coordinates of a legal path"""
+                    for movepath in self.selectedLegalMoves:
+                        for move in movepath:
                             if move.x == selectedSquareCoordinate.x and move.y == selectedSquareCoordinate.y:
                                 self.board.movePiece(self.selectedPieceCoordinate, self.mousePos)
                                 self.selectedPieceCoordinate = None
                                 self.selectedLegalMoves = None
-                                self.endTurn()"""
+                                self.endTurn()
 
     def update(self):
         self.graphics.updateDisplay(self.board, self.selectedLegalMoves, self.selectedPieceCoordinate)
