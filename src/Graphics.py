@@ -29,7 +29,7 @@ class Graphics:
 
         # self.highlight_squares(legal_moves, selected_piece)
         self.drawBoardPieces(board)
-        self.highlightLegalMoves(legalMovements, selectedPiece)
+        self.highlightLegalMoves(legalMovements, selectedPiece, board)
         self.drawBoardKings(board)
 
         if self.message:
@@ -72,14 +72,15 @@ class Graphics:
                     kingPiece = pygame.image.load("../graphics-proto/crown.png")
                     self.screen.blit(kingPiece, (x * 90, y * 90))
 
-    def highlightLegalMoves(self, legalMoves, selectedPiece):
+    def highlightLegalMoves(self, legalMoves, selectedPiece, board):
         if selectedPiece != None:
             goldPiece = pygame.image.load("../graphics-proto/gold.png")
 
             for movePath in legalMoves:
                 # self.screen.blit(goldPiece, (movePath.x * 90, movePath.y * 90))
                 for coordinate in movePath:
-                    self.screen.blit(goldPiece, (coordinate.x * 90, coordinate.y * 90))
+                    if coordinate is not None and not board.location(coordinate).occupant:
+                        self.screen.blit(goldPiece, (coordinate.x * 90, coordinate.y * 90))
 
     def pixelCoords(self, boardCoords):
         """
@@ -103,9 +104,6 @@ class Graphics:
         return Coordinate(pixelCoordinate.x / self.squareSize, pixelCoordinate.y / self.squareSize)
 
     def piecePositionToPixel(self, boardPiece):
-        return True
-
-    def highlightSquares(self, squares, origin):
         return True
 
     def draw_message(self, message):

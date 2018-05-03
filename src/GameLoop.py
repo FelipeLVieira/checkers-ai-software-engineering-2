@@ -45,9 +45,9 @@ class GameLoop:
             if (event.type == pygame.QUIT) or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                 self.terminateGame()
 
-            # Main variables
+            # Click event handling
             if event.type == pygame.MOUSEBUTTONDOWN:
-                print(self.mousePos.x, self.mousePos.y)
+
                 # Get selected square object
                 selectedSquare = self.board.location(self.mousePos)
                 # Get coordinates
@@ -57,18 +57,18 @@ class GameLoop:
                 if self.selectedPieceCoordinate is None and self.board.location(self.mousePos).occupant is not None \
                         and selectedSquare.occupant.color is self.turn:
                     self.selectedPieceCoordinate = self.mousePos
-                    # Get legal moves
-                    self.selectedLegalMoves = self.board.legalMoves(self.turn, selectedSquareCoordinate, False, False)
-                    if len(self.selectedLegalMoves) == 0:
-                        self.selectedPieceCoordinate = None
-                        self.selectedLegalMoves = None
+
+                    # Get legal moves and filter for the longest moves only
+                    self.selectedLegalMoves = self.board.getLongestMoves(
+                        self.board.legalMoves(self.turn, selectedSquareCoordinate, False, False, []))
+                    print(self.selectedLegalMoves)
 
                 # Cancel piece selection
                 elif self.board.location(self.mousePos) == self.board.location(self.selectedPieceCoordinate):
                     self.selectedPieceCoordinate = None
                     self.selectedLegalMoves = None
 
-                # Move piece
+                # Move piece to another position
                 if self.board.location(self.mousePos).occupant is None and self.selectedPieceCoordinate is not None:
                     selectedSquareCoordinate = Coordinate(self.mousePos.x, self.mousePos.y)
                     # List of legal paths
@@ -79,10 +79,17 @@ class GameLoop:
                             self.selectedLegalMoves = None
                             self.endTurn()
                         # Coordinates of a legal path"""
+                    # Move the piece and check (and remove) pieces that it jumped over
                     for movepath in self.selectedLegalMoves:
                         for move in movepath:
                             if move.x == selectedSquareCoordinate.x and move.y == selectedSquareCoordinate.y:
+                                print(self.selectedPieceCoordinate, self.mousePos)
                                 self.board.movePiece(self.selectedPieceCoordinate, self.mousePos)
+                                # Odd moves are moves that jump over pieces
+                                # Call removePiece on even positions
+                                if not len(movepath) % 2 != 0 and len(movepath) > 1:
+                                    for i in range(0, len(movepath), 2):
+                                        self.board.removePiece(movepath[i])
                                 self.selectedPieceCoordinate = None
                                 self.selectedLegalMoves = None
                                 self.endTurn()
