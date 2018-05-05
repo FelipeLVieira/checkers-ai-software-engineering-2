@@ -82,17 +82,18 @@ class GameLoop:
                     # Move the piece and check (and remove) pieces that it jumped over
                     for movepath in self.selectedLegalMoves:
                         for move in movepath:
-                            if move.x == selectedSquareCoordinate.x and move.y == selectedSquareCoordinate.y:
-                                print(self.selectedPieceCoordinate, self.mousePos)
-                                self.board.movePiece(self.selectedPieceCoordinate, self.mousePos)
-                                # Odd moves are moves that jump over pieces
-                                # Call removePiece on even positions
-                                if not len(movepath) % 2 != 0 and len(movepath) > 1:
-                                    for i in range(0, len(movepath), 2):
-                                        self.board.removePiece(movepath[i])
-                                self.selectedPieceCoordinate = None
-                                self.selectedLegalMoves = None
-                                self.endTurn()
+                            if move is not None:
+                                if move.x == selectedSquareCoordinate.x and move.y == selectedSquareCoordinate.y:
+                                    print(self.selectedPieceCoordinate, self.mousePos)
+                                    self.board.movePiece(self.selectedPieceCoordinate, self.mousePos)
+                                    # Odd moves are moves that jump over pieces
+                                    # Call removePiece on even positions
+                                    if not len(movepath) % 2 != 0 and len(movepath) > 1:
+                                        for i in range(0, len(movepath), 2):
+                                            self.board.removePiece(movepath[i])
+                                    self.selectedPieceCoordinate = None
+                                    self.selectedLegalMoves = None
+                                    self.endTurn()
 
     def update(self):
         self.graphics.updateDisplay(self.board, self.selectedLegalMoves, self.selectedPieceCoordinate)

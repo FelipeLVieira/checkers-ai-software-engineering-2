@@ -167,12 +167,13 @@ class Board:
 
     def legalMoves(self, playerTurn, selectedSquareCoordinate, jump, king, alreadyVisited):
 
-        if not self.canMoveOrJump(playerTurn, selectedSquareCoordinate, jump, king, alreadyVisited):
-            return
 
         legalMoves = []
 
         legalMoves = alreadyVisited
+
+        if not self.canMoveOrJump(playerTurn, selectedSquareCoordinate, jump, king, alreadyVisited):
+            return
 
         if not jump:
             if playerTurn is WHITE or king is True:
@@ -204,8 +205,8 @@ class Board:
                 legalMoves.append([self.rel(NORTHWEST, selectedSquareCoordinate)])
                 # Append the piece destination
                 legalMoves[-1] += [self.relIncrement(NORTHWEST, selectedSquareCoordinate)]
-                self.legalMoves(playerTurn, self.relIncrement(NORTHWEST, selectedSquareCoordinate),
-                                True, king, legalMoves)
+                legalMoves[-1] += [self.legalMoves(playerTurn, self.relIncrement(NORTHWEST, selectedSquareCoordinate),
+                                True, king, legalMoves)]
 
             if self.onBoard(self.rel(NORTHEAST, selectedSquareCoordinate)) \
                     and self.onBoard(self.relIncrement(NORTHEAST, selectedSquareCoordinate)) \
@@ -214,8 +215,8 @@ class Board:
                     and playerTurn is not self.location(self.rel(NORTHEAST, selectedSquareCoordinate)).occupant.color:
                 legalMoves.append([self.rel(NORTHEAST, selectedSquareCoordinate)])
                 legalMoves[-1] += [self.relIncrement(NORTHEAST, selectedSquareCoordinate)]
-                self.legalMoves(playerTurn, self.relIncrement(NORTHWEST, selectedSquareCoordinate),
-                                True, king, legalMoves)
+                legalMoves[-1] += [self.legalMoves(playerTurn, self.relIncrement(NORTHWEST, selectedSquareCoordinate),
+                                True, king, legalMoves)]
 
             if self.onBoard(self.rel(SOUTHWEST, selectedSquareCoordinate)) \
                     and self.onBoard(self.relIncrement(SOUTHWEST, selectedSquareCoordinate)) \
@@ -224,8 +225,8 @@ class Board:
                     and playerTurn is not self.location(self.rel(SOUTHWEST, selectedSquareCoordinate)).occupant.color:
                 legalMoves.append([self.rel(SOUTHWEST, selectedSquareCoordinate)])
                 legalMoves[-1] += [self.relIncrement(SOUTHWEST, selectedSquareCoordinate)]
-                self.legalMoves(playerTurn, self.relIncrement(NORTHWEST, selectedSquareCoordinate),
-                                True, king, legalMoves)
+                legalMoves[-1] += [self.legalMoves(playerTurn, self.relIncrement(NORTHWEST, selectedSquareCoordinate),
+                                True, king, legalMoves)]
 
             if self.onBoard(self.rel(SOUTHEAST, selectedSquareCoordinate)) \
                     and self.onBoard(self.relIncrement(SOUTHEAST, selectedSquareCoordinate)) \
@@ -234,11 +235,11 @@ class Board:
                     and playerTurn is not self.location(self.rel(SOUTHEAST, selectedSquareCoordinate)).occupant.color:
                 legalMoves.append([self.rel(SOUTHEAST, selectedSquareCoordinate)])
                 legalMoves[-1] += [self.relIncrement(SOUTHEAST, selectedSquareCoordinate)]
-                self.legalMoves(playerTurn, self.relIncrement(NORTHWEST, selectedSquareCoordinate),
-                                True, king, legalMoves)
+                legalMoves[-1] += [self.legalMoves(playerTurn, self.relIncrement(NORTHWEST, selectedSquareCoordinate),
+                                True, king, legalMoves)]
 
+        # Jumped at least once already
         if jump:
-            # Check if there's a piece to jump over after jump other(s) before
             if self.onBoard(self.rel(NORTHWEST, selectedSquareCoordinate)) \
                     and self.onBoard(self.relIncrement(NORTHWEST, selectedSquareCoordinate)) \
                     and self.location(self.rel(NORTHWEST, selectedSquareCoordinate)).occupant is not None \
@@ -246,8 +247,8 @@ class Board:
                     and playerTurn is not self.location(self.rel(NORTHWEST, selectedSquareCoordinate)).occupant.color:
                 legalMoves[-1] += [self.rel(NORTHWEST, selectedSquareCoordinate)]
                 legalMoves[-1] += [self.relIncrement(NORTHWEST, selectedSquareCoordinate)]
-                self.legalMoves(playerTurn, self.relIncrement(NORTHWEST, selectedSquareCoordinate),
-                                True, king, legalMoves)
+                legalMoves[-1] += [self.legalMoves(playerTurn, self.relIncrement(NORTHWEST, selectedSquareCoordinate),
+                                True, king, legalMoves)]
 
             if self.onBoard(self.rel(NORTHEAST, selectedSquareCoordinate)) \
                     and self.onBoard(self.relIncrement(NORTHEAST, selectedSquareCoordinate)) \
@@ -256,8 +257,8 @@ class Board:
                     and playerTurn is not self.location(self.rel(NORTHEAST, selectedSquareCoordinate)).occupant.color:
                 legalMoves[-1] += [self.rel(NORTHEAST, selectedSquareCoordinate)]
                 legalMoves[-1] += [self.relIncrement(NORTHEAST, selectedSquareCoordinate)]
-                self.legalMoves(playerTurn, self.relIncrement(NORTHWEST, selectedSquareCoordinate),
-                                True, king, legalMoves)
+                legalMoves[-1] += [self.legalMoves(playerTurn, self.relIncrement(NORTHWEST, selectedSquareCoordinate),
+                                True, king, legalMoves)]
 
             if self.onBoard(self.rel(SOUTHWEST, selectedSquareCoordinate)) \
                     and self.onBoard(self.relIncrement(SOUTHWEST, selectedSquareCoordinate)) \
@@ -266,8 +267,8 @@ class Board:
                     and playerTurn is not self.location(self.rel(SOUTHWEST, selectedSquareCoordinate)).occupant.color:
                 legalMoves[-1] += [self.rel(SOUTHWEST, selectedSquareCoordinate)]
                 legalMoves[-1] += [self.relIncrement(SOUTHWEST, selectedSquareCoordinate)]
-                self.legalMoves(playerTurn, self.relIncrement(NORTHWEST, selectedSquareCoordinate),
-                                True, king, legalMoves)
+                legalMoves[-1] += [self.legalMoves(playerTurn, self.relIncrement(NORTHWEST, selectedSquareCoordinate),
+                                True, king, legalMoves)]
 
             if self.onBoard(self.rel(SOUTHEAST, selectedSquareCoordinate)) \
                     and self.onBoard(self.relIncrement(SOUTHEAST, selectedSquareCoordinate)) \
@@ -276,8 +277,8 @@ class Board:
                     and playerTurn is not self.location(self.rel(SOUTHEAST, selectedSquareCoordinate)).occupant.color:
                 legalMoves[-1] += [self.rel(SOUTHEAST, selectedSquareCoordinate)]
                 legalMoves[-1] += [self.relIncrement(SOUTHEAST, selectedSquareCoordinate)]
-                self.legalMoves(playerTurn, self.relIncrement(NORTHWEST, selectedSquareCoordinate),
-                                True, king, legalMoves)
+                legalMoves[-1] += [self.legalMoves(playerTurn, self.relIncrement(NORTHWEST, selectedSquareCoordinate),
+                                True, king, legalMoves)]
 
         return legalMoves
 
