@@ -108,7 +108,7 @@ class Board:
             return
         return self.matrix[coordinate.x][coordinate.y]
 
-    def canMoveOrJump(self, playerTurn, selectedSquareCoordinate, jump, king):
+    def canMoveOrJumpCount(self, playerTurn, selectedSquareCoordinate, jump, king):
 
         canMoveorJump = 0
 
@@ -171,7 +171,6 @@ class Board:
     def legalMoves(self, playerTurn, selectedSquareCoordinate, jump, king, alreadyVisited):
 
         legalMoves = []
-
         legalMoves = alreadyVisited
 
         if alreadyVisited is not None:
@@ -181,9 +180,9 @@ class Board:
                     or self.relIncrement(SOUTHEAST, selectedSquareCoordinate) in alreadyVisited:
                 return
 
-        canMoveOrJump = self.canMoveOrJump(playerTurn, selectedSquareCoordinate, jump, king)
-        print("canMoveOrJump = ", canMoveOrJump)
-        if canMoveOrJump == 0:
+        canMoveOrJumpCount = self.canMoveOrJumpCount(playerTurn, selectedSquareCoordinate, jump, king)
+        print("canMoveOrJump = ", canMoveOrJumpCount)
+        if canMoveOrJumpCount == 0:
             return
 
         if not jump:
@@ -218,7 +217,7 @@ class Board:
             if self.canJumpDirection(selectedSquareCoordinate, playerTurn, NORTHEAST):
                 legalMoves.append([self.rel(NORTHEAST, selectedSquareCoordinate)])
                 legalMoves[-1] += [self.relIncrement(NORTHEAST, selectedSquareCoordinate)]
-                legalMoves[-1] += [self.legalMoves(playerTurn, self.relIncrement(NORTHWEST, selectedSquareCoordinate),
+                legalMoves[-1] += [self.legalMoves(playerTurn, self.relIncrement(NORTHEAST, selectedSquareCoordinate),
                                                    True, king, legalMoves[-1])]
 
             if self.canJumpDirection(selectedSquareCoordinate, playerTurn, SOUTHWEST):
@@ -235,41 +234,42 @@ class Board:
 
         # Jumped at least once already
         if jump:
-            if self.onBoard(self.rel(NORTHWEST, selectedSquareCoordinate)) \
-                    and self.onBoard(self.relIncrement(NORTHWEST, selectedSquareCoordinate)) \
-                    and self.location(self.rel(NORTHWEST, selectedSquareCoordinate)).occupant is not None \
-                    and self.location(self.relIncrement(NORTHWEST, selectedSquareCoordinate)).occupant is None \
-                    and playerTurn is not self.location(self.rel(NORTHWEST, selectedSquareCoordinate)).occupant.color:
-                legalMoves[-1] += [self.relIncrement(NORTHWEST, selectedSquareCoordinate)]
-                legalMoves[-1] += [self.legalMoves(playerTurn, self.relIncrement(NORTHWEST, selectedSquareCoordinate),
-                                                   True, king, legalMoves[-1])]
 
-            if self.onBoard(self.rel(NORTHEAST, selectedSquareCoordinate)) \
-                    and self.onBoard(self.relIncrement(NORTHEAST, selectedSquareCoordinate)) \
-                    and self.location(self.rel(NORTHEAST, selectedSquareCoordinate)).occupant is not None \
-                    and self.location(self.relIncrement(NORTHEAST, selectedSquareCoordinate)).occupant is None \
-                    and playerTurn is not self.location(self.rel(NORTHEAST, selectedSquareCoordinate)).occupant.color:
-                legalMoves[-1] += [self.relIncrement(NORTHEAST, selectedSquareCoordinate)]
-                legalMoves[-1] += [self.legalMoves(playerTurn, self.relIncrement(NORTHWEST, selectedSquareCoordinate),
-                                                   True, king, legalMoves[-1])]
+            print("recursive legalMoves =", legalMoves)
 
-            if self.onBoard(self.rel(SOUTHWEST, selectedSquareCoordinate)) \
-                    and self.onBoard(self.relIncrement(SOUTHWEST, selectedSquareCoordinate)) \
-                    and self.location(self.rel(SOUTHWEST, selectedSquareCoordinate)).occupant is not None \
-                    and self.location(self.relIncrement(SOUTHWEST, selectedSquareCoordinate)).occupant is None \
-                    and playerTurn is not self.location(self.rel(SOUTHWEST, selectedSquareCoordinate)).occupant.color:
-                legalMoves[-1] += [self.relIncrement(SOUTHWEST, selectedSquareCoordinate)]
+            if self.canJumpDirection(selectedSquareCoordinate, playerTurn, NORTHWEST):
+                # It should be replicated based in number of
+                # canMoveOrJumpCount() return testing a unique move path for now
+                legalMoves[-1]([self.rel(NORTHWEST, selectedSquareCoordinate)])
+                print("recursive NORTHWEST before = ", legalMoves[-1])
+                legalMoves[-1] = [legalMoves[-1]] + [self.relIncrement(NORTHWEST, selectedSquareCoordinate)]
+                print("recursive NORTHWEST after = ", legalMoves[-1])
                 legalMoves[-1] += [self.legalMoves(playerTurn, self.relIncrement(NORTHWEST, selectedSquareCoordinate),
-                                                   True, king, legalMoves[-1])]
+                                                   True, king, legalMoves)]
 
-            if self.onBoard(self.rel(SOUTHEAST, selectedSquareCoordinate)) \
-                    and self.onBoard(self.relIncrement(SOUTHEAST, selectedSquareCoordinate)) \
-                    and self.location(self.rel(SOUTHEAST, selectedSquareCoordinate)).occupant is not None \
-                    and self.location(self.relIncrement(SOUTHEAST, selectedSquareCoordinate)).occupant is None \
-                    and playerTurn is not self.location(self.rel(SOUTHEAST, selectedSquareCoordinate)).occupant.color:
-                legalMoves[-1] += [self.relIncrement(SOUTHEAST, selectedSquareCoordinate)]
-                legalMoves[-1] += [self.legalMoves(playerTurn, self.relIncrement(NORTHWEST, selectedSquareCoordinate),
-                                                   True, king, legalMoves[-1])]
+            if self.canJumpDirection(selectedSquareCoordinate, playerTurn, NORTHEAST):
+                legalMoves[-1]([self.rel(NORTHEAST, selectedSquareCoordinate)])
+                print("legalMoves[-1] NORTHWEST before = ", legalMoves[-1])
+                legalMoves[-1] = [legalMoves[-1]] + [self.relIncrement(NORTHEAST, selectedSquareCoordinate)]
+                print("legalMoves[-1] NORTHWEST after = ", legalMoves[-1])
+                legalMoves[-1] += [self.legalMoves(playerTurn, self.relIncrement(NORTHEAST, selectedSquareCoordinate),
+                                                   True, king, legalMoves)]
+
+            if self.canJumpDirection(selectedSquareCoordinate, playerTurn, SOUTHWEST):
+                legalMoves[-1]([self.rel(SOUTHWEST, selectedSquareCoordinate)])
+                print("legalMoves[-1] SOUTHWEST before = ", legalMoves[-1])
+                legalMoves[-1] = [legalMoves[-1]] + [self.relIncrement(SOUTHWEST, selectedSquareCoordinate)]
+                print("legalMoves[-1] SOUTHWEST after = ", legalMoves[-1])
+                legalMoves[-1] += [self.legalMoves(playerTurn, self.relIncrement(SOUTHWEST, selectedSquareCoordinate),
+                                                   True, king, legalMoves)]
+
+            if self.canJumpDirection(selectedSquareCoordinate, playerTurn, SOUTHEAST):
+                legalMoves[-1]([self.rel(SOUTHEAST, selectedSquareCoordinate)])
+                print("legalMoves[-1] SOUTHEAST before = ", legalMoves[-1])
+                legalMoves[-1] = [legalMoves[-1]] + [self.relIncrement(SOUTHEAST, selectedSquareCoordinate)]
+                print("legalMoves[-1] SOUTHEAST after = ", legalMoves[-1])
+                legalMoves[-1] += [self.legalMoves(playerTurn, self.relIncrement(SOUTHEAST, selectedSquareCoordinate),
+                                                   True, king, legalMoves)]
 
         return self.filterNoneMoves(legalMoves)
 
