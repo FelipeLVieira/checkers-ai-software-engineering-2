@@ -84,7 +84,6 @@ class GameLoop:
                         for move in movepath:
                             if move is not None:
                                 if move.x == selectedSquareCoordinate.x and move.y == selectedSquareCoordinate.y:
-                                    print(self.selectedPieceCoordinate, self.mousePos)
                                     self.board.movePiece(self.selectedPieceCoordinate, self.mousePos)
                                     # Odd moves are moves that jump over pieces
                                     # Call removePiece on even positions
