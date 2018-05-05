@@ -110,25 +110,7 @@ class Board:
 
     def canMoveOrJump(self, playerTurn, selectedSquareCoordinate, jump, king):
 
-        canMoveorJump = False
-
-        # Check if the piece never jumped before
-        if not jump:
-            if playerTurn is WHITE or king is True:
-                # Check if there is a empty square to move forward
-                if self.onBoard(self.rel(NORTHWEST, selectedSquareCoordinate)):
-                    if self.location(self.rel(NORTHWEST, selectedSquareCoordinate)).occupant is None:
-                        canMoveorJump = True
-                if self.onBoard(self.rel(NORTHEAST, selectedSquareCoordinate)):
-                    if self.location(self.rel(NORTHEAST, selectedSquareCoordinate)).occupant is None:
-                        canMoveorJump = True
-            elif playerTurn is RED or king is True:
-                if self.onBoard(self.rel(SOUTHWEST, selectedSquareCoordinate)):
-                    if self.location(self.rel(SOUTHWEST, selectedSquareCoordinate)).occupant is None:
-                        canMoveorJump = True
-                if self.onBoard(self.rel(SOUTHEAST, selectedSquareCoordinate)):
-                    if self.location(self.rel(SOUTHEAST, selectedSquareCoordinate)).occupant is None:
-                        canMoveorJump = True
+        canMoveorJump = 0
 
         # Otherwise, any piece can be checked if it's able to jump an enemy
         if self.onBoard(self.rel(NORTHWEST, selectedSquareCoordinate)) \
@@ -136,30 +118,55 @@ class Board:
                 and self.location(self.rel(NORTHWEST, selectedSquareCoordinate)).occupant is not None \
                 and self.location(self.relIncrement(NORTHWEST, selectedSquareCoordinate)).occupant is None \
                 and playerTurn is not self.location(self.rel(NORTHWEST, selectedSquareCoordinate)).occupant.color:
-            canMoveorJump = True
+            canMoveorJump += 1
 
         if self.onBoard(self.rel(NORTHEAST, selectedSquareCoordinate)) \
                 and self.onBoard(self.relIncrement(NORTHEAST, selectedSquareCoordinate)) \
                 and self.location(self.rel(NORTHEAST, selectedSquareCoordinate)).occupant is not None \
                 and self.location(self.relIncrement(NORTHEAST, selectedSquareCoordinate)).occupant is None \
                 and playerTurn is not self.location(self.rel(NORTHEAST, selectedSquareCoordinate)).occupant.color:
-            canMoveorJump = True
+            canMoveorJump += 1
 
         if self.onBoard(self.rel(SOUTHWEST, selectedSquareCoordinate)) \
                 and self.onBoard(self.relIncrement(SOUTHWEST, selectedSquareCoordinate)) \
                 and self.location(self.rel(SOUTHWEST, selectedSquareCoordinate)).occupant is not None \
                 and self.location(self.relIncrement(SOUTHWEST, selectedSquareCoordinate)).occupant is None \
                 and playerTurn is not self.location(self.rel(SOUTHWEST, selectedSquareCoordinate)).occupant.color:
-            canMoveorJump = True
+            canMoveorJump += 1
 
         if self.onBoard(self.rel(SOUTHEAST, selectedSquareCoordinate)) \
                 and self.onBoard(self.relIncrement(SOUTHEAST, selectedSquareCoordinate)) \
                 and self.location(self.rel(SOUTHEAST, selectedSquareCoordinate)).occupant is not None \
                 and self.location(self.relIncrement(SOUTHEAST, selectedSquareCoordinate)).occupant is None \
                 and playerTurn is not self.location(self.rel(SOUTHEAST, selectedSquareCoordinate)).occupant.color:
-            canMoveorJump = True
+            canMoveorJump += 1
+
+        # Check if the piece never jumped before
+        if not jump and canMoveorJump == 0:
+            if playerTurn is WHITE or king is True:
+                # Check if there is a empty square to move forward
+                if self.onBoard(self.rel(NORTHWEST, selectedSquareCoordinate)):
+                    if self.location(self.rel(NORTHWEST, selectedSquareCoordinate)).occupant is None:
+                        canMoveorJump += 1
+                if self.onBoard(self.rel(NORTHEAST, selectedSquareCoordinate)):
+                    if self.location(self.rel(NORTHEAST, selectedSquareCoordinate)).occupant is None:
+                        canMoveorJump += 1
+            elif playerTurn is RED or king is True:
+                if self.onBoard(self.rel(SOUTHWEST, selectedSquareCoordinate)):
+                    if self.location(self.rel(SOUTHWEST, selectedSquareCoordinate)).occupant is None:
+                        canMoveorJump += 1
+                if self.onBoard(self.rel(SOUTHEAST, selectedSquareCoordinate)):
+                    if self.location(self.rel(SOUTHEAST, selectedSquareCoordinate)).occupant is None:
+                        canMoveorJump += 1
 
         return canMoveorJump
+
+    def canJumpDirection(self, coordinate, playerTurn, DIRECTION):
+        return self.onBoard(self.rel(DIRECTION, coordinate)) \
+               and self.onBoard(self.relIncrement(DIRECTION, coordinate)) \
+               and self.location(self.rel(DIRECTION, coordinate)).occupant is not None \
+               and self.location(self.relIncrement(DIRECTION, coordinate)).occupant is None \
+               and playerTurn is not self.location(self.rel(DIRECTION, coordinate)).occupant.color
 
     def legalMoves(self, playerTurn, selectedSquareCoordinate, jump, king, alreadyVisited):
 
@@ -174,7 +181,9 @@ class Board:
                     or self.relIncrement(SOUTHEAST, selectedSquareCoordinate) in alreadyVisited:
                 return
 
-        if not self.canMoveOrJump(playerTurn, selectedSquareCoordinate, jump, king):
+        canMoveOrJump = self.canMoveOrJump(playerTurn, selectedSquareCoordinate, jump, king)
+        print("canMoveOrJump = ", canMoveOrJump)
+        if canMoveOrJump == 0:
             return
 
         if not jump:
@@ -198,11 +207,7 @@ class Board:
             # Any peace can jump over an opponent for any position
 
             # Check if there's a piece to jump over
-            if self.onBoard(self.rel(NORTHWEST, selectedSquareCoordinate)) \
-                    and self.onBoard(self.relIncrement(NORTHWEST, selectedSquareCoordinate)) \
-                    and self.location(self.rel(NORTHWEST, selectedSquareCoordinate)).occupant is not None \
-                    and self.location(self.relIncrement(NORTHWEST, selectedSquareCoordinate)).occupant is None \
-                    and playerTurn is not self.location(self.rel(NORTHWEST, selectedSquareCoordinate)).occupant.color:
+            if self.canJumpDirection(selectedSquareCoordinate, playerTurn, NORTHWEST):
                 # Append the piece's coordinate that will be jumped over
                 legalMoves.append([self.rel(NORTHWEST, selectedSquareCoordinate)])
                 # Append the piece destination
@@ -210,34 +215,22 @@ class Board:
                 legalMoves[-1] += [self.legalMoves(playerTurn, self.relIncrement(NORTHWEST, selectedSquareCoordinate),
                                                    True, king, legalMoves[-1])]
 
-            if self.onBoard(self.rel(NORTHEAST, selectedSquareCoordinate)) \
-                    and self.onBoard(self.relIncrement(NORTHEAST, selectedSquareCoordinate)) \
-                    and self.location(self.rel(NORTHEAST, selectedSquareCoordinate)).occupant is not None \
-                    and self.location(self.relIncrement(NORTHEAST, selectedSquareCoordinate)).occupant is None \
-                    and playerTurn is not self.location(self.rel(NORTHEAST, selectedSquareCoordinate)).occupant.color:
+            if self.canJumpDirection(selectedSquareCoordinate, playerTurn, NORTHEAST):
                 legalMoves.append([self.rel(NORTHEAST, selectedSquareCoordinate)])
                 legalMoves[-1] += [self.relIncrement(NORTHEAST, selectedSquareCoordinate)]
                 legalMoves[-1] += [self.legalMoves(playerTurn, self.relIncrement(NORTHWEST, selectedSquareCoordinate),
                                                    True, king, legalMoves[-1])]
 
-            if self.onBoard(self.rel(SOUTHWEST, selectedSquareCoordinate)) \
-                    and self.onBoard(self.relIncrement(SOUTHWEST, selectedSquareCoordinate)) \
-                    and self.location(self.rel(SOUTHWEST, selectedSquareCoordinate)).occupant is not None \
-                    and self.location(self.relIncrement(SOUTHWEST, selectedSquareCoordinate)).occupant is None \
-                    and playerTurn is not self.location(self.rel(SOUTHWEST, selectedSquareCoordinate)).occupant.color:
+            if self.canJumpDirection(selectedSquareCoordinate, playerTurn, SOUTHWEST):
                 legalMoves.append([self.rel(SOUTHWEST, selectedSquareCoordinate)])
                 legalMoves[-1] += [self.relIncrement(SOUTHWEST, selectedSquareCoordinate)]
-                legalMoves[-1] += [self.legalMoves(playerTurn, self.relIncrement(NORTHWEST, selectedSquareCoordinate),
+                legalMoves[-1] += [self.legalMoves(playerTurn, self.relIncrement(SOUTHWEST, selectedSquareCoordinate),
                                                    True, king, legalMoves[-1])]
 
-            if self.onBoard(self.rel(SOUTHEAST, selectedSquareCoordinate)) \
-                    and self.onBoard(self.relIncrement(SOUTHEAST, selectedSquareCoordinate)) \
-                    and self.location(self.rel(SOUTHEAST, selectedSquareCoordinate)).occupant is not None \
-                    and self.location(self.relIncrement(SOUTHEAST, selectedSquareCoordinate)).occupant is None \
-                    and playerTurn is not self.location(self.rel(SOUTHEAST, selectedSquareCoordinate)).occupant.color:
+            if self.canJumpDirection(selectedSquareCoordinate, playerTurn, SOUTHEAST):
                 legalMoves.append([self.rel(SOUTHEAST, selectedSquareCoordinate)])
                 legalMoves[-1] += [self.relIncrement(SOUTHEAST, selectedSquareCoordinate)]
-                legalMoves[-1] += [self.legalMoves(playerTurn, self.relIncrement(NORTHWEST, selectedSquareCoordinate),
+                legalMoves[-1] += [self.legalMoves(playerTurn, self.relIncrement(SOUTHEAST, selectedSquareCoordinate),
                                                    True, king, legalMoves[-1])]
 
         # Jumped at least once already

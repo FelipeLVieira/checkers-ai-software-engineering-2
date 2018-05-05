@@ -62,8 +62,6 @@ class GameLoop:
                     self.selectedLegalMoves = self.board.getLongestMoves(
                         self.board.legalMoves(self.turn, selectedSquareCoordinate, False, False, []))
 
-
-
                     print(self.selectedLegalMoves)
 
                 # Cancel piece selection
