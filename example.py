@@ -322,6 +322,8 @@ class Board:
         Takes a set of coordinates as arguments and returns self.matrix[x][y]
         This can be faster than writing something like self.matrix[coords[0]][coords[1]]
         """
+        if coordinate is None
+            return
 
         return self.matrix[coordinate.x][coordinate.y]
 
