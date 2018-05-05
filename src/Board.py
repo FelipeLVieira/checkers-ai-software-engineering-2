@@ -278,11 +278,14 @@ class Board:
                 legalMoves[-1] += [self.legalMoves(playerTurn, self.relIncrement(NORTHWEST, selectedSquareCoordinate),
                                                    True, king, legalMoves[-1])]
 
-        return legalMoves
+        return self.filterNoneMoves(legalMoves)
 
     def getLongestMoves(self, legalMoves):
 
         longestMoves = [[]]
+
+        if legalMoves is None:
+            return
 
         # Get the largest move
         for legalMove in legalMoves:
@@ -295,6 +298,15 @@ class Board:
                 longestMoves.append(legalMove)
 
         return longestMoves
+
+    def filterNoneMoves(self, moves):
+        for move in moves:
+            if None in move:
+                move.pop()
+        return moves
+
+    def exists(it):
+        return (it is not None)
 
     def removePiece(self, coordinate):
         """

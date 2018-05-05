@@ -73,7 +73,7 @@ class Graphics:
                     self.screen.blit(kingPiece, (x * 90, y * 90))
 
     def highlightLegalMoves(self, legalMoves, selectedPiece, board):
-        if selectedPiece != None:
+        if selectedPiece is not None and legalMoves is not None:
             goldPiece = pygame.image.load("../graphics-proto/gold.png")
 
             for movePath in legalMoves:

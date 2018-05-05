@@ -61,6 +61,9 @@ class GameLoop:
                     # Get legal moves and filter for the longest moves only
                     self.selectedLegalMoves = self.board.getLongestMoves(
                         self.board.legalMoves(self.turn, selectedSquareCoordinate, False, False, []))
+
+
+
                     print(self.selectedLegalMoves)
 
                 # Cancel piece selection
@@ -69,7 +72,8 @@ class GameLoop:
                     self.selectedLegalMoves = None
 
                 # Move piece to another position
-                if self.board.location(self.mousePos).occupant is None and self.selectedPieceCoordinate is not None:
+                if self.board.location(self.mousePos).occupant is None and self.selectedPieceCoordinate is not None \
+                        and self.selectedLegalMoves is not None:
                     selectedSquareCoordinate = Coordinate(self.mousePos.x, self.mousePos.y)
                     # List of legal paths
                     """for movepath in self.selectedLegalMoves:
