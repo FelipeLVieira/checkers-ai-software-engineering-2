@@ -171,19 +171,13 @@ class Graphics:
 class Graphic:
     """Implements a graphic object that caches an image surface."""
     surface = None
-    # This mutex is used for the Motion class, to assure that it's only being
-    # moved by one Motion object.
-    mutex = None
 
     def __init__(self, path):
         self.surface = pygame.image.load(path)
         self.mutex = False
 
-    def blitat(self, surface, coordsOrX, y = None):
+    def blitAt(self, surface, coords):
         """Blits this graphic's surface over another surface."""
-        if y is not None:
-            coordsOrX = (coordsOrX, y)
-
         surface.blit(self.surface, coordsOrX)
 
     def update(self):
