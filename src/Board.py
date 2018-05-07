@@ -2,8 +2,6 @@ import pygame
 
 from Constants import *
 
-from src.Graphics import Graphics
-
 
 class Board:
     def __init__(self):
@@ -237,7 +235,7 @@ class Board:
                 # Append the piece destination
                 move += [self.afterNextCoordinate(NORTHWEST, currentCoordinate)]
                 aux = self.legalMoves(playerTurn, self.afterNextCoordinate(NORTHWEST, currentCoordinate),
-                                      True, currentCoordinate, move)
+                                              True, currentCoordinate, move)
                 if len(aux) < 2:
                     legalMoves.append(aux[0])
                 else:
@@ -247,7 +245,7 @@ class Board:
                 move = [self.nextCoordinate(NORTHEAST, currentCoordinate)]
                 move += [self.afterNextCoordinate(NORTHEAST, currentCoordinate)]
                 aux = self.legalMoves(playerTurn, self.afterNextCoordinate(NORTHEAST, currentCoordinate),
-                                      True, currentCoordinate, move)
+                                              True, currentCoordinate, move)
                 if len(aux) < 2:
                     legalMoves.append(aux[0])
                 else:
@@ -257,7 +255,7 @@ class Board:
                 move = [self.nextCoordinate(SOUTHWEST, currentCoordinate)]
                 move += [self.afterNextCoordinate(SOUTHWEST, currentCoordinate)]
                 aux = self.legalMoves(playerTurn, self.afterNextCoordinate(SOUTHWEST, currentCoordinate),
-                                      True, currentCoordinate, move)
+                                              True, currentCoordinate, move)
                 if len(aux) < 2:
                     legalMoves.append(aux[0])
                 else:
@@ -446,28 +444,6 @@ class Board:
                 for coordinate in movePath:
                     if coordinate is not None and not self.location(coordinate).occupant:
                         screen.blit(goldPiece, (coordinate.x * 90, coordinate.y * 90))
-
-    def pixelCoords(self, boardCoords, squareSize, pieceSize):
-        """
-            Takes in a tuple of board coordinates (x,y)
-            and returns the pixel coordinates of the center of the square at that location.
-        """
-        return (
-            boardCoords[0] * Graphics().squareSize + Graphics().pieceSize,
-            boardCoords[1] * Graphics().squareSize + Graphics().pieceSize)
-
-    def boardCoords(self, pixelCoordinate):
-        """
-           Does the reverse of pixel_coords(). Takes in a tuple of of pixel coordinates and returns what square they are in.
-        """
-        return Coordinate(int(pixelCoordinate[0] / Graphics().squareSize),
-                          int(pixelCoordinate[1] / Graphics().squareSize))
-
-    def pixelToSquarePosition(self, pixelCoordinate):
-        """
-            Does the reverse of pixel_coords(). Takes in a tuple of of pixel coordinates and returns what square they are in.
-        """
-        return Coordinate(pixelCoordinate.x / Graphics().squareSize, pixelCoordinate.y / Graphics().squareSize)
 
 
 class Coordinate:
