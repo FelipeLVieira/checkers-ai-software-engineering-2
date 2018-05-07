@@ -233,25 +233,25 @@ class Board:
                 # Append the piece destination
                 move += [self.afterNextCoordinate(NORTHWEST, currentCoordinate)]
                 legalMoves += self.legalMoves(playerTurn, self.afterNextCoordinate(NORTHWEST, currentCoordinate),
-                                                  True, currentCoordinate, move)
+                                              True, currentCoordinate, move)
 
             if self.canJumpDirection(currentCoordinate, playerTurn, NORTHEAST, previous, move):
                 move = [self.nextCoordinate(NORTHEAST, currentCoordinate)]
                 move += [self.afterNextCoordinate(NORTHEAST, currentCoordinate)]
                 legalMoves += self.legalMoves(playerTurn, self.afterNextCoordinate(NORTHEAST, currentCoordinate),
-                                                  True, currentCoordinate, move)
+                                              True, currentCoordinate, move)
 
             if self.canJumpDirection(currentCoordinate, playerTurn, SOUTHWEST, previous, move):
                 move = [self.nextCoordinate(SOUTHWEST, currentCoordinate)]
                 move += [self.afterNextCoordinate(SOUTHWEST, currentCoordinate)]
                 legalMoves += self.legalMoves(playerTurn, self.afterNextCoordinate(SOUTHWEST, currentCoordinate),
-                                                  True, currentCoordinate, move)
+                                              True, currentCoordinate, move)
 
             if self.canJumpDirection(currentCoordinate, playerTurn, SOUTHEAST, previous, move):
                 move = [self.nextCoordinate(SOUTHEAST, currentCoordinate)]
                 move += [self.afterNextCoordinate(SOUTHEAST, currentCoordinate)]
                 legalMoves += self.legalMoves(playerTurn, self.afterNextCoordinate(SOUTHEAST, currentCoordinate),
-                                                  True, currentCoordinate, move)
+                                              True, currentCoordinate, move)
 
         # Jumped at least once already
         # LegalMoves is temporally a simple array when enters here
@@ -266,37 +266,50 @@ class Board:
                 aux += [self.nextCoordinate(NORTHWEST, currentCoordinate)]
                 aux += [self.afterNextCoordinate(NORTHWEST, currentCoordinate)]
                 aux = self.legalMoves(playerTurn, self.afterNextCoordinate(NORTHWEST, currentCoordinate),
-                                       True, currentCoordinate, aux)
+                                      True, currentCoordinate, aux)
                 print("aux NORTHWEST", aux)
-                legalMoves.append(aux)
+                if len(aux) < 2:
+                    legalMoves.append(aux[0])
+                else:
+                    legalMoves.append(aux)
 
             if self.canJumpDirection(currentCoordinate, playerTurn, NORTHEAST, previous, move):
                 aux = move
                 aux += [self.nextCoordinate(NORTHEAST, currentCoordinate)]
                 aux += [self.afterNextCoordinate(NORTHEAST, currentCoordinate)]
                 aux = self.legalMoves(playerTurn, self.afterNextCoordinate(NORTHEAST, currentCoordinate),
-                                       True, currentCoordinate, aux)
+                                      True, currentCoordinate, aux)
                 print("aux NORTHEAST", aux)
-                legalMoves.append(aux)
+                if len(aux) < 2:
+                    legalMoves.append(aux[0])
+                else:
+                    legalMoves.append(aux)
 
             if self.canJumpDirection(currentCoordinate, playerTurn, SOUTHWEST, previous, move):
                 aux = move
                 aux += [self.nextCoordinate(SOUTHWEST, currentCoordinate)]
                 aux += [self.afterNextCoordinate(SOUTHWEST, currentCoordinate)]
                 aux = self.legalMoves(playerTurn, self.afterNextCoordinate(SOUTHWEST, currentCoordinate),
-                                       True, currentCoordinate, aux)
+                                      True, currentCoordinate, aux)
                 print("aux SOUTHWEST", aux)
-                legalMoves.append(aux)
+                if len(aux) < 2:
+                    legalMoves.append(aux[0])
+                else:
+                    legalMoves.append(aux)
 
             if self.canJumpDirection(currentCoordinate, playerTurn, SOUTHEAST, previous, move):
                 aux = move
                 aux += [self.nextCoordinate(SOUTHEAST, currentCoordinate)]
                 aux += [self.afterNextCoordinate(SOUTHEAST, currentCoordinate)]
                 aux = self.legalMoves(playerTurn, self.afterNextCoordinate(SOUTHEAST, currentCoordinate),
-                                       True, currentCoordinate, aux)
+                                      True, currentCoordinate, aux)
                 print("aux SOUTHEAST", aux)
-                legalMoves.append(aux)
-                print("legalMoves ", legalMoves)
+                if len(aux) < 2:
+                    legalMoves.append(aux[0])
+                else:
+                    legalMoves.append(aux)
+
+        print("legalMoves ", legalMoves)
 
         return self.filterMoves(legalMoves)
 
