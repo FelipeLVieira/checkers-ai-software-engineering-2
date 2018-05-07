@@ -1,5 +1,6 @@
 from Constants import *
 
+
 class Board:
     def __init__(self):
         self.matrix = self.newBoard()
@@ -114,7 +115,7 @@ class Board:
                 return True
         return False
 
-    def canMoveOrJumpCount(self, playerTurn, currentCoordinate, jump, move):
+    def canMoveOrJumpCount(self, playerTurn, currentCoordinate, jump, previous, move):
 
         possibleJumpsCount = 0
 
@@ -123,6 +124,7 @@ class Board:
                 and self.onBoard(self.afterNextCoordinate(NORTHWEST, currentCoordinate)) \
                 and self.location(self.nextCoordinate(NORTHWEST, currentCoordinate)).occupant is not None \
                 and self.location(self.afterNextCoordinate(NORTHWEST, currentCoordinate)).occupant is None \
+                and self.afterNextCoordinate(NORTHWEST, currentCoordinate) is not previous \
                 and not self.moveContainsCoordinate(self.afterNextCoordinate(NORTHWEST, currentCoordinate), move) \
                 and playerTurn is not self.location(
             self.nextCoordinate(NORTHWEST, currentCoordinate)).occupant.color:
@@ -132,6 +134,7 @@ class Board:
                 and self.onBoard(self.afterNextCoordinate(NORTHEAST, currentCoordinate)) \
                 and self.location(self.nextCoordinate(NORTHEAST, currentCoordinate)).occupant is not None \
                 and self.location(self.afterNextCoordinate(NORTHEAST, currentCoordinate)).occupant is None \
+                and self.afterNextCoordinate(NORTHEAST, currentCoordinate) is not previous \
                 and not self.moveContainsCoordinate(self.afterNextCoordinate(NORTHEAST, currentCoordinate), move) \
                 and playerTurn is not self.location(
             self.nextCoordinate(NORTHEAST, currentCoordinate)).occupant.color:
@@ -141,6 +144,7 @@ class Board:
                 and self.onBoard(self.afterNextCoordinate(SOUTHWEST, currentCoordinate)) \
                 and self.location(self.nextCoordinate(SOUTHWEST, currentCoordinate)).occupant is not None \
                 and self.location(self.afterNextCoordinate(SOUTHWEST, currentCoordinate)).occupant is None \
+                and self.afterNextCoordinate(SOUTHWEST, currentCoordinate) is not previous \
                 and not self.moveContainsCoordinate(self.afterNextCoordinate(SOUTHWEST, currentCoordinate), move) \
                 and playerTurn is not self.location(
             self.nextCoordinate(SOUTHWEST, currentCoordinate)).occupant.color:
@@ -150,6 +154,7 @@ class Board:
                 and self.onBoard(self.afterNextCoordinate(SOUTHEAST, currentCoordinate)) \
                 and self.location(self.nextCoordinate(SOUTHEAST, currentCoordinate)).occupant is not None \
                 and self.location(self.afterNextCoordinate(SOUTHEAST, currentCoordinate)).occupant is None \
+                and self.afterNextCoordinate(SOUTHEAST, currentCoordinate) is not previous \
                 and not self.moveContainsCoordinate(self.afterNextCoordinate(SOUTHEAST, currentCoordinate), move) \
                 and playerTurn is not self.location(
             self.nextCoordinate(SOUTHEAST, currentCoordinate)).occupant.color:
@@ -175,7 +180,7 @@ class Board:
 
         return possibleJumpsCount
 
-    def canJumpDirection(self, coordinate, playerTurn, DIRECTION, move):
+    def canJumpDirection(self, coordinate, playerTurn, DIRECTION, previous, move):
         """
             Given a coordinate, color, direction and a list of moves, checks if there's another available jump
         """
@@ -183,13 +188,17 @@ class Board:
                and self.onBoard(self.afterNextCoordinate(DIRECTION, coordinate)) \
                and self.location(self.nextCoordinate(DIRECTION, coordinate)).occupant is not None \
                and self.location(self.afterNextCoordinate(DIRECTION, coordinate)).occupant is None \
+               and self.afterNextCoordinate(DIRECTION, coordinate) is not previous \
+               and not self.moveContainsCoordinate(self.afterNextCoordinate(DIRECTION, coordinate), move) \
                and playerTurn is not self.location(self.nextCoordinate(DIRECTION, coordinate)).occupant.color
 
     def legalMoves(self, playerTurn, currentCoordinate, jump, previous, move):
         # Get the number of actions in this call
-        canMoveOrJumpCount = self.canMoveOrJumpCount(playerTurn, currentCoordinate, jump, move)
+        canMoveOrJumpCount = self.canMoveOrJumpCount(playerTurn, currentCoordinate, jump, previous, move)
+        print("legalMoves -> canMoveorJumpCount: ", canMoveOrJumpCount)
         # No positions to jump, return
         if canMoveOrJumpCount == 0:
+            print("canMoveorJumpCount == 0 ", move)
             return move
 
         if not jump:
@@ -214,63 +223,80 @@ class Board:
 
             # Has no jump moves
             if len(legalMoves) == 2:
-                return self.filterMoves(legalMoves)
+                return legalMoves
 
             # Will jump
             # Check where to jump over and call recursive for that direction
-            if self.canJumpDirection(currentCoordinate, playerTurn, NORTHWEST, move):
+            if self.canJumpDirection(currentCoordinate, playerTurn, NORTHWEST, previous, move):
                 # Append the piece's coordinate that will be jumped over
                 move = [self.nextCoordinate(NORTHWEST, currentCoordinate)]
                 # Append the piece destination
                 move += [self.afterNextCoordinate(NORTHWEST, currentCoordinate)]
-                legalMoves.append(self.legalMoves(playerTurn, self.afterNextCoordinate(NORTHWEST, currentCoordinate),
-                                                  True, currentCoordinate, move))
+                legalMoves += self.legalMoves(playerTurn, self.afterNextCoordinate(NORTHWEST, currentCoordinate),
+                                                  True, currentCoordinate, move)
 
-            if self.canJumpDirection(currentCoordinate, playerTurn, NORTHEAST, move):
+            if self.canJumpDirection(currentCoordinate, playerTurn, NORTHEAST, previous, move):
                 move = [self.nextCoordinate(NORTHEAST, currentCoordinate)]
                 move += [self.afterNextCoordinate(NORTHEAST, currentCoordinate)]
-                legalMoves.append(self.legalMoves(playerTurn, self.afterNextCoordinate(NORTHEAST, currentCoordinate),
-                                                  True, currentCoordinate, move))
+                legalMoves += self.legalMoves(playerTurn, self.afterNextCoordinate(NORTHEAST, currentCoordinate),
+                                                  True, currentCoordinate, move)
 
-            if self.canJumpDirection(currentCoordinate, playerTurn, SOUTHWEST, move):
+            if self.canJumpDirection(currentCoordinate, playerTurn, SOUTHWEST, previous, move):
                 move = [self.nextCoordinate(SOUTHWEST, currentCoordinate)]
                 move += [self.afterNextCoordinate(SOUTHWEST, currentCoordinate)]
-                legalMoves.append(self.legalMoves(playerTurn, self.afterNextCoordinate(SOUTHWEST, currentCoordinate),
-                                                  True, currentCoordinate, move))
+                legalMoves += self.legalMoves(playerTurn, self.afterNextCoordinate(SOUTHWEST, currentCoordinate),
+                                                  True, currentCoordinate, move)
 
-            if self.canJumpDirection(currentCoordinate, playerTurn, SOUTHEAST, move):
+            if self.canJumpDirection(currentCoordinate, playerTurn, SOUTHEAST, previous, move):
                 move = [self.nextCoordinate(SOUTHEAST, currentCoordinate)]
                 move += [self.afterNextCoordinate(SOUTHEAST, currentCoordinate)]
-                legalMoves.append(self.legalMoves(playerTurn, self.afterNextCoordinate(SOUTHEAST, currentCoordinate),
-                                                  True, currentCoordinate, move))
+                legalMoves += self.legalMoves(playerTurn, self.afterNextCoordinate(SOUTHEAST, currentCoordinate),
+                                                  True, currentCoordinate, move)
 
         # Jumped at least once already
         # LegalMoves is temporally a simple array when enters here
         if jump:
 
-            if self.canJumpDirection(currentCoordinate, playerTurn, NORTHWEST, move):
-                move += [self.nextCoordinate(NORTHWEST, currentCoordinate)]
-                move += [self.afterNextCoordinate(NORTHWEST, currentCoordinate)]
-                return self.legalMoves(playerTurn, self.afterNextCoordinate(NORTHWEST, currentCoordinate),
-                                       True, currentCoordinate, move)
+            legalMoves = []
 
-            if self.canJumpDirection(currentCoordinate, playerTurn, NORTHEAST, move):
-                move += [self.nextCoordinate(NORTHEAST, currentCoordinate)]
-                move += [self.afterNextCoordinate(NORTHEAST, currentCoordinate)]
-                return self.legalMoves(playerTurn, self.afterNextCoordinate(NORTHEAST, currentCoordinate),
-                                       True, currentCoordinate, move)
+            aux = []
 
-            if self.canJumpDirection(currentCoordinate, playerTurn, SOUTHWEST, move):
-                move += [self.nextCoordinate(SOUTHWEST, currentCoordinate)]
-                move += [self.afterNextCoordinate(SOUTHWEST, currentCoordinate)]
-                return self.legalMoves(playerTurn, self.afterNextCoordinate(SOUTHWEST, currentCoordinate),
-                                       True, currentCoordinate, move)
+            if self.canJumpDirection(currentCoordinate, playerTurn, NORTHWEST, previous, move):
+                aux = move
+                aux += [self.nextCoordinate(NORTHWEST, currentCoordinate)]
+                aux += [self.afterNextCoordinate(NORTHWEST, currentCoordinate)]
+                aux = self.legalMoves(playerTurn, self.afterNextCoordinate(NORTHWEST, currentCoordinate),
+                                       True, currentCoordinate, aux)
+                print("aux NORTHWEST", aux)
+                legalMoves.append(aux)
 
-            if self.canJumpDirection(currentCoordinate, playerTurn, SOUTHEAST, move):
-                move += [self.nextCoordinate(SOUTHEAST, currentCoordinate)]
-                move += [self.afterNextCoordinate(SOUTHEAST, currentCoordinate)]
-                return self.legalMoves(playerTurn, self.afterNextCoordinate(SOUTHEAST, currentCoordinate),
-                                       True, currentCoordinate, move)
+            if self.canJumpDirection(currentCoordinate, playerTurn, NORTHEAST, previous, move):
+                aux = move
+                aux += [self.nextCoordinate(NORTHEAST, currentCoordinate)]
+                aux += [self.afterNextCoordinate(NORTHEAST, currentCoordinate)]
+                aux = self.legalMoves(playerTurn, self.afterNextCoordinate(NORTHEAST, currentCoordinate),
+                                       True, currentCoordinate, aux)
+                print("aux NORTHEAST", aux)
+                legalMoves.append(aux)
+
+            if self.canJumpDirection(currentCoordinate, playerTurn, SOUTHWEST, previous, move):
+                aux = move
+                aux += [self.nextCoordinate(SOUTHWEST, currentCoordinate)]
+                aux += [self.afterNextCoordinate(SOUTHWEST, currentCoordinate)]
+                aux = self.legalMoves(playerTurn, self.afterNextCoordinate(SOUTHWEST, currentCoordinate),
+                                       True, currentCoordinate, aux)
+                print("aux SOUTHWEST", aux)
+                legalMoves.append(aux)
+
+            if self.canJumpDirection(currentCoordinate, playerTurn, SOUTHEAST, previous, move):
+                aux = move
+                aux += [self.nextCoordinate(SOUTHEAST, currentCoordinate)]
+                aux += [self.afterNextCoordinate(SOUTHEAST, currentCoordinate)]
+                aux = self.legalMoves(playerTurn, self.afterNextCoordinate(SOUTHEAST, currentCoordinate),
+                                       True, currentCoordinate, aux)
+                print("aux SOUTHEAST", aux)
+                legalMoves.append(aux)
+                print("legalMoves ", legalMoves)
 
         return self.filterMoves(legalMoves)
 
