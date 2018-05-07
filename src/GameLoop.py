@@ -59,8 +59,8 @@ class GameLoop:
                     self.selectedPieceCoordinate = self.mousePos
 
                     # Get legal moves and filter for the longest moves only
-                    self.selectedLegalMoves = self.board.getLongestMoves(
-                        self.board.legalMoves(self.turn, selectedSquareCoordinate, False, None, []))
+                    self.selectedLegalMoves = \
+                        self.board.legalMoves(self.turn, selectedSquareCoordinate, False, None, [])
 
                     print("Selected Legal Moves ", self.selectedLegalMoves)
 
