@@ -55,28 +55,7 @@ class Graphics:
     |  We'll discuss this in the next meetup so we can define where these go.       |
     +-----------------------------------------------------------------------------"""
 
-    def pixelCoords(self, boardCoords):
-        """
-            Takes in a tuple of board coordinates (x,y)
-            and returns the pixel coordinates of the center of the square at that location.
-        """
-        return (
-            boardCoords[0] * self.squareSize + self.pieceSize, boardCoords[1] * self.squareSize + self.pieceSize)
 
-    def boardCoords(self, pixelCoordinate):
-        """
-           Does the reverse of pixel_coords(). Takes in a tuple of of pixel coordinates and returns what square they are in.
-        """
-        return Coordinate(int(pixelCoordinate[0] / self.squareSize), int(pixelCoordinate[1] / self.squareSize))
-
-    def pixelToSquarePosition(self, pixelCoordinate):
-        """
-            Does the reverse of pixel_coords(). Takes in a tuple of of pixel coordinates and returns what square they are in.
-        """
-        return Coordinate(pixelCoordinate.x / self.squareSize, pixelCoordinate.y / self.squareSize)
-
-    def piecePositionToPixel(self, boardPiece):
-        return True
 
     def draw_message(self, message):
         """
@@ -87,12 +66,6 @@ class Graphics:
         self.text_surface_obj = self.font_obj.render(message, True, HIGH, BLACK)
         self.text_rect_obj = self.text_surface_obj.get_rect()
         self.text_rect_obj.center = (self.windowSize / 2, self.windowSize / 2)
-
-    def onBoard(self, coordinates):
-        """
-        Checks to see if the given square (x,y) lies on the board.
-        If it does, then on_board() return True. Otherwise it returns false.
-        """
 
     def isEndSquare(self, coordinate):
         """
