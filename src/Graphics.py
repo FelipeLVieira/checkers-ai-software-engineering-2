@@ -3,6 +3,9 @@ from Board import *
 import glob
 import math
 
+pygame.font.init()
+
+
 class Graphics:
     def __init__(self):
         self.caption = "Checkers"
@@ -12,12 +15,18 @@ class Graphics:
 
         self.windowSize = 720
         self.screen = pygame.display.set_mode((self.windowSize, self.windowSize))
-        self.background = pygame.image.load("../graphics-proto/checker.png")
 
         self.squareSize = int(round(self.windowSize / 8))
         self.pieceSize = int(round(self.squareSize / 2))
 
         self.message = False
+
+        # Assets
+        self.background = pygame.image.load("../graphics-proto/checker.png")
+        self.goldPiece = pygame.image.load("../graphics-proto/gold.png")
+        # self.kingPiece = pygame.image.load("../graphics-proto/crown.png")
+        self.redPiece = pygame.image.load("../graphics-proto/piece_red.png")
+        self.whitePiece = pygame.image.load("../graphics-proto/piece_white.png")
 
     def setupWindow(self):
         pygame.init()
@@ -29,10 +38,9 @@ class Graphics:
         """
         self.screen.blit(self.background, (0, 0))
 
-        # self.highlight_squares(legal_moves, selected_piece)
-        self.drawBoardPieces(board)
-        self.highlightLegalMoves(legalMovements, selectedPiece, board)
-        self.drawBoardKings(board)
+        board.drawBoardPieces(self.screen, self.redPiece, self.whitePiece)
+        board.highlightLegalMoves(legalMovements, selectedPiece, self.screen, self.goldPiece)
+        # board.drawBoardKings(self.screen, self.kingPiece)
 
         if self.message:
             self.screen.blit(self.text_surface_obj, self.text_rect_obj)
@@ -47,47 +55,6 @@ class Graphics:
     |  We'll discuss this in the next meetup so we can define where these go.       |
     +-----------------------------------------------------------------------------"""
 
-    def drawBoardSquares(self, board):
-        """
-            Takes a board object and draws all of its squares to the display
-            """
-        for x in range(8):
-            for y in range(8):
-                pygame.draw.rect(self.screen, board[x][y].color,
-                                 (x * self.squareSize, y * self.squareSize, self.squareSize, self.squareSize), )
-
-    def drawBoardPieces(self, board):
-        for x in range(8):
-            for y in range(8):
-                if board.matrix[x][y].occupant is not None and board.matrix[x][y].color is BLACK and board.matrix[x][y].occupant.color is RED:
-                    redPiece = pygame.image.load("../graphics-proto/piece_red.png")
-                    self.screen.blit(redPiece, (x * 90, y * 90))
-
-                if board.matrix[x][y].occupant is not None and board.matrix[x][y].color is BLACK and board.matrix[x][y].occupant.color is WHITE:
-                    whitePiece = pygame.image.load("../graphics-proto/piece_white.png")
-                    self.screen.blit(whitePiece, (x * 90, y * 90))
-
-    def drawBoardKings(self, board):
-        for x in range(8):
-            for y in range(8):
-                if board.matrix[x][y].occupant is not None and board.matrix[x][y].occupant.king == True:
-                    kingPiece = pygame.image.load("../graphics-proto/crown.png")
-                    self.screen.blit(kingPiece, (x * 90, y * 90))
-
-    def highlightLegalMoves(self, legalMoves, selectedPiece, board):
-        if selectedPiece is not None and legalMoves is not None:
-            """--------------------------------------------------------------------+
-            | VitinhoCarneiro: Don't load stuff every time you're going to use it, |
-            | it's unnecessary and slow. Cache it somewhere.                       |
-            +--------------------------------------------------------------------"""
-            goldPiece = pygame.image.load("../graphics-proto/gold.png")
-
-            for movePath in legalMoves:
-                # self.screen.blit(goldPiece, (movePath.x * 90, movePath.y * 90))
-                for coordinate in movePath:
-                    if coordinate is not None and not board.location(coordinate).occupant:
-                        self.screen.blit(goldPiece, (coordinate.x * 90, coordinate.y * 90))
-
     def pixelCoords(self, boardCoords):
         """
             Takes in a tuple of board coordinates (x,y)
@@ -101,7 +68,6 @@ class Graphics:
            Does the reverse of pixel_coords(). Takes in a tuple of of pixel coordinates and returns what square they are in.
         """
         return Coordinate(int(pixelCoordinate[0] / self.squareSize), int(pixelCoordinate[1] / self.squareSize))
-
 
     def pixelToSquarePosition(self, pixelCoordinate):
         """
@@ -168,6 +134,7 @@ class Graphics:
         else:
             return False
 
+
 class Graphic:
     """Implements a graphic object that caches an image surface."""
     surface = None
@@ -184,6 +151,7 @@ class Graphic:
         """A stub for abstraction purposes, does nothing."""
         pass
 
+
 class AnimatedGraphic(Graphic):
     """Implements an animated graphic object."""
     surfaces = None
@@ -191,8 +159,8 @@ class AnimatedGraphic(Graphic):
     frameDelayCounter = None
     frame = None
     looping = None
-    
-    def __init__(self, path, frameDelay, loop = False):
+
+    def __init__(self, path, frameDelay, loop=False):
         paths = glob.glob(path)
         self.surfaces = list(map(pygame.image.load, paths))
         self.frameDelay = frameDelay
@@ -200,7 +168,7 @@ class AnimatedGraphic(Graphic):
         self.frame = 0
         self.looping = loop
         Graphic.__init__(self, paths[1])
-    
+
     def update(self):
         """Updates the animation. Must be called every frame."""
         if self.looping or not self.frame >= len(self.surfaces):
@@ -211,6 +179,7 @@ class AnimatedGraphic(Graphic):
                 if self.frame >= len(self.surfaces):
                     self.frame = 0
                 self.surface = self.surfaces(self.frame)
+
 
 class Motion:
     """A basic class for controlling movement of graphics.
@@ -235,7 +204,7 @@ class Motion:
     decelerate = None
     currentPos = None
     nextEvent = None
-    
+
     hasCompleted = False
 
     def __init__(self, path):
@@ -246,13 +215,13 @@ class Motion:
         self.nodeCompletion = 1.0
         self.currentPos = self.coord2
 
-    def update(self, timeDelta = 1.0/60):
+    def update(self, timeDelta=1.0 / 60):
         """Updates the movement coordinates."""
         if self.hasCompleted: return
 
         self.nodeCompletion += self.currentSpeed * timeDelta
 
-        if(self.nodeCompletion >= 1.0):
+        if (self.nodeCompletion >= 1.0):
             self.loadNextNode()
             self.nodeCompletion -= 1.0
 
@@ -261,7 +230,7 @@ class Motion:
     def calcPosition(self):
         """Calculates the position for the current movement state."""
         return self.coord2 * self.nodeCompletion + self.coord1 * (1.0 - self.nodeCompletion)
-    
+
     def loadNextNode(self):
         """Loads the next node in the path, consuming it. Also fires the
            current node's event, if there's any."""
@@ -269,7 +238,7 @@ class Motion:
 
         self.coord1 = self.coord2
 
-        if len(self.path) == 0: 
+        if len(self.path) == 0:
             self.hasCompleted = True
             self.nodeCompletion = 1.0
         else:
@@ -280,6 +249,7 @@ class Motion:
             self.decelerate = node.decelerate
             self.nextEvent = node.eventOnComplete
 
+
 class PathNode:
     """Represents a node in a movement path.
        Speed is represented in average pixels per second."""
@@ -289,16 +259,18 @@ class PathNode:
     accelerate = None
     decelerate = None
 
-    def __init__(self, coords, speed, eventOnComplete = None, accelerate = False, decelerate = False):
+    def __init__(self, coords, speed, eventOnComplete=None, accelerate=False, decelerate=False):
         self.coords = coords
         self.speed = speed
         self.eventOnComplete = eventOnComplete
         self.accelerate = accelerate
         self.decelerate = decelerate
 
+
 class EasingMotion(Motion):
     """Subclass of Motion with support for accelerated/decelerated movement
        using quadratic interpolation."""
+
     def __init__(self, path):
         Motion.__init__(self, path)
 
@@ -307,20 +279,23 @@ class EasingMotion(Motion):
            quadratic interpolation and the accelerate/decelerate flags."""
         # Case 1: acceleration only
         if self.accelerate and not self.decelerate:
-           return self.coord2 * (self.nodeCompletion ** 2) + self.coord1 * (1.0 - (self.nodeCompletion ** 2))
+            return self.coord2 * (self.nodeCompletion ** 2) + self.coord1 * (1.0 - (self.nodeCompletion ** 2))
 
         # Case 2: deceleration only
         if self.decelerate and not self.accelerate:
-            return self.coord2 * (1.0 - ((1.0 - self.nodeCompletion) ** 2)) + self.coord1 * ((1.0 - self.nodeCompletion) ** 2) 
-        
-        # Case 3: acceleration and deceleration
+            return self.coord2 * (1.0 - ((1.0 - self.nodeCompletion) ** 2)) + self.coord1 * (
+                    (1.0 - self.nodeCompletion) ** 2)
+
+            # Case 3: acceleration and deceleration
         if self.decelerate and self.accelerate:
             # This function is decomposed into two quadratic curves. 1st half:
-            if(nodeCompletion < 0.5):
-                return self.coord2 * (2.0 * self.nodeCompletion ** 2) / 2.0 + self.coord1 * (1.0 - ((2.0 * self.nodeCompletion) ** 2) / 2.0)
+            if (nodeCompletion < 0.5):
+                return self.coord2 * (2.0 * self.nodeCompletion ** 2) / 2.0 + self.coord1 * (
+                        1.0 - ((2.0 * self.nodeCompletion) ** 2) / 2.0)
             # 2nd half:
             else:
-                return self.coord2 * (1.0 - (2.0 * (1.0 - self.nodeCompletion) ** 2 / 2.0)) + self.coord1 * (2.0 * (1.0 - self.nodeCompletion) ** 2 / 2.0)
+                return self.coord2 * (1.0 - (2.0 * (1.0 - self.nodeCompletion) ** 2 / 2.0)) + self.coord1 * (
+                        2.0 * (1.0 - self.nodeCompletion) ** 2 / 2.0)
 
         # Case 4: linear motion (not accelerated or decelerated)
         return Motion.calcPosition(self)
@@ -329,5 +304,3 @@ class EasingMotion(Motion):
 def euclideanDist(coord1, coord2):
     """Returns the euclidean distance of two coordinates - (x, y) tuples"""
     return math.sqrt((coord2[0] - coord1[0]) ** 2 + (coord2[1] - coord1[1]) ** 2)
-
-

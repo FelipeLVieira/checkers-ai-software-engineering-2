@@ -1,3 +1,5 @@
+import pygame
+
 from Constants import *
 
 
@@ -232,26 +234,42 @@ class Board:
                 move = [self.nextCoordinate(NORTHWEST, currentCoordinate)]
                 # Append the piece destination
                 move += [self.afterNextCoordinate(NORTHWEST, currentCoordinate)]
-                legalMoves += self.legalMoves(playerTurn, self.afterNextCoordinate(NORTHWEST, currentCoordinate),
+                aux = self.legalMoves(playerTurn, self.afterNextCoordinate(NORTHWEST, currentCoordinate),
                                               True, currentCoordinate, move)
+                if len(aux) < 2:
+                    legalMoves.append(aux[0])
+                else:
+                    legalMoves.append(aux)
 
             if self.canJumpDirection(currentCoordinate, playerTurn, NORTHEAST, previous, move):
                 move = [self.nextCoordinate(NORTHEAST, currentCoordinate)]
                 move += [self.afterNextCoordinate(NORTHEAST, currentCoordinate)]
-                legalMoves += self.legalMoves(playerTurn, self.afterNextCoordinate(NORTHEAST, currentCoordinate),
+                aux = self.legalMoves(playerTurn, self.afterNextCoordinate(NORTHEAST, currentCoordinate),
                                               True, currentCoordinate, move)
+                if len(aux) < 2:
+                    legalMoves.append(aux[0])
+                else:
+                    legalMoves.append(aux)
 
             if self.canJumpDirection(currentCoordinate, playerTurn, SOUTHWEST, previous, move):
                 move = [self.nextCoordinate(SOUTHWEST, currentCoordinate)]
                 move += [self.afterNextCoordinate(SOUTHWEST, currentCoordinate)]
-                legalMoves += self.legalMoves(playerTurn, self.afterNextCoordinate(SOUTHWEST, currentCoordinate),
+                aux = self.legalMoves(playerTurn, self.afterNextCoordinate(SOUTHWEST, currentCoordinate),
                                               True, currentCoordinate, move)
+                if len(aux) < 2:
+                    legalMoves.append(aux[0])
+                else:
+                    legalMoves.append(aux)
 
             if self.canJumpDirection(currentCoordinate, playerTurn, SOUTHEAST, previous, move):
                 move = [self.nextCoordinate(SOUTHEAST, currentCoordinate)]
                 move += [self.afterNextCoordinate(SOUTHEAST, currentCoordinate)]
-                legalMoves += self.legalMoves(playerTurn, self.afterNextCoordinate(SOUTHEAST, currentCoordinate),
-                                              True, currentCoordinate, move)
+                aux = self.legalMoves(playerTurn, self.afterNextCoordinate(SOUTHEAST, currentCoordinate),
+                                      True, currentCoordinate, move)
+                if len(aux) < 2:
+                    legalMoves.append(aux[0])
+                else:
+                    legalMoves.append(aux)
 
         # Jumped at least once already
         # LegalMoves is temporally a simple array when enters here
@@ -390,6 +408,42 @@ class Board:
             if (self.location(coordinate).occupant.color == WHITE and coordinate.y == 0) or (
                     self.location(coordinate).occupant.color == RED and coordinate.y == 7):
                 self.location(coordinate).occupant.king = True
+
+    def drawBoardSquares(self, graphics):
+        """
+            Takes a board object and draws all of its squares to the display
+            """
+        for x in range(8):
+            for y in range(8):
+                pygame.draw.rect(graphics.screen, self.matrix[x][y].color,
+                                 (x * graphics.squareSize, y * graphics.squareSize, graphics.squareSize,
+                                  graphics.squareSize), )
+
+    def drawBoardPieces(self, screen, redPiece, whitePiece):
+        for x in range(8):
+            for y in range(8):
+                if self.matrix[x][y].occupant is not None and self.matrix[x][y].color is BLACK and self.matrix[x][
+                    y].occupant.color is RED:
+                    screen.blit(redPiece, (x * 90, y * 90))
+
+                if self.matrix[x][y].occupant is not None and self.matrix[x][y].color is BLACK and self.matrix[x][
+                    y].occupant.color is WHITE:
+                    screen.blit(whitePiece, (x * 90, y * 90))
+
+    def drawBoardKings(self, screen, kingPiece):
+        for x in range(8):
+            for y in range(8):
+                if self.matrix[x][y].occupant is not None and self.matrix[x][y].occupant.king:
+                    screen.blit(kingPiece, (x * 90, y * 90))
+
+    def highlightLegalMoves(self, legalMoves, selectedPiece, screen, goldPiece):
+        if selectedPiece is not None and legalMoves is not None:
+
+            for movePath in legalMoves:
+                # self.screen.blit(goldPiece, (movePath.x * 90, movePath.y * 90))
+                for coordinate in movePath:
+                    if coordinate is not None and not self.location(coordinate).occupant:
+                        screen.blit(goldPiece, (coordinate.x * 90, coordinate.y * 90))
 
 
 class Coordinate:
