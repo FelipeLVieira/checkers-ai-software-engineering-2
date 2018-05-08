@@ -65,7 +65,6 @@ class Graphic:
 
     def __init__(self, path):
         self.surface = pygame.image.load(path)
-        self.mutex = False
 
     def blitAt(self, surface, coords):
         """Blits this graphic's surface over another surface."""
@@ -126,7 +125,13 @@ class Motion:
     nodeCompletion = None
     accelerate = None
     decelerate = None
+    
+    #-----------------------------------------------------------------------+
+    # This parameter holds the motion path's current position. This is what |
+    # should be read to obtain the updated position every frame.            |
+    #-----------------------------------------------------------------------+
     currentPos = None
+
     nextEvent = None
 
     hasCompleted = False
