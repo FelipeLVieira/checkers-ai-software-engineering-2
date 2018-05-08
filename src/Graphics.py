@@ -125,7 +125,13 @@ class Motion:
     nodeCompletion = None
     accelerate = None
     decelerate = None
+    
+    #-----------------------------------------------------------------------+
+    # This parameter holds the motion path's current position. This is what |
+    # should be read to obtain the updated position every frame.            |
+    #-----------------------------------------------------------------------+
     currentPos = None
+
     nextEvent = None
 
     hasCompleted = False
