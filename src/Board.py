@@ -7,14 +7,16 @@ class Board:
     def __init__(self):
         self.matrix = self.newBoard()
 
+    """-------------------+
+    |  Board Initializer  |
+    +-------------------"""
+
     def newBoard(self):
 
-        # initialize squares and place them in matrix
+        # Initialize squares and place them in matrix
 
         matrix = [[None] * 8 for i in range(8)]
 
-        # The following code block has been adapted from
-        # http://itgirl.dreamhosters.com/itgirlgames/games/Program%20Leaders/ClareR/Checkers/checkers.py
         for x in range(8):
             for y in range(8):
                 if (x % 2 != 0) and (y % 2 == 0):
@@ -112,12 +114,18 @@ class Board:
         return self.matrix[coordinate.x][coordinate.y]
 
     def moveContainsCoordinate(self, coordinate, move):
+        """
+        Check if the coordinate already exists in the move coordinate list
+        """
         for m in move:
             if m.x == coordinate.x and m.y == coordinate.y:
                 return True
         return False
 
     def canMoveOrJumpCount(self, playerTurn, currentCoordinate, jump, previous, move):
+        """
+        Count the number of adjacent possible movements
+        """
 
         possibleJumpsCount = 0
 
@@ -195,10 +203,15 @@ class Board:
                and playerTurn is not self.location(self.nextCoordinate(DIRECTION, coordinate)).occupant.color
 
     def legalMoves(self, playerTurn, currentCoordinate, jump, previous, move):
-        # Get the number of actions in this call
+        """
+        Look for all possible movements recursively and return a list of possible moves
+        """
+
+        # Count the number of adjacent movements available on this coordinate
         canMoveOrJumpCount = self.canMoveOrJumpCount(playerTurn, currentCoordinate, jump, previous, move)
         print("legalMoves -> canMoveorJumpCount: ", canMoveOrJumpCount)
-        # No positions to jump, return
+
+        # No positions to jump, return the move created by previous function(s) call(s)
         if canMoveOrJumpCount == 0:
             print("canMoveorJumpCount == 0 ", move)
             return move
@@ -235,7 +248,7 @@ class Board:
                 # Append the piece destination
                 move += [self.afterNextCoordinate(NORTHWEST, currentCoordinate)]
                 aux = self.legalMoves(playerTurn, self.afterNextCoordinate(NORTHWEST, currentCoordinate),
-                                              True, currentCoordinate, move)
+                                      True, currentCoordinate, move)
                 if len(aux) < 2:
                     legalMoves.append(aux[0])
                 else:
@@ -245,7 +258,7 @@ class Board:
                 move = [self.nextCoordinate(NORTHEAST, currentCoordinate)]
                 move += [self.afterNextCoordinate(NORTHEAST, currentCoordinate)]
                 aux = self.legalMoves(playerTurn, self.afterNextCoordinate(NORTHEAST, currentCoordinate),
-                                              True, currentCoordinate, move)
+                                      True, currentCoordinate, move)
                 if len(aux) < 2:
                     legalMoves.append(aux[0])
                 else:
@@ -255,7 +268,7 @@ class Board:
                 move = [self.nextCoordinate(SOUTHWEST, currentCoordinate)]
                 move += [self.afterNextCoordinate(SOUTHWEST, currentCoordinate)]
                 aux = self.legalMoves(playerTurn, self.afterNextCoordinate(SOUTHWEST, currentCoordinate),
-                                              True, currentCoordinate, move)
+                                      True, currentCoordinate, move)
                 if len(aux) < 2:
                     legalMoves.append(aux[0])
                 else:
@@ -332,6 +345,11 @@ class Board:
         return self.filterMoves(legalMoves)
 
     def getLongestMoves(self, legalMoves):
+
+        """
+        Given a list of possible moves, filter the largest.
+        If draw, return all with the same size of the first largest move found
+        """
 
         longestMoves = [[]]
 
@@ -440,10 +458,32 @@ class Board:
         if selectedPiece is not None and legalMoves is not None:
 
             for movePath in legalMoves:
-                # self.screen.blit(goldPiece, (movePath.x * 90, movePath.y * 90))
                 for coordinate in movePath:
                     if coordinate is not None and not self.location(coordinate).occupant:
                         screen.blit(goldPiece, (coordinate.x * 90, coordinate.y * 90))
+
+    def pixelCoords(self, coordinate, squareSize, pieceSize):
+        """
+            Takes in a tuple of board coordinates (x,y)
+            and returns the pixel coordinates of the center of the square at that location.
+        """
+        return (
+            coordinate.x * squareSize + pieceSize, coordinate.y * squareSize + pieceSize)
+
+    def boardCoords(self, pixelCoordinate, squareSize):
+        """
+           Does the reverse of pixel_coords(). Takes in a tuple of of pixel coordinates and returns what square they are in.
+        """
+        return Coordinate(int(pixelCoordinate[0] / squareSize), int(pixelCoordinate[1] / squareSize))
+
+    def pixelToSquarePosition(self, pixelCoordinate, squareSize):
+        """
+            Does the reverse of pixel_coords(). Takes in a tuple of of pixel coordinates and returns what square they are in.
+        """
+        return Coordinate(pixelCoordinate.x / squareSize, pixelCoordinate.y / squareSize)
+
+    def piecePositionToPixel(self, boardPiece):
+        return True
 
 
 class Coordinate:

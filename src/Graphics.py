@@ -32,7 +32,7 @@ class Graphics:
         pygame.init()
         pygame.display.set_caption(self.caption)
 
-    def updateDisplay(self, board, legalMovements, selectedPiece):
+    def updateMainGameDisplay(self, board, legalMovements, selectedPiece):
         """
         This updates the current display.
         """
@@ -48,36 +48,6 @@ class Graphics:
         pygame.display.update()
         self.clock.tick(self.fps)
 
-    """-----------------------------------------------------------------------------+
-    |  Victor: I don't think these routines are supposed to be here...              |
-    |  they're all related to the GameBoard class and should be called from there,  |
-    |  with the Graphics class handling low level graphical functions.              |
-    |  We'll discuss this in the next meetup so we can define where these go.       |
-    +-----------------------------------------------------------------------------"""
-
-    def pixelCoords(self, boardCoords):
-        """
-            Takes in a tuple of board coordinates (x,y)
-            and returns the pixel coordinates of the center of the square at that location.
-        """
-        return (
-            boardCoords[0] * self.squareSize + self.pieceSize, boardCoords[1] * self.squareSize + self.pieceSize)
-
-    def boardCoords(self, pixelCoordinate):
-        """
-           Does the reverse of pixel_coords(). Takes in a tuple of of pixel coordinates and returns what square they are in.
-        """
-        return Coordinate(int(pixelCoordinate[0] / self.squareSize), int(pixelCoordinate[1] / self.squareSize))
-
-    def pixelToSquarePosition(self, pixelCoordinate):
-        """
-            Does the reverse of pixel_coords(). Takes in a tuple of of pixel coordinates and returns what square they are in.
-        """
-        return Coordinate(pixelCoordinate.x / self.squareSize, pixelCoordinate.y / self.squareSize)
-
-    def piecePositionToPixel(self, boardPiece):
-        return True
-
     def draw_message(self, message):
         """
         Draws message to the screen.
@@ -87,52 +57,6 @@ class Graphics:
         self.text_surface_obj = self.font_obj.render(message, True, HIGH, BLACK)
         self.text_rect_obj = self.text_surface_obj.get_rect()
         self.text_rect_obj.center = (self.windowSize / 2, self.windowSize / 2)
-
-    def onBoard(self, coordinates):
-        """
-        Checks to see if the given square (x,y) lies on the board.
-        If it does, then on_board() return True. Otherwise it returns false.
-        """
-
-    def isEndSquare(self, coordinate):
-        """
-        Is passed a coordinate tuple (x,y), and returns true or
-        false depending on if that square on the board is an end square.
-        """
-
-        if coordinate.x == 0 or coordinate.y == 7:
-            return True
-        else:
-            return False
-
-    """--------------------------------------------------+
-    | VitinhoCarneiro: Why the heck are these functions  |
-    | below, unrelated to graphics, in here?             |
-    +--------------------------------------------------"""
-
-    def removePiece(self, coordinate, board):
-        """
-        Removes a piece from the board at position (x,y).
-        """
-        board.matrix[coordinate.x][coordinate.y].occupant = None
-
-    def movePiece(self, startCoordinate, endCoordinate, board):
-        """
-        Move a piece from (start_x, start_y) to (end_x, end_y).
-        """
-
-        board.matrix[endCoordinate.x][endCoordinate.y].occupant = board.matrix[startCoordinate.x][
-            startCoordinate.y].occupant
-        self.removePiece(startCoordinate, board)
-
-        board.king(endCoordinate)
-
-    def isEndSquare(self, coords):
-
-        if coords[1] == 0 or coords[1] == 7:
-            return True
-        else:
-            return False
 
 
 class Graphic:
@@ -145,7 +69,7 @@ class Graphic:
 
     def blitAt(self, surface, coords):
         """Blits this graphic's surface over another surface."""
-        surface.blit(self.surface, coordsOrX)
+        surface.blit(self.surface, coords)
 
     def update(self):
         """A stub for abstraction purposes, does nothing."""
@@ -289,7 +213,7 @@ class EasingMotion(Motion):
             # Case 3: acceleration and deceleration
         if self.decelerate and self.accelerate:
             # This function is decomposed into two quadratic curves. 1st half:
-            if (nodeCompletion < 0.5):
+            if (self.nodeCompletion < 0.5):
                 return self.coord2 * (2.0 * self.nodeCompletion ** 2) / 2.0 + self.coord1 * (
                         1.0 - ((2.0 * self.nodeCompletion) ** 2) / 2.0)
             # 2nd half:

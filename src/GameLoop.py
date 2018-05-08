@@ -18,28 +18,36 @@ class GameLoop:
         self.graphics = Graphics()
         self.board = Board()
 
-        """print(np.array(self.board.boardString(self.board.matrix)))
-
-        for x in range(0,8):
-            for y in range(0,8):
-                if self.board.matrix[x][y].occupant is not None:
-                    print(self.board.matrix[x][y].occupant.color)
-                else:
-                    print("empty")
-            print("\n")"""
-
-        self.turn = WHITE
         self.selectedPieceCoordinate = None
 
-        self.hop = False
         self.selectedLegalMoves = []
         self.done = False
+
+        # Player's turn switcher
+        self.turn = WHITE
+
+        # Boolean screen switchers
+        self.startScreen = False
+        self.mainGame = True
+        self.gameOver = False
+        self.pause = False
 
     def setup(self):
         self.graphics.setupWindow()
 
-    def eventLoop(self):
-        self.mousePos = self.graphics.boardCoords(pygame.mouse.get_pos())  # what square is the mouse in?
+    """--------------+
+    |  Event Loops   |
+    +--------------"""
+
+    def startScreenEventLoop(self):
+        return
+
+    def pauseEventLoop(self):
+        return
+
+    def mainGameEventLoop(self):
+        self.mousePos = self.board.boardCoords(pygame.mouse.get_pos(),
+                                               self.graphics.squareSize)  # what square is the mouse in?
         for event in pygame.event.get():
             # ESC quits the game (just for now)... (by the way, closing the window works too because of pygame.QUIT)
             if (event.type == pygame.QUIT) or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
@@ -73,14 +81,6 @@ class GameLoop:
                 if self.board.location(self.mousePos).occupant is None and self.selectedPieceCoordinate is not None \
                         and self.selectedLegalMoves is not None:
                     selectedSquareCoordinate = Coordinate(self.mousePos.x, self.mousePos.y)
-                    # List of legal paths
-                    """for movepath in self.selectedLegalMoves:
-                        if movepath.x == selectedSquareCoordinate.x and movepath.y == selectedSquareCoordinate.y:
-                            self.board.movePiece(self.selectedPieceCoordinate, self.mousePos)
-                            self.selectedPieceCoordinate = None
-                            self.selectedLegalMoves = None
-                            self.endTurn()
-                        # Coordinates of a legal path"""
                     # Move the piece and check (and remove) pieces that it jumped over
                     for movepath in self.selectedLegalMoves:
                         for move in movepath:
@@ -96,9 +96,26 @@ class GameLoop:
                                     self.selectedLegalMoves = None
                                     self.endTurn()
 
-    def update(self):
-        self.graphics.updateDisplay(self.board, self.selectedLegalMoves, self.selectedPieceCoordinate)
+    """-----------------+
+    |  Screen Updaters  |
+    +-----------------"""
+
+    def updateStartScreen(self):
+        return
+
+    def updatePause(self):
+        return
+
+    def updateMainGame(self):
+        self.graphics.updateMainGameDisplay(self.board, self.selectedLegalMoves, self.selectedPieceCoordinate)
         pygame.display.flip()
+
+    """------------------+
+    |  Game Controllers  |
+    +------------------"""
+
+    def pauseGame(self):
+        return
 
     def endTurn(self):
         if self.checkForEndgame():
@@ -117,12 +134,23 @@ class GameLoop:
         pygame.quit()
         sys.exit()
 
+    """--------------+
+    |      Main      |
+    +--------------"""
+
     def main(self):
         self.setup()
 
         while True:
-            self.eventLoop()
-            self.update()
+            if self.startScreen:
+                self.startScreenEventLoop()
+                self.updateStartScreen()
+            if self.mainGame:
+                self.mainGameEventLoop()
+                self.updateMainGame()
+            if self.pause:
+                self.pauseEventLoop()
+                self.updatePause()
 
 
 def main():
