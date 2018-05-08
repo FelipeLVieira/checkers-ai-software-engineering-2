@@ -141,11 +141,10 @@ class Graphic:
 
     def __init__(self, path):
         self.surface = pygame.image.load(path)
-        self.mutex = False
 
     def blitAt(self, surface, coords):
         """Blits this graphic's surface over another surface."""
-        surface.blit(self.surface, coordsOrX)
+        surface.blit(self.surface, coords)
 
     def update(self):
         """A stub for abstraction purposes, does nothing."""
