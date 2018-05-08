@@ -416,20 +416,32 @@ class Board:
         If draw, return all with the same size of the first largest move found
         """
 
-        longestMoves = [[]]
+        longestMoves = []
 
         if legalMoves is None:
             return
 
+        for move in legalMoves:
+            if len(move) > 1:
+                longestMoves.append(move)
+
+        if len(longestMoves) == 0:
+            return legalMoves
+        else:
+            return longestMoves
+
         # Get the largest move
+        """
         for legalMove in legalMoves:
             if len(legalMove) > len(longestMoves[0]):
                 longestMoves[0] = legalMove
-
+        
         # Check if there's another move with the same size
+        
         for legalMove in legalMoves:
             if len(legalMove) == len(longestMoves[0]) and legalMove not in longestMoves:
                 longestMoves.append(legalMove)
+        """
 
         return longestMoves
 

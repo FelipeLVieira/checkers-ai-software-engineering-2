@@ -62,13 +62,15 @@ class GameLoop:
                 selectedSquareCoordinate = Coordinate(self.mousePos.x, self.mousePos.y)
 
                 # Select piece and get legal moves
-                if self.selectedPieceCoordinate is None and self.board.location(self.mousePos).occupant is not None \
+                if self.board.location(self.mousePos).occupant is not None \
                         and selectedSquare.occupant.color is self.turn:
 
                     # Get legal moves and filter for the longest moves only
                     self.selectedLegalMoves = \
                         self.board.legalMoves(self.turn, self.mousePos,
                                               False, None, [], self.board.location(self.mousePos).occupant.king)
+
+                    self.selectedLegalMoves = self.board.getLongestMoves(self.selectedLegalMoves)
 
                     print("Selected Legal Moves ", self.selectedLegalMoves)
                     if self.selectedLegalMoves == 0:
