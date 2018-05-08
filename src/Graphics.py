@@ -145,7 +145,7 @@ class Motion:
 
         self.nodeCompletion += self.currentSpeed * timeDelta
 
-        if (self.nodeCompletion >= 1.0):
+        if self.nodeCompletion >= 1.0:
             self.loadNextNode()
             self.nodeCompletion -= 1.0
 
@@ -168,7 +168,7 @@ class Motion:
         else:
             node = self.path.pop[0]
             self.coord2 = node.coords
-            self.currentSpeed = node.speed / euclideanDist(coord1, coord2)
+            self.currentSpeed = node.speed / euclideanDist(self.coord1, self.coord2)
             self.accelerate = node.accelerate
             self.decelerate = node.decelerate
             self.nextEvent = node.eventOnComplete

@@ -19,7 +19,7 @@ class GameLoop:
         self.board = Board()
 
         self.selectedPieceCoordinate = None
-
+        self.mousePos = None
         self.selectedLegalMoves = []
         self.done = False
 
@@ -64,13 +64,17 @@ class GameLoop:
                 # Select piece and get legal moves
                 if self.selectedPieceCoordinate is None and self.board.location(self.mousePos).occupant is not None \
                         and selectedSquare.occupant.color is self.turn:
-                    self.selectedPieceCoordinate = self.mousePos
 
                     # Get legal moves and filter for the longest moves only
                     self.selectedLegalMoves = \
-                        self.board.legalMoves(self.turn, selectedSquareCoordinate, False, None, [])
+                        self.board.legalMoves(self.turn, self.mousePos,
+                                              False, None, [], self.board.location(self.mousePos).occupant.king)
 
                     print("Selected Legal Moves ", self.selectedLegalMoves)
+                    if self.selectedLegalMoves == 0:
+                        continue
+
+                    self.selectedPieceCoordinate = self.mousePos
 
                 # Cancel piece selection
                 elif self.board.location(self.mousePos) == self.board.location(self.selectedPieceCoordinate):
@@ -91,7 +95,9 @@ class GameLoop:
                                     # Call removePiece on even positions
                                     if not len(movepath) % 2 != 0 and len(movepath) > 1:
                                         for i in range(0, len(movepath), 2):
-                                            self.board.removePiece(movepath[i])
+                                            if self.board.location(movepath[i]).occupant and self.board.location(
+                                                    movepath[i]).occupant.color is not self.turn:
+                                                self.board.removePiece(movepath[i])
                                     self.selectedPieceCoordinate = None
                                     self.selectedLegalMoves = None
                                     self.endTurn()
