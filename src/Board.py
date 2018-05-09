@@ -291,6 +291,8 @@ class Board:
             if king:
 
                 # NW
+
+                # Will check if the direction is free to move and will stop at the first piece or end of board
                 if auxNorthwestmove:
                     nextCoord = auxNorthwestmove[0]
                     while self.onBoard(nextCoord):
@@ -301,6 +303,8 @@ class Board:
                             nextCoord = self.nextCoordinate(NORTHWEST, nextCoord)
                         else:
                             break
+
+                # Will check if it's possible to jump over a enemy piece
                 if auxNorthwestmove and self.canJumpDirection(auxNorthwestmove[-1], playerTurn, NORTHWEST, previous,
                                                               auxNorthwestmove):
                     auxNorthwestmove = [self.nextCoordinate(NORTHWEST, auxNorthwestmove[-1])]
@@ -309,6 +313,7 @@ class Board:
                                                                     auxNorthwestmove):
                     auxNorthwestmove = [self.nextCoordinate(NORTHWEST, currentCoordinate)]
                     auxNorthwestmove += [self.afterNextCoordinate(NORTHWEST, currentCoordinate)]
+                # There is at least one jump, so call recursive to search for more jumps
                 if auxNorthwestmove:
                     legalMoves.append(
                         self.legalMoves(playerTurn, auxNorthwestmove[-1],
@@ -353,7 +358,7 @@ class Board:
                                                               auxSouthwestmove):
                     auxSouthwestmove = [self.nextCoordinate(SOUTHWEST, auxSouthwestmove[-1])]
                     auxSouthwestmove += [self.afterNextCoordinate(SOUTHWEST, auxSouthwestmove[-1])]
-                elif self.canJumpDirection(currentCoordinate, playerTurn, SOUTHWEST, previous, auxSouthwestmove):
+                elif not auxSouthwestmove and self.canJumpDirection(currentCoordinate, playerTurn, SOUTHWEST, previous, auxSouthwestmove):
                     auxSouthwestmove = [self.nextCoordinate(SOUTHWEST, currentCoordinate)]
                     auxSouthwestmove += [self.afterNextCoordinate(SOUTHWEST, currentCoordinate)]
 
@@ -377,7 +382,7 @@ class Board:
                                                               auxSoutheastmove):
                     auxSoutheastmove = [self.nextCoordinate(SOUTHEAST, auxSoutheastmove[-1])]
                     auxSoutheastmove += [self.afterNextCoordinate(SOUTHEAST, auxSoutheastmove[-1])]
-                elif self.canJumpDirection(currentCoordinate, playerTurn, SOUTHEAST, previous, auxSoutheastmove):
+                elif not auxSoutheastmove and self.canJumpDirection(currentCoordinate, playerTurn, SOUTHEAST, previous, auxSoutheastmove):
                     auxSoutheastmove = [self.nextCoordinate(SOUTHEAST, currentCoordinate)]
                     auxSoutheastmove += [self.afterNextCoordinate(SOUTHEAST, currentCoordinate)]
 
