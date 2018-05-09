@@ -65,18 +65,18 @@ class GameLoop:
                 if self.board.location(self.mousePos).occupant is not None \
                         and selectedSquare.occupant.color is self.turn:
 
+                    self.selectedPieceCoordinate = self.mousePos
+
                     # Get legal moves and filter for the longest moves only
                     self.selectedLegalMoves = \
                         self.board.legalMoves(self.turn, self.mousePos,
-                                              False, None, [], self.board.location(self.mousePos).occupant.king)
+                                              False, None, [], self.board.location(self.selectedPieceCoordinate).occupant.king)
 
-                    self.selectedLegalMoves = self.board.getLongestMoves(self.selectedLegalMoves)
+                    # Filter for the moves that jump over pieces
+                    self.selectedLegalMoves = self.board.getLongestMoves(self.selectedLegalMoves, self.board.location(
+                        self.selectedPieceCoordinate).occupant.king)
 
                     print("Selected Legal Moves ", self.selectedLegalMoves)
-                    if self.selectedLegalMoves == 0:
-                        continue
-
-                    self.selectedPieceCoordinate = self.mousePos
 
                 # Cancel piece selection
                 elif self.board.location(self.mousePos) == self.board.location(self.selectedPieceCoordinate):
@@ -84,14 +84,16 @@ class GameLoop:
                     self.selectedLegalMoves = None
 
                 # Move piece to another position
-                if self.board.location(self.mousePos).occupant is None and self.selectedPieceCoordinate is not None \
+                elif self.board.location(self.mousePos).occupant is None and self.selectedPieceCoordinate is not None \
                         and self.selectedLegalMoves is not None:
                     selectedSquareCoordinate = Coordinate(self.mousePos.x, self.mousePos.y)
                     # Move the piece and check (and remove) pieces that it jumped over
                     for movepath in self.selectedLegalMoves:
-                        for move in movepath:
+                        for idx, move in enumerate(movepath):
                             if move is not None:
-                                if move.x == selectedSquareCoordinate.x and move.y == selectedSquareCoordinate.y:
+                                # Check if the selected position is the position that jumps over all possible pieces
+                                if move.x == selectedSquareCoordinate.x and move.y == selectedSquareCoordinate.y and move is \
+                                        movepath[-1]:
                                     self.board.movePiece(self.selectedPieceCoordinate, self.mousePos)
                                     # Odd moves are moves that jump over pieces
                                     # Call removePiece on even positions
@@ -100,8 +102,29 @@ class GameLoop:
                                             if self.board.location(movepath[i]).occupant and self.board.location(
                                                     movepath[i]).occupant.color is not self.turn:
                                                 self.board.removePiece(movepath[i])
+
                                     self.selectedPieceCoordinate = None
                                     self.selectedLegalMoves = None
+                                    selectedSquare = None
+
+                                    self.endTurn()
+                                elif move.x == selectedSquareCoordinate.x and move.y == selectedSquareCoordinate.y and move is not \
+                                        movepath[-1] and self.board.location(
+                                    self.selectedPieceCoordinate).occupant.king:
+                                    aux = movepath[:idx]
+                                    self.board.movePiece(self.selectedPieceCoordinate, self.mousePos)
+                                    # Odd moves are moves that jump over pieces
+                                    # Call removePiece on even positions
+                                    if not len(aux) % 2 != 0 and len(aux) > 1:
+                                        for i in range(0, len(aux), 2):
+                                            if self.board.location(movepath[i]).occupant and self.board.location(
+                                                    aux[i]).occupant.color is not self.turn:
+                                                self.board.removePiece(aux[i])
+
+                                    self.selectedPieceCoordinate = None
+                                    self.selectedLegalMoves = None
+                                    selectedSquare = None
+
                                     self.endTurn()
 
     """-----------------+
