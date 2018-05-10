@@ -313,7 +313,9 @@ class Board:
                     auxNorthwestmove += [self.afterNextCoordinate(NORTHWEST, currentCoordinate)]
                 # There is at least one jump, so call recursive to search for more jumps
 
-                if len(auxNorthwestmove) >= 2:
+                if len(auxNorthwestmove) >= 2 and self.canJumpDirection(currentCoordinate, playerTurn, NORTHWEST,
+                                                                        previous,
+                                                                        auxNorthwestmove):
                     legalMoves.append(
                         self.legalMoves(playerTurn, auxNorthwestmove[-1],
                                         True, auxNorthwestmove[-2], auxNorthwestmove, king))
@@ -338,7 +340,9 @@ class Board:
                     auxNortheastmove = [self.nextCoordinate(NORTHEAST, currentCoordinate)]
                     auxNortheastmove += [self.afterNextCoordinate(NORTHEAST, currentCoordinate)]
 
-                if len(auxNortheastmove) >= 2:
+                if len(auxNortheastmove) >= 2 and self.canJumpDirection(currentCoordinate, playerTurn, NORTHEAST,
+                                                                        previous,
+                                                                        auxNortheastmove):
                     legalMoves.append(
                         self.legalMoves(playerTurn, auxNortheastmove[-1],
                                         True, auxNortheastmove[-2], auxNortheastmove, king))
@@ -364,7 +368,9 @@ class Board:
                     auxSouthwestmove = [self.nextCoordinate(SOUTHWEST, currentCoordinate)]
                     auxSouthwestmove += [self.afterNextCoordinate(SOUTHWEST, currentCoordinate)]
 
-                if len(auxSouthwestmove) >= 2:
+                if len(auxSouthwestmove) >= 2 and self.canJumpDirection(currentCoordinate, playerTurn, SOUTHWEST,
+                                                                        previous,
+                                                                        auxSouthwestmove):
                     legalMoves.append(
                         self.legalMoves(playerTurn, auxSouthwestmove[-1],
                                         True, auxSouthwestmove[-2], auxSouthwestmove, king))
@@ -389,7 +395,9 @@ class Board:
                     auxSoutheastmove = [self.nextCoordinate(SOUTHEAST, currentCoordinate)]
                     auxSoutheastmove += [self.afterNextCoordinate(SOUTHEAST, currentCoordinate)]
 
-                if len(auxSoutheastmove) >= 2:
+                if len(auxSoutheastmove) >= 2 and self.canJumpDirection(currentCoordinate, playerTurn, SOUTHEAST,
+                                                                        previous,
+                                                                        auxSoutheastmove):
                     legalMoves.append(
                         self.legalMoves(playerTurn, auxSoutheastmove[-1],
                                         True, auxSoutheastmove[-2], auxSoutheastmove, king))
