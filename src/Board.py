@@ -293,7 +293,7 @@ class Board:
 
                 # NW
 
-                # Will check if the direction is free to move and will stop at the first piece or end of board
+                # Checks if the path is free to move and will stop at the first piece or end of board
                 if auxNorthwestmove:
                     nextCoord = auxNorthwestmove[0]
                     while self.onBoard(nextCoord) and self.onBoard(self.nextCoordinate(NORTHWEST, nextCoord)) and \
@@ -301,18 +301,21 @@ class Board:
                         auxNorthwestmove += [self.nextCoordinate(NORTHWEST, nextCoord)]
                         nextCoord = self.nextCoordinate(NORTHWEST, nextCoord)
 
-                    # Will check if it's possible to jump over a enemy piece
+                    # Checks if didn't enter inside while (it can't move except for jump pieces
                     if not nextCoord == auxNorthwestmove[0]:
+
+                        # Call the validations to check if there's a piece
                         if self.canJumpDirection(auxNorthwestmove[-2], playerTurn, NORTHWEST, previous,
                                                  auxNorthwestmove):
                             auxNorthwestmove += [self.nextCoordinate(NORTHWEST, auxNorthwestmove[-1])]
 
+                # After verify if the variable nextCoord didn't get new moves, verify if it can jump an adjacent piece
                 if not auxNorthwestmove and self.canJumpDirection(currentCoordinate, playerTurn, NORTHWEST, previous,
                                                                   auxNorthwestmove):
                     auxNorthwestmove = [self.nextCoordinate(NORTHWEST, currentCoordinate)]
                     auxNorthwestmove += [self.afterNextCoordinate(NORTHWEST, currentCoordinate)]
-                # There is at least one jump, so call recursive to search for more jumps
 
+                # If it has a jump, call recursive to search to look for more jumps
                 if len(auxNorthwestmove) >= 2 and self.canJumpDirection(currentCoordinate, playerTurn, NORTHWEST,
                                                                         previous,
                                                                         auxNorthwestmove):

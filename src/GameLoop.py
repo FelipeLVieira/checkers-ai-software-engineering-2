@@ -102,18 +102,13 @@ class GameLoop:
                                     selectedSquare = None
 
                                     self.endTurn()
+                                # If the piece jump in a position smaller the farest square of the move
                                 elif coordinate.x == selectedSquareCoordinate.x and coordinate.y == selectedSquareCoordinate.y and coordinate is not \
                                         movepath[-1] and self.board.location(
                                     self.selectedPieceCoordinate).occupant.king:
-                                    aux = movepath[:idx]
+                                    auxMove = movepath[:idx]
                                     self.board.movePiece(self.selectedPieceCoordinate, self.mousePos)
-                                    # Odd moves are moves that jump over pieces
-                                    # Call removePiece on even positions
-                                    if not len(aux) % 2 != 0 and len(aux) > 1:
-                                        for i in range(0, len(aux), 2):
-                                            if self.board.location(movepath[i]).occupant and self.board.location(
-                                                    aux[i]).occupant.color is not self.turn:
-                                                self.board.removePiece(aux[i])
+                                    self.board.removePiecesByMove(auxMove, self.turn)
 
                                     self.selectedPieceCoordinate = None
                                     self.selectedLegalMoves = None
