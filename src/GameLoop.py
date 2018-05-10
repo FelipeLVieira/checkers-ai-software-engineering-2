@@ -89,26 +89,20 @@ class GameLoop:
                     selectedSquareCoordinate = Coordinate(self.mousePos.x, self.mousePos.y)
                     # Move the piece and check (and remove) pieces that it jumped over
                     for movepath in self.selectedLegalMoves:
-                        for idx, move in enumerate(movepath):
-                            if move is not None:
+                        for idx, coordinate in enumerate(movepath):
+                            if coordinate is not None:
                                 # Check if the selected position is the position that jumps over all possible pieces
-                                if move.x == selectedSquareCoordinate.x and move.y == selectedSquareCoordinate.y and move is \
+                                if coordinate.x == selectedSquareCoordinate.x and coordinate.y == selectedSquareCoordinate.y and coordinate is \
                                         movepath[-1]:
                                     self.board.movePiece(self.selectedPieceCoordinate, self.mousePos)
-                                    # Odd moves are moves that jump over pieces
-                                    # Call removePiece on even positions
-                                    if not len(movepath) % 2 != 0 and len(movepath) > 1:
-                                        for i in range(0, len(movepath), 2):
-                                            if self.board.location(movepath[i]).occupant and self.board.location(
-                                                    movepath[i]).occupant.color is not self.turn:
-                                                self.board.removePiece(movepath[i])
+                                    self.board.removePiecesByMove(movepath, self.turn)
 
                                     self.selectedPieceCoordinate = None
                                     self.selectedLegalMoves = None
                                     selectedSquare = None
 
                                     self.endTurn()
-                                elif move.x == selectedSquareCoordinate.x and move.y == selectedSquareCoordinate.y and move is not \
+                                elif coordinate.x == selectedSquareCoordinate.x and coordinate.y == selectedSquareCoordinate.y and coordinate is not \
                                         movepath[-1] and self.board.location(
                                     self.selectedPieceCoordinate).occupant.king:
                                     aux = movepath[:idx]

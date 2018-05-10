@@ -197,6 +197,7 @@ class Board:
         """
             Given a coordinate, color, direction and a list of moves, checks if there's another available jump
         """
+
         if self.onBoard(self.nextCoordinate(DIRECTION, coordinate)) \
                 and self.onBoard(self.afterNextCoordinate(DIRECTION, coordinate)) \
                 and self.location(self.nextCoordinate(DIRECTION, coordinate)).occupant is not None \
@@ -295,20 +296,16 @@ class Board:
                 # Will check if the direction is free to move and will stop at the first piece or end of board
                 if auxNorthwestmove:
                     nextCoord = auxNorthwestmove[0]
-                    while self.onBoard(nextCoord):
-                        if self.location(self.nextCoordinate(NORTHWEST, nextCoord)) \
-                                and self.onBoard(self.nextCoordinate(NORTHWEST, nextCoord)) \
-                                and self.location(self.nextCoordinate(NORTHWEST, nextCoord)).occupant is None:
-                            auxNorthwestmove += [self.nextCoordinate(NORTHWEST, nextCoord)]
-                            nextCoord = self.nextCoordinate(NORTHWEST, nextCoord)
-                        else:
-                            break
+                    while self.onBoard(nextCoord) and self.onBoard(self.nextCoordinate(NORTHWEST, nextCoord)) and \
+                            self.location(nextCoord).occupant is None:
+                        auxNorthwestmove += [self.nextCoordinate(NORTHWEST, nextCoord)]
+                        nextCoord = self.nextCoordinate(NORTHWEST, nextCoord)
 
                     # Will check if it's possible to jump over a enemy piece
-                    if self.canJumpDirection(auxNorthwestmove[-1], playerTurn, NORTHWEST, previous,
-                                             auxNorthwestmove):
-                        auxNorthwestmove = [self.nextCoordinate(NORTHWEST, auxNorthwestmove[-1])]
-                        auxNorthwestmove += [self.afterNextCoordinate(NORTHWEST, auxNorthwestmove[-1])]
+                    if not nextCoord == auxNorthwestmove[0]:
+                        if self.canJumpDirection(auxNorthwestmove[-2], playerTurn, NORTHWEST, previous,
+                                                 auxNorthwestmove):
+                            auxNorthwestmove += [self.nextCoordinate(NORTHWEST, auxNorthwestmove[-1])]
 
                 if not auxNorthwestmove and self.canJumpDirection(currentCoordinate, playerTurn, NORTHWEST, previous,
                                                                   auxNorthwestmove):
@@ -326,18 +323,16 @@ class Board:
                 # NE
                 if auxNortheastmove:
                     nextCoord = auxNortheastmove[0]
-                    while self.onBoard(nextCoord):
-                        if self.onBoard(self.nextCoordinate(NORTHEAST, nextCoord)) \
-                                and self.location(self.nextCoordinate(NORTHEAST, nextCoord)) \
-                                and self.location(self.nextCoordinate(NORTHEAST, nextCoord)).occupant is None:
-                            auxNortheastmove += [self.nextCoordinate(NORTHEAST, nextCoord)]
-                            nextCoord = self.nextCoordinate(NORTHEAST, nextCoord)
-                        else:
-                            break
-                    if self.canJumpDirection(auxNortheastmove[-1], playerTurn, NORTHEAST, previous,
-                                             auxNortheastmove):
-                        auxNortheastmove = [self.nextCoordinate(NORTHEAST, auxNortheastmove[-1])]
-                        auxNortheastmove += [self.afterNextCoordinate(NORTHEAST, auxNortheastmove[-1])]
+                    while self.onBoard(nextCoord) and self.onBoard(self.nextCoordinate(NORTHEAST, nextCoord)) and \
+                            self.location(nextCoord).occupant is None:
+                        auxNortheastmove += [self.nextCoordinate(NORTHEAST, nextCoord)]
+                        nextCoord = self.nextCoordinate(NORTHEAST, nextCoord)
+
+                    if not nextCoord == auxNortheastmove[0]:
+                        if self.canJumpDirection(auxNortheastmove[-2], playerTurn, NORTHEAST, previous,
+                                                 auxNortheastmove):
+                            auxNortheastmove += [self.nextCoordinate(NORTHEAST, auxNortheastmove[-1])]
+
                 if not auxNortheastmove and self.canJumpDirection(currentCoordinate, playerTurn, NORTHEAST, previous,
                                                                   auxNortheastmove):
                     auxNortheastmove = [self.nextCoordinate(NORTHEAST, currentCoordinate)]
@@ -353,18 +348,17 @@ class Board:
                 # SW
                 if auxSouthwestmove:
                     nextCoord = auxSouthwestmove[0]
-                    while self.onBoard(nextCoord):
-                        if self.onBoard(self.nextCoordinate(SOUTHWEST, nextCoord)) \
-                                and self.location(self.nextCoordinate(SOUTHWEST, nextCoord)) \
-                                and self.location(self.nextCoordinate(SOUTHWEST, nextCoord)).occupant is None:
-                            auxSouthwestmove += [self.nextCoordinate(SOUTHWEST, nextCoord)]
-                            nextCoord = self.nextCoordinate(SOUTHWEST, nextCoord)
-                        else:
-                            break
-                    if self.canJumpDirection(auxSouthwestmove[-1], playerTurn, SOUTHWEST, previous,
-                                             auxSouthwestmove):
-                        auxSouthwestmove = [self.nextCoordinate(SOUTHWEST, auxSouthwestmove[-1])]
-                        auxSouthwestmove += [self.afterNextCoordinate(SOUTHWEST, auxSouthwestmove[-1])]
+
+                    while self.onBoard(nextCoord) and self.onBoard(self.nextCoordinate(SOUTHWEST, nextCoord)) and \
+                            self.location(nextCoord).occupant is None:
+                        auxSouthwestmove += [self.nextCoordinate(SOUTHWEST, nextCoord)]
+                        nextCoord = self.nextCoordinate(SOUTHWEST, nextCoord)
+
+                    if not nextCoord == auxSouthwestmove[0]:
+                        if self.canJumpDirection(auxSouthwestmove[-2], playerTurn, SOUTHWEST, previous,
+                                                 auxSouthwestmove):
+                            auxSouthwestmove += [self.nextCoordinate(SOUTHWEST, auxSouthwestmove[-1])]
+
                 if not auxSouthwestmove and self.canJumpDirection(currentCoordinate, playerTurn, SOUTHWEST, previous,
                                                                   auxSouthwestmove):
                     auxSouthwestmove = [self.nextCoordinate(SOUTHWEST, currentCoordinate)]
@@ -380,18 +374,16 @@ class Board:
                 # SE
                 if auxSoutheastmove:
                     nextCoord = auxSoutheastmove[0]
-                    while self.onBoard(nextCoord):
-                        if self.onBoard(self.nextCoordinate(SOUTHEAST, nextCoord)) \
-                                and self.location(self.nextCoordinate(SOUTHEAST, nextCoord)) \
-                                and self.location(self.nextCoordinate(SOUTHEAST, nextCoord)).occupant is None:
-                            auxSoutheastmove += [self.nextCoordinate(SOUTHEAST, nextCoord)]
-                            nextCoord = self.nextCoordinate(SOUTHEAST, nextCoord)
-                        else:
-                            break
-                    if self.canJumpDirection(auxSoutheastmove[-1], playerTurn, SOUTHEAST, previous,
-                                             auxSoutheastmove):
-                        auxSoutheastmove = [self.nextCoordinate(SOUTHEAST, auxSoutheastmove[-1])]
-                        auxSoutheastmove += [self.afterNextCoordinate(SOUTHEAST, auxSoutheastmove[-1])]
+                    while self.onBoard(nextCoord) and self.onBoard(self.nextCoordinate(SOUTHEAST, nextCoord)) and \
+                            self.location(nextCoord).occupant is None:
+                        auxSoutheastmove += [self.nextCoordinate(SOUTHEAST, nextCoord)]
+                        nextCoord = self.nextCoordinate(SOUTHEAST, nextCoord)
+
+                    if not nextCoord == auxSoutheastmove[0]:
+                        if self.canJumpDirection(auxSoutheastmove[-2], playerTurn, SOUTHEAST, previous,
+                                                 auxSoutheastmove):
+                            auxSoutheastmove += [self.nextCoordinate(SOUTHEAST, auxSoutheastmove[-1])]
+
                 if not auxSoutheastmove and self.canJumpDirection(currentCoordinate, playerTurn, SOUTHEAST, previous,
                                                                   auxSoutheastmove):
                     auxSoutheastmove = [self.nextCoordinate(SOUTHEAST, currentCoordinate)]
@@ -533,38 +525,29 @@ class Board:
     def exists(self):
         return self is not None
 
+    def removePiecesByMove(self, move, player):
+        """
+        Removes enemy pieces from a move (x,y).
+        """
+        for coordinate in move:
+            if self.location(coordinate).occupant:
+                if self.location(coordinate).occupant.color is not player:
+                    self.matrix[coordinate.x][coordinate.y].occupant = None
+
     def removePiece(self, coordinate):
         """
         Removes a piece from the board at position (x,y).
         """
         self.matrix[coordinate.x][coordinate.y].occupant = None
 
-    """def removePiece(self, selectedLegalMoves, selectedSquareCoordinate, selectedPieceCoordinate):
-        # Move the piece and check (and remove) pieces that it jumped over
-        for movepath in selectedLegalMoves:
-            for move in movepath:
-                if move is not None:
-                    if move.x == selectedSquareCoordinate.x and move.y == selectedSquareCoordinate.y and move is movepath[-1]:
-                        self.board.movePiece(self.selectedPieceCoordinate, self.mousePos)
-                        # Odd moves are moves that jump over pieces
-                        # Call removePiece on even positions
-                        if not len(movepath) % 2 != 0 and len(movepath) > 1:
-                            for i in range(0, len(movepath), 2):
-                                if self.board.location(movepath[i]).occupant and self.board.location(
-                                        movepath[i]).occupant.color is not self.turn:
-                                    self.board.removePiece(movepath[i])
-                        self.selectedPieceCoordinate = None
-                        self.selectedLegalMoves = None
-                        self.endTurn()"""
-
     def movePiece(self, startCoordinate, endCoordinate):
         """
         Move a piece from (start_x, start_y) to (end_x, end_y).
         """
-
-        self.matrix[endCoordinate.x][endCoordinate.y].occupant = self.matrix[startCoordinate.x][
-            startCoordinate.y].occupant
-        self.removePiece(startCoordinate)
+        if self.onBoard(startCoordinate) and self.onBoard(endCoordinate):
+            self.matrix[endCoordinate.x][endCoordinate.y].occupant = self.matrix[startCoordinate.x][
+                startCoordinate.y].occupant
+            self.removePiece(startCoordinate)
         self.king(endCoordinate)
 
     def isEndSquare(self, coordinate):
