@@ -32,10 +32,10 @@ class Board:
         for x in range(8):
             for y in range(3):
                 if matrix[x][y].color == BLACK:
-                    matrix[x][y].occupant = Piece(RED, True)
+                    matrix[x][y].occupant = Piece(RED)
             for y in range(5, 8):
                 if matrix[x][y].color == BLACK:
-                    matrix[x][y].occupant = Piece(WHITE, True)
+                    matrix[x][y].occupant = Piece(WHITE)
 
         return matrix
 
@@ -499,29 +499,18 @@ class Board:
         if legalMoves is None:
             return
 
+        longest = []
         for move in legalMoves:
-            if len(move) > 1 and not king:
-                longestMoves.append(move)
+            if len(move) > len(longest):
+                longest = move
 
-        if len(longestMoves) == 0:
-            return legalMoves
-        else:
-            return longestMoves
+        longestLegalMoves = []
 
-        # Get the largest move
-        """
-        for legalMove in legalMoves:
-            if len(legalMove) > len(longestMoves[0]):
-                longestMoves[0] = legalMove
-        
-        # Check if there's another move with the same size
-        
-        for legalMove in legalMoves:
-            if len(legalMove) == len(longestMoves[0]) and legalMove not in longestMoves:
-                longestMoves.append(legalMove)
-        """
+        for move in legalMoves:
+            if len(longest) == len(move):
+                longestLegalMoves.append(move)
 
-        return longestMoves
+        return longestLegalMoves
 
     def filterMoves(self, moves):
 

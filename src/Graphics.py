@@ -26,7 +26,7 @@ class Graphics:
         # Assets
         self.background = pygame.image.load("../graphics-proto/checker.png")
         self.goldPiece = pygame.image.load("../graphics-proto/gold.png")
-        # self.kingPiece = pygame.image.load("../graphics-proto/crown.png")
+        self.kingPiece = pygame.image.load("../assets/images/king_marker-white_piece.png")
         self.redPiece = pygame.image.load("../graphics-proto/piece_red.png")
         self.whitePiece = pygame.image.load("../graphics-proto/piece_white.png")
 
@@ -42,7 +42,7 @@ class Graphics:
 
         board.drawBoardPieces(self.screen, self.redPiece, self.whitePiece)
         board.highlightLegalMoves(legalMovements, selectedPiece, self.screen, self.goldPiece)
-        # board.drawBoardKings(self.screen, self.kingPiece)
+        board.drawBoardKings(self.screen, self.kingPiece)
 
         if self.message:
             self.screen.blit(self.text_surface_obj, self.text_rect_obj)
