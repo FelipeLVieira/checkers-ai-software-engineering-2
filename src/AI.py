@@ -25,7 +25,7 @@ def minimax_ab(board, depth, AIColor, maximizing=True, alpha=float("-inf"),
             executeMove(move, childBoard)
             # Recurse to the minimizing step
             bestValue = max(bestValue, minimax_ab(childBoard, depth - 1,
-                    playerColor, maximizing=False, alpha, beta))
+                    playerColor, False, alpha, beta))
             alpha = max(alpha, bestValue)
             # Prune the tree
             if beta <= alpha: break
@@ -38,7 +38,7 @@ def minimax_ab(board, depth, AIColor, maximizing=True, alpha=float("-inf"),
             executeMove(move, childBoard)
             # Recurse to the maximizing step
             worstValue = min(bestValue, minimax_ab(childBoard, depth - 1,
-                    playerColor, maximizing=True, alpha, beta))
+                    playerColor, True, alpha, beta))
             beta = min(beta, worstValue)
             # Prune the tree
             if beta <= alpha: break
