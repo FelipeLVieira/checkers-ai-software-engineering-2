@@ -597,25 +597,32 @@ class Board:
             for y in range(8):
                 if self.matrix[x][y].occupant is not None and self.matrix[x][y].color is BLACK and self.matrix[x][
                     y].occupant.color is RED:
-                    screen.blit(redPiece, (x * 90, y * 90))
+                    screen.blit(redPiece, (x * 82 + 140, y * 82 + 35 ))
 
                 if self.matrix[x][y].occupant is not None and self.matrix[x][y].color is BLACK and self.matrix[x][
                     y].occupant.color is WHITE:
-                    screen.blit(whitePiece, (x * 90, y * 90))
+                    screen.blit(whitePiece, (x * 82 + 140, y * 82 + 35))
 
-    def drawBoardKings(self, screen, kingPiece):
+    def drawBoardKings(self, screen, kingWhitePiece, kingRedPiece):
         for x in range(8):
             for y in range(8):
-                if self.matrix[x][y].occupant is not None and self.matrix[x][y].occupant.king:
-                    screen.blit(kingPiece, (x * 90, y * 90))
+                if self.matrix[x][y].occupant is not None and self.matrix[x][y].occupant.king and \
+                        self.matrix[x][y].occupant.color is WHITE:
+                    screen.blit(kingWhitePiece, (x * 82 + 140, y * 82 + 35))
+                if self.matrix[x][y].occupant is not None and self.matrix[x][y].occupant.king and \
+                        self.matrix[x][y].occupant.color is RED:
+                    screen.blit(kingRedPiece, (x * 82 + 140, y * 82 + 35))
 
-    def highlightLegalMoves(self, legalMoves, selectedPiece, screen, goldPiece):
+    def highlightLegalMoves(self, legalMoves, selectedPiece, screen, redHoverPiece, whiteHoverPiece, playerTurn):
         if selectedPiece is not None and legalMoves is not None:
 
             for movePath in legalMoves:
                 for coordinate in movePath:
                     if coordinate is not None and not self.location(coordinate).occupant:
-                        screen.blit(goldPiece, (coordinate.x * 90, coordinate.y * 90))
+                        if playerTurn is RED:
+                            screen.blit(redHoverPiece, (coordinate.x * 82 + 140, coordinate.y * 82 + 35))
+                        elif playerTurn is WHITE:
+                            screen.blit(whiteHoverPiece, (coordinate.x * 82 + 140, coordinate.y * 82 + 35))
 
     def pixelCoords(self, coordinate, squareSize, pieceSize):
         """
@@ -623,19 +630,20 @@ class Board:
             and returns the pixel coordinates of the center of the square at that location.
         """
         return (
-            coordinate.x * squareSize + pieceSize, coordinate.y * squareSize + pieceSize)
+            coordinate.x * squareSize + 134 + pieceSize, coordinate.y * squareSize + 32 + pieceSize)
 
     def boardCoords(self, pixelCoordinate, squareSize):
         """
            Does the reverse of pixel_coords(). Takes in a tuple of of pixel coordinates and returns what square they are in.
         """
-        return Coordinate(int(pixelCoordinate[0] / squareSize), int(pixelCoordinate[1] / squareSize))
+        return Coordinate(int((pixelCoordinate[0]-134) / squareSize), int((pixelCoordinate[1]-32) / squareSize))
 
     def pixelToSquarePosition(self, pixelCoordinate, squareSize):
         """
             Does the reverse of pixel_coords(). Takes in a tuple of of pixel coordinates and returns what square they are in.
         """
         return Coordinate(pixelCoordinate.x / squareSize, pixelCoordinate.y / squareSize)
+
 
     def piecePositionToPixel(self, boardPiece):
         return True

@@ -127,7 +127,7 @@ class GameLoop:
         return
 
     def updateMainGame(self):
-        self.graphics.updateMainGameDisplay(self.board, self.selectedLegalMoves, self.selectedPieceCoordinate)
+        self.graphics.updateMainGameDisplay(self.board, self.selectedLegalMoves, self.selectedPieceCoordinate, self.turn)
         pygame.display.flip()
 
     """------------------+

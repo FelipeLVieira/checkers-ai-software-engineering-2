@@ -15,34 +15,37 @@ class Graphics:
         self.fps = 60
         self.clock = pygame.time.Clock()
 
-        self.windowSize = 720
-        self.screen = pygame.display.set_mode((self.windowSize, self.windowSize))
-
-        self.squareSize = int(round(self.windowSize / 8))
+        self.windowWidth = 1280
+        self.windowHeight = 720
+        self.screen = pygame.display.set_mode((self.windowWidth, self.windowHeight))
+        self.boardSize = 655
+        self.squareSize = int(round(self.boardSize / 8))
         self.pieceSize = int(round(self.squareSize / 2))
 
         self.message = False
 
         # Assets
-        self.background = pygame.image.load("../graphics-proto/checker.png")
-        self.goldPiece = pygame.image.load("../graphics-proto/gold.png")
-        self.kingPiece = pygame.image.load("../assets/images/king_marker-white_piece.png")
-        self.redPiece = pygame.image.load("../graphics-proto/piece_red.png")
-        self.whitePiece = pygame.image.load("../graphics-proto/piece_white.png")
+        self.background = pygame.image.load("../assets/images/bg-game.png")
+        self.redHoverPiece = pygame.image.load("../assets/images/highlight-possible_spot_marker-f9.png")
+        self.whiteHoverPiece = pygame.image.load("../assets/images/highlight-possible_spot_marker-f9.png")
+        self.kingWhitePiece = pygame.image.load("../assets/images/king_marker-white_piece.png")
+        self.kingRedPiece = pygame.image.load("../assets/images/king_marker-red_piece.png")
+        self.redPiece = pygame.image.load("../assets/images/piece-red.png")
+        self.whitePiece = pygame.image.load("../assets/images/piece-white.png")
 
     def setupWindow(self):
         pygame.init()
         pygame.display.set_caption(self.caption)
 
-    def updateMainGameDisplay(self, board, legalMovements, selectedPiece):
+    def updateMainGameDisplay(self, board, legalMovements, selectedPiece, playerTurn):
         """
         This updates the current display.
         """
         self.screen.blit(self.background, (0, 0))
 
         board.drawBoardPieces(self.screen, self.redPiece, self.whitePiece)
-        board.highlightLegalMoves(legalMovements, selectedPiece, self.screen, self.goldPiece)
-        board.drawBoardKings(self.screen, self.kingPiece)
+        board.highlightLegalMoves(legalMovements, selectedPiece, self.screen, self.redHoverPiece, self.whiteHoverPiece, playerTurn)
+        board.drawBoardKings(self.screen, self.kingWhitePiece, self.kingRedPiece)
 
         if self.message:
             self.screen.blit(self.text_surface_obj, self.text_rect_obj)
