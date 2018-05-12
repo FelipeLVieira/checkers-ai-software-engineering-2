@@ -4,7 +4,11 @@ from Constants import *
 
 
 class Board:
-    def __init__(self):
+    def __init__(self, board=None):
+        # This allows us to make a copy of the board for the AI to safely
+        # recurse on.
+        if board is Board:
+            self.matrix = board.matrix
         self.matrix = self.newBoard()
 
     """-------------------+
@@ -38,6 +42,7 @@ class Board:
                     matrix[x][y].occupant = Piece(WHITE)
 
         return matrix
+
 
     def boardString(self, board):
         """
@@ -229,7 +234,9 @@ class Board:
     |  Piece Moves Logic  |
     +-------------------"""
 
-    def legalMoves(self, playerTurn, currentCoordinate, jump, previous, move, king):
+    def legalMoves(self, playerTurn, currentCoordinate, jump=False,
+            previous=None, move=[],
+            king=self.board.location(currentCoordinate).occupant.king):
         """
         Look for all possible movements recursively and return a list of possible moves
         """
