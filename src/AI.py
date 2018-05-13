@@ -78,7 +78,7 @@ def minimaxAB(board, depth, AIColor, maximizing=True, alpha=float("-inf"),
             
             # Simulate move in an imaginary board
             childBoard = Board.Board(board)
-            executeMove(move, childBoard)
+            childBoard.executeMove(move)
 
             # Recurse to the minimizing step.
             # randomOffset is used here to give the AI some unpredictability.
@@ -116,7 +116,7 @@ def minimaxAB(board, depth, AIColor, maximizing=True, alpha=float("-inf"),
 
             # Execute move in our imaginary board
             childBoard = Board.Board(board)
-            executeMove(move, childBoard)
+            childBoard.executeMove(move)
 
             # Recurse to the maximizing step.
             # randomOffset is used here to give the AI some unpredictability.
@@ -140,4 +140,12 @@ def minimaxAB(board, depth, AIColor, maximizing=True, alpha=float("-inf"),
 
 
 def heuristic(board, playerColor):
+    """Outputs a number that describes the state of the game.
+       In other words, a number that correlates with how well the player
+       indicated by playerColor is doing."""
     raise NotImplementedError()
+    # Ideas for heuristic:
+    # 1. Number of this player's pieces - Number of the other player's pieces
+    # 2. Signed square of (1.)?
+    # 3. Cube of (1.)?
+    # 4. Take number of kings into account

@@ -87,6 +87,11 @@ class GameLoop:
                 elif self.board.location(self.mousePos).occupant is None and self.selectedPieceCoordinate is not None \
                         and self.selectedLegalMoves is not None:
                     selectedSquareCoordinate = Coordinate(self.mousePos.x, self.mousePos.y)
+                    """-------------------------------------------------------+
+                    | VitinhoCarneiro: The code below should be in a function |
+                    | within Board.py... I need to call it from within the AI |
+                    | inside a copy of the board for it to work.              |
+                    +-------------------------------------------------------"""
                     # Move the piece and check (and remove) pieces that it jumped over
                     for movepath in self.selectedLegalMoves:
                         for idx, coordinate in enumerate(movepath):
