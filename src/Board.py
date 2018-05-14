@@ -36,10 +36,10 @@ class Board:
         for x in range(8):
             for y in range(3):
                 if matrix[x][y].color == BLACK:
-                    matrix[x][y].occupant = Piece(RED)
+                    matrix[x][y].occupant = Piece(RED, True)
             for y in range(5, 8):
                 if matrix[x][y].color == BLACK:
-                    matrix[x][y].occupant = Piece(WHITE)
+                    matrix[x][y].occupant = Piece(WHITE, True)
 
         return matrix
 
@@ -236,6 +236,34 @@ class Board:
 
         return False
 
+    def kingInitialLegalMove(self, currentCoordinate, auxCoordinateList, playerTurn, DIRECTION):
+        if auxCoordinateList:
+            auxCoordinateList = [currentCoordinate]
+            nextCoord = currentCoordinate
+            while self.canMoveDirection(auxCoordinateList[-1], DIRECTION):
+                auxCoordinateList += [self.nextCoordinate(DIRECTION, nextCoord)]
+                if not self.canMoveDirection(auxCoordinateList[-1], DIRECTION):
+                    break
+                else:
+                    nextCoord = self.nextCoordinate(DIRECTION, nextCoord)
+
+            # Checks if didn't enter inside while (it can't move except for jump pieces
+            if not auxCoordinateList[0] == nextCoord:
+                # Can still jump after few cells move?
+                if self.canJumpDirection(auxCoordinateList[-1], playerTurn, DIRECTION, None,
+                                         auxCoordinateList):
+                    # Add the jump coordinates
+                    auxCoordinateList += [self.nextCoordinate(DIRECTION, auxCoordinateList[-1])]
+                    auxCoordinateList += [self.afterNextCoordinate(DIRECTION, currentCoordinate)]
+
+        # After verify if the variable nextCoord didn't get new moves, verify if it can jump an adjacent piece
+        if not auxCoordinateList and self.canJumpDirection(currentCoordinate, playerTurn, DIRECTION, None,
+                                                           auxCoordinateList):
+            auxCoordinateList = [self.nextCoordinate(DIRECTION, currentCoordinate)]
+            auxCoordinateList += [self.afterNextCoordinate(DIRECTION, currentCoordinate)]
+
+        return auxCoordinateList
+
     """-------------------+
     |  Piece Moves Logic  |
     +-------------------"""
@@ -290,121 +318,46 @@ class Board:
             # Build kings path and also checks if king can jump
             if king:
 
+                """---------------------------------------------------------------------------------"""
                 # NW
 
                 # Checks if the path is free to move and will stop at the first piece or end of board
+                auxNorthwestmove = self.kingInitialLegalMove(currentCoordinate, auxNorthwestmove, playerTurn, NORTHWEST)
+
+                # Call recursivity to check for more jumps
                 if auxNorthwestmove:
-                    nextCoord = auxNorthwestmove[0]
-                    while self.onBoard(nextCoord) and self.onBoard(self.nextCoordinate(NORTHWEST, nextCoord)) and \
-                            self.location(nextCoord).occupant is None:
-                        auxNorthwestmove += [self.nextCoordinate(NORTHWEST, nextCoord)]
-                        nextCoord = self.nextCoordinate(NORTHWEST, nextCoord)
+                    legalMoves.append(self.legalMoves(playerTurn, auxNorthwestmove[-1],
+                                                      True, auxNorthwestmove[-1], auxNorthwestmove, king))
 
-                    # Checks if didn't enter inside while (it can't move except for jump pieces
-                    if not nextCoord == auxNorthwestmove[0]:
-
-                        # Call the validations to check if there's a piece
-                        if self.canJumpDirection(auxNorthwestmove[-2], playerTurn, NORTHWEST, previous,
-                                                 auxNorthwestmove):
-                            auxNorthwestmove += [self.nextCoordinate(NORTHWEST, auxNorthwestmove[-1])]
-
-                # After verify if the variable nextCoord didn't get new moves, verify if it can jump an adjacent piece
-                if not auxNorthwestmove and self.canJumpDirection(currentCoordinate, playerTurn, NORTHWEST, previous,
-                                                                  auxNorthwestmove):
-                    auxNorthwestmove = [self.nextCoordinate(NORTHWEST, currentCoordinate)]
-                    auxNorthwestmove += [self.afterNextCoordinate(NORTHWEST, currentCoordinate)]
-
-                # If it has a jump, call recursive to search to look for more jumps
-                if len(auxNorthwestmove) >= 2 and self.canJumpDirection(currentCoordinate, playerTurn, NORTHWEST,
-                                                                        previous,
-                                                                        auxNorthwestmove):
-                    legalMoves.append(
-                        self.legalMoves(playerTurn, auxNorthwestmove[-1],
-                                        True, auxNorthwestmove[-2], auxNorthwestmove, king))
-                else:
-                    legalMoves.append(auxNorthwestmove)
+                """---------------------------------------------------------------------------------"""
 
                 # NE
+
+                auxNortheastmove = self.kingInitialLegalMove(currentCoordinate, auxNortheastmove, playerTurn, NORTHEAST)
+
                 if auxNortheastmove:
-                    nextCoord = auxNortheastmove[0]
-                    while self.onBoard(nextCoord) and self.onBoard(self.nextCoordinate(NORTHEAST, nextCoord)) and \
-                            self.location(nextCoord).occupant is None:
-                        auxNortheastmove += [self.nextCoordinate(NORTHEAST, nextCoord)]
-                        nextCoord = self.nextCoordinate(NORTHEAST, nextCoord)
+                    legalMoves.append(self.legalMoves(playerTurn, auxNortheastmove[-1],
+                                                      True, auxNortheastmove[-1], auxNortheastmove, king))
 
-                    if not nextCoord == auxNortheastmove[0]:
-                        if self.canJumpDirection(auxNortheastmove[-2], playerTurn, NORTHEAST, previous,
-                                                 auxNortheastmove):
-                            auxNortheastmove += [self.nextCoordinate(NORTHEAST, auxNortheastmove[-1])]
-
-                if not auxNortheastmove and self.canJumpDirection(currentCoordinate, playerTurn, NORTHEAST, previous,
-                                                                  auxNortheastmove):
-                    auxNortheastmove = [self.nextCoordinate(NORTHEAST, currentCoordinate)]
-                    auxNortheastmove += [self.afterNextCoordinate(NORTHEAST, currentCoordinate)]
-
-                if len(auxNortheastmove) >= 2 and self.canJumpDirection(currentCoordinate, playerTurn, NORTHEAST,
-                                                                        previous,
-                                                                        auxNortheastmove):
-                    legalMoves.append(
-                        self.legalMoves(playerTurn, auxNortheastmove[-1],
-                                        True, auxNortheastmove[-2], auxNortheastmove, king))
-                else:
-                    legalMoves.append(auxNortheastmove)
+                """---------------------------------------------------------------------------------"""
 
                 # SW
+
+                auxSouthwestmove = self.kingInitialLegalMove(currentCoordinate, auxSouthwestmove, playerTurn, SOUTHWEST)
+
                 if auxSouthwestmove:
-                    nextCoord = auxSouthwestmove[0]
+                    legalMoves.append(self.legalMoves(playerTurn, auxSouthwestmove[-1],
+                                                      True, auxSouthwestmove[-1], auxSouthwestmove, king))
 
-                    while self.onBoard(nextCoord) and self.onBoard(self.nextCoordinate(SOUTHWEST, nextCoord)) and \
-                            self.location(nextCoord).occupant is None:
-                        auxSouthwestmove += [self.nextCoordinate(SOUTHWEST, nextCoord)]
-                        nextCoord = self.nextCoordinate(SOUTHWEST, nextCoord)
-
-                    if not nextCoord == auxSouthwestmove[0]:
-                        if self.canJumpDirection(auxSouthwestmove[-2], playerTurn, SOUTHWEST, previous,
-                                                 auxSouthwestmove):
-                            auxSouthwestmove += [self.nextCoordinate(SOUTHWEST, auxSouthwestmove[-1])]
-
-                if not auxSouthwestmove and self.canJumpDirection(currentCoordinate, playerTurn, SOUTHWEST, previous,
-                                                                  auxSouthwestmove):
-                    auxSouthwestmove = [self.nextCoordinate(SOUTHWEST, currentCoordinate)]
-                    auxSouthwestmove += [self.afterNextCoordinate(SOUTHWEST, currentCoordinate)]
-
-                if len(auxSouthwestmove) >= 2 and self.canJumpDirection(currentCoordinate, playerTurn, SOUTHWEST,
-                                                                        previous,
-                                                                        auxSouthwestmove):
-                    legalMoves.append(
-                        self.legalMoves(playerTurn, auxSouthwestmove[-1],
-                                        True, auxSouthwestmove[-2], auxSouthwestmove, king))
-                else:
-                    legalMoves.append(auxSouthwestmove)
+                """---------------------------------------------------------------------------------"""
 
                 # SE
+
+                auxSoutheastmove = self.kingInitialLegalMove(currentCoordinate, auxSoutheastmove, playerTurn, SOUTHEAST)
+
                 if auxSoutheastmove:
-                    nextCoord = auxSoutheastmove[0]
-                    while self.onBoard(nextCoord) and self.onBoard(self.nextCoordinate(SOUTHEAST, nextCoord)) and \
-                            self.location(nextCoord).occupant is None:
-                        auxSoutheastmove += [self.nextCoordinate(SOUTHEAST, nextCoord)]
-                        nextCoord = self.nextCoordinate(SOUTHEAST, nextCoord)
-
-                    if not nextCoord == auxSoutheastmove[0]:
-                        if self.canJumpDirection(auxSoutheastmove[-2], playerTurn, SOUTHEAST, previous,
-                                                 auxSoutheastmove):
-                            auxSoutheastmove += [self.nextCoordinate(SOUTHEAST, auxSoutheastmove[-1])]
-
-                if not auxSoutheastmove and self.canJumpDirection(currentCoordinate, playerTurn, SOUTHEAST, previous,
-                                                                  auxSoutheastmove):
-                    auxSoutheastmove = [self.nextCoordinate(SOUTHEAST, currentCoordinate)]
-                    auxSoutheastmove += [self.afterNextCoordinate(SOUTHEAST, currentCoordinate)]
-
-                if len(auxSoutheastmove) >= 2 and self.canJumpDirection(currentCoordinate, playerTurn, SOUTHEAST,
-                                                                        previous,
-                                                                        auxSoutheastmove):
-                    legalMoves.append(
-                        self.legalMoves(playerTurn, auxSoutheastmove[-1],
-                                        True, auxSoutheastmove[-2], auxSoutheastmove, king))
-                else:
-                    legalMoves.append(auxSoutheastmove)
+                    legalMoves.append(self.legalMoves(playerTurn, auxSoutheastmove[-1],
+                                                      True, auxSoutheastmove[-1], auxSoutheastmove, king))
 
             """----------------+
             |  Recursive call  |
