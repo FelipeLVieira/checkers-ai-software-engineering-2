@@ -24,7 +24,7 @@ class GameLoop:
         self.done = False
 
         # Player's turn switcher
-        self.turn = WHITE
+        self.board.turn = WHITE
 
         # Boolean screen switchers
         self.startScreen = False
@@ -63,63 +63,38 @@ class GameLoop:
 
                 # Select piece and get legal moves
                 if self.board.location(self.mousePos).occupant is not None \
-                        and selectedSquare.occupant.color is self.turn:
+                        and selectedSquare.occupant.color is self.board.turn:
 
-                    self.selectedPieceCoordinate = self.mousePos
+                    self.board.selectedPieceCoordinate = self.mousePos
 
                     # Get legal moves and filter for the longest moves only
-                    self.selectedLegalMoves = \
-                        self.board.legalMoves(self.turn, self.mousePos,
-                                              False, None, [], self.board.location(self.selectedPieceCoordinate).occupant.king)
+                    self.board.selectedLegalMoves = \
+                        self.board.legalMoves(self.board.turn, self.mousePos,
+                                              False, None, [], self.board.location(self.board.selectedPieceCoordinate).occupant.king)
 
                     # Filter for the moves that jump over pieces
-                    self.selectedLegalMoves = self.board.getLongestMoves(self.selectedLegalMoves, self.board.location(
-                        self.selectedPieceCoordinate).occupant.king)
+                    self.board.selectedLegalMoves = self.board.getLongestMoves(self.board.selectedLegalMoves, self.board.location(
+                        self.board.selectedPieceCoordinate).occupant.king)
 
-                    print("Selected Legal Moves ", self.selectedLegalMoves)
+                    print("Selected Legal Moves ", self.board.selectedLegalMoves)
 
                 # Cancel piece selection
-                elif self.board.location(self.mousePos) == self.board.location(self.selectedPieceCoordinate):
-                    self.selectedPieceCoordinate = None
-                    self.selectedLegalMoves = None
+                elif self.board.location(self.mousePos) == self.board.location(self.board.selectedPieceCoordinate):
+                    self.board.selectedPieceCoordinate = None
+                    self.board.selectedLegalMoves = None
 
                 # Move piece to another position
-                elif self.board.location(self.mousePos).occupant is None and self.selectedPieceCoordinate is not None \
-                        and self.selectedLegalMoves is not None:
+                elif self.board.location(self.mousePos).occupant is None and self.board.selectedPieceCoordinate is not None \
+                        and self.board.selectedLegalMoves is not None:
                     selectedSquareCoordinate = Coordinate(self.mousePos.x, self.mousePos.y)
-                    """-------------------------------------------------------+
-                    | VitinhoCarneiro: The code below should be in a function |
-                    | within Board.py... I need to call it from within the AI |
-                    | inside a copy of the board for it to work.              |
-                    +-------------------------------------------------------"""
-                    # Move the piece and check (and remove) pieces that it jumped over
-                    for movepath in self.selectedLegalMoves:
-                        for idx, coordinate in enumerate(movepath):
-                            if coordinate is not None:
-                                # Check if the selected position is the position that jumps over all possible pieces
-                                if coordinate.x == selectedSquareCoordinate.x and coordinate.y == selectedSquareCoordinate.y and coordinate is \
-                                        movepath[-1]:
-                                    self.board.movePiece(self.selectedPieceCoordinate, self.mousePos)
-                                    self.board.removePiecesByMove(movepath, self.turn)
 
-                                    self.selectedPieceCoordinate = None
-                                    self.selectedLegalMoves = None
-                                    selectedSquare = None
+                    self.board.executeMove(selectedSquareCoordinate)
 
-                                    self.endTurn()
-                                # If the piece jump in a position smaller the farest square of the move
-                                elif coordinate.x == selectedSquareCoordinate.x and coordinate.y == selectedSquareCoordinate.y and coordinate is not \
-                                        movepath[-1] and self.board.location(
-                                    self.selectedPieceCoordinate).occupant.king:
-                                    auxMove = movepath[:idx]
-                                    self.board.movePiece(self.selectedPieceCoordinate, self.mousePos)
-                                    self.board.removePiecesByMove(auxMove, self.turn)
+                    self.board.selectedPieceCoordinate = None
+                    self.board.selectedLegalMoves = None
+                    selectedSquare = None
 
-                                    self.selectedPieceCoordinate = None
-                                    self.selectedLegalMoves = None
-                                    selectedSquare = None
-
-                                    self.endTurn()
+                    self.endTurn()
 
     """-----------------+
     |  Screen Updaters  |
@@ -132,7 +107,7 @@ class GameLoop:
         return
 
     def updateMainGame(self):
-        self.graphics.updateMainGameDisplay(self.board, self.selectedLegalMoves, self.selectedPieceCoordinate)
+        self.graphics.updateMainGameDisplay(self.board, self.board.selectedLegalMoves, self.board.selectedPieceCoordinate)
         pygame.display.flip()
 
     """------------------+
@@ -148,10 +123,10 @@ class GameLoop:
 
     def checkForEndgame(self):
 
-        if self.turn is WHITE:
-            self.turn = RED
+        if self.board.turn is WHITE:
+            self.board.turn = RED
         else:
-            self.turn = WHITE
+            self.board.turn = WHITE
 
         return True
 
