@@ -20,7 +20,6 @@ class rngWrapper
 rng = rngWrapper()
 
 
-
 def contextColor(color, maximizing):
     '''Gives the minimax context color based on the AI's color.'''
     if maximizing: return color
@@ -137,18 +136,32 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
             if beta <= alpha: break
         if not parentCall: return worstValue
     
-    returnPointer = legalMoveSet[chosenNode]
+    returnPointer.append(legalMoveSet[chosenNode])
+
 
 def heuristic(board, playerColor):
     """Outputs a number that describes the state of the game.
        In other words, a number that correlates with how well the player
        indicated by playerColor is doing."""
-    raise NotImplementedError()
-    # Ideas for heuristic:
-    # 1. Number of this player's pieces - Number of the other player's pieces
-    # 2. Signed square of (1.)?
-    # 3. Cube of (1.)?
-    # 4. Take number of kings into account
+    myPieces = 0
+    opponentPieces = 0
+
+    for col in range(8):
+        for row in range(8):
+            if board.matrix[col][row].occupant is Board.Piece:
+                if board.matrix[col][row].occupant.color == playerColor:
+                    if board.matrix[col][row].occupant.king:
+                        myPieces += 2
+                    else:
+                        myPieces += 1
+                else: 
+                    if board.matrix[col][row].occupant.king:
+                        opponentPieces += 2
+                    else:
+                        opponentPieces += 1
+
+    return (myPieces - opponentPieces) * (1 + (24 - (myPieces + opponentPieces) / 2))
+
 
 def AIPlayer(board, playerColor):
     # The minimum time in seconds to delay when the AI is
@@ -184,7 +197,9 @@ def AIPlayer(board, playerColor):
 
     # +------------------------------+
     
-    def __init__(self, color=RED, waitTime=60, heuristicFunc=heuristic, depth=5, stubbornnessTable=None, randomOffset=0.05):
+
+    def __init__(self, color=RED, waitTime=60, heuristicFunc=heuristic, 
+            depth=5, stubbornnessTable=None, randomOffset=0.05):
         self.color = color
         self.waitTime = waitTime
         self.heuristicFunc = heuristicFunc
@@ -192,14 +207,17 @@ def AIPlayer(board, playerColor):
         self.stubbornnessTable = stubbornnessTable
         self.randomOffset = randomOffset
 
+
     def isThinking():
         return (self.minimaxThread is threading.thread and
                 self.minimaxThread.is_alive())
+
 
     def play(board):
         if self.isThinking():
             raise RuntimeError("AI.py::AIPlayer:play(): An attempt to call the AI function was made while it is already running.")
         self.waitTimer = self.waitTime
+        self.minimaxResult = []
         self.minimaxThread = threading.Thread(
                 target=minimaxAB, args=(board, depth, color, minimaxResult),
                 kwargs={heuristicFunc=self.heuristicFunc,
@@ -207,6 +225,7 @@ def AIPlayer(board, playerColor):
                         randomOffset = self.randomOffset})
         self.minimaxThread.start()
     
+
     def updateAndCheckCompletion(timeDelta):
         self.waitTimer -= timeDelta
         if not (self.waitTimer > 0 or self.isThinking()):
