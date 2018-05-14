@@ -43,7 +43,6 @@ class Board:
 
         return matrix
 
-
     def boardString(self, board):
         """
         Takes a board and returns a matrix of the board space colors. Used for testing new_board()
@@ -198,6 +197,13 @@ class Board:
 
         return possibleJumpsCount
 
+    def canMoveDirection(self, currentCoordinate, DIRECTION):
+        if self.onBoard(self.nextCoordinate(DIRECTION, currentCoordinate)):
+            if self.location(self.nextCoordinate(DIRECTION, currentCoordinate)).occupant is None:
+                return True
+            else:
+                return False
+
     def canJumpDirection(self, coordinate, playerTurn, DIRECTION, previous, move):
         """
             Given a coordinate, color, direction and a list of moves, checks if there's another available jump
@@ -235,28 +241,18 @@ class Board:
     +-------------------"""
 
     def legalMoves(self, playerTurn, currentCoordinate, jump=False,
-            previous=None, move=[],
-            king=self.board.location(currentCoordinate).occupant.king):
+                   previous=None, move=[], king=False):
         """
         Look for all possible movements recursively and return a list of possible moves
         """
 
-        # Count the number of adjacent movements available on this coordinate
-        canMoveOrJumpCount = self.canMoveOrJumpCount(playerTurn, currentCoordinate, jump, previous, move, king)
-        print("legalMoves -> canMoveorJumpCount: ", canMoveOrJumpCount)
-
-        # No positions to jump, return the move created by previous function(s) call(s)
-        if canMoveOrJumpCount == 0:
-            print("return move ", move)
-            return move
+        legalMoves = []
 
         if not jump:
 
             """---------------+
             |   First Call    |
             +---------------"""
-
-            legalMoves = []
 
             auxNorthwestmove = []
             auxNortheastmove = []
@@ -265,35 +261,31 @@ class Board:
 
             if playerTurn is WHITE or king:
                 # Check if there is a empty square to move forward
-                if self.onBoard(self.nextCoordinate(NORTHWEST, currentCoordinate)):
-                    if self.location(self.nextCoordinate(NORTHWEST, currentCoordinate)).occupant is None:
-                        if king:
-                            auxNorthwestmove = [self.nextCoordinate(NORTHWEST, currentCoordinate)]
-                        else:
-                            legalMoves.append([self.nextCoordinate(NORTHWEST, currentCoordinate)])
+                if self.canMoveDirection(currentCoordinate, NORTHWEST):
+                    if king:
+                        auxNorthwestmove = [self.nextCoordinate(NORTHWEST, currentCoordinate)]
+                    else:
+                        legalMoves.append([self.nextCoordinate(NORTHWEST, currentCoordinate)])
 
-                if self.onBoard(self.nextCoordinate(NORTHEAST, currentCoordinate)):
-                    if self.location(self.nextCoordinate(NORTHEAST, currentCoordinate)).occupant is None:
-                        if king:
-                            auxNortheastmove = [self.nextCoordinate(NORTHEAST, currentCoordinate)]
-                        else:
-                            legalMoves.append([self.nextCoordinate(NORTHEAST, currentCoordinate)])
+                if self.canMoveDirection(currentCoordinate, NORTHEAST):
+                    if king:
+                        auxNortheastmove = [self.nextCoordinate(NORTHEAST, currentCoordinate)]
+                    else:
+                        legalMoves.append([self.nextCoordinate(NORTHEAST, currentCoordinate)])
 
             if playerTurn is RED or king:
 
-                if self.onBoard(self.nextCoordinate(SOUTHWEST, currentCoordinate)):
-                    if self.location(self.nextCoordinate(SOUTHWEST, currentCoordinate)).occupant is None:
-                        if king:
-                            auxSouthwestmove = [self.nextCoordinate(SOUTHWEST, currentCoordinate)]
-                        else:
-                            legalMoves.append([self.nextCoordinate(SOUTHWEST, currentCoordinate)])
+                if self.canMoveDirection(currentCoordinate, SOUTHWEST):
+                    if king:
+                        auxSouthwestmove = [self.nextCoordinate(SOUTHWEST, currentCoordinate)]
+                    else:
+                        legalMoves.append([self.nextCoordinate(SOUTHWEST, currentCoordinate)])
 
-                if self.onBoard(self.nextCoordinate(SOUTHEAST, currentCoordinate)):
-                    if self.location(self.nextCoordinate(SOUTHEAST, currentCoordinate)).occupant is None:
-                        if king:
-                            auxSoutheastmove = [self.nextCoordinate(SOUTHEAST, currentCoordinate)]
-                        else:
-                            legalMoves.append([self.nextCoordinate(SOUTHEAST, currentCoordinate)])
+                if self.canMoveDirection(currentCoordinate, SOUTHEAST):
+                    if king:
+                        auxSoutheastmove = [self.nextCoordinate(SOUTHEAST, currentCoordinate)]
+                    else:
+                        legalMoves.append([self.nextCoordinate(SOUTHEAST, currentCoordinate)])
 
             # Build kings path and also checks if king can jump
             if king:
@@ -492,7 +484,12 @@ class Board:
 
         print("legalMoves ", legalMoves)
 
-        return self.filterMoves(legalMoves)
+        legalMoves = self.filterMoves(legalMoves)
+
+        if not legalMoves:
+            return move
+        else:
+            return legalMoves
 
     def getLongestMoves(self, legalMoves, king):
 
