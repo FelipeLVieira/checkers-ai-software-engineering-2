@@ -2,6 +2,7 @@ import pygame
 import Board
 from Constants import *
 import random
+import threading
 
 
 class rngWrapper
@@ -28,9 +29,9 @@ def contextColor(color, maximizing):
     raise RuntimeError("Graphics.py::contextColor(): invalid color `{}'."
             .format(color))
 
-def minimaxAB(board, depth, AIColor, maximizing=True, alpha=float("-inf"), 
-               beta=float("+inf"), parentCall=True, stubbornnessTable=None,
-               randomOffset=0.05, heuristicFunc=heuristic):
+def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
+        alpha=float("-inf"), beta=float("+inf"), parentCall=True,
+        stubbornnessTable=None, randomOffset=0.05, heuristicFunc=heuristic):
     """Implements the minimax algorithm.
        The below variables are tuning knobs:
        - depth controls how far into the future the algorithm looks.
@@ -135,9 +136,8 @@ def minimaxAB(board, depth, AIColor, maximizing=True, alpha=float("-inf"),
             # Prune the tree
             if beta <= alpha: break
         if not parentCall: return worstValue
-
-    return legalMoveSet(chosenNode)
-
+    
+    returnPointer = legalMoveSet[chosenNode]
 
 def heuristic(board, playerColor):
     """Outputs a number that describes the state of the game.
@@ -149,3 +149,69 @@ def heuristic(board, playerColor):
     # 2. Signed square of (1.)?
     # 3. Cube of (1.)?
     # 4. Take number of kings into account
+
+def AIPlayer(board, playerColor):
+    # The minimum time in seconds to delay when the AI is
+    # going to play.
+    # This avoids it from playing too quickly on fast computers.
+    waitTime = None
+
+    # The counter for waitTime.
+    waitTimer = None
+    
+    # The AI color; usually RED, but who knows.
+    color = None
+
+    # The pointer to the minimax thread that's initiated when the AI is going
+    # to play.
+    minimaxThread = None
+
+    # Result of the minimaxThread
+    minimaxResult = None
+
+    # +--- Difficulty parameters: ---+
+    # Heuristic function:
+    heuristicFunc = None
+
+    # Search depth:
+    depth = None
+
+    # Stubbornness:
+    stubbornnessTable = None
+
+    # Random judgement offset:
+    randomOffset = None
+
+    # +------------------------------+
+    
+    def __init__(self, color=RED, waitTime=60, heuristicFunc=heuristic, depth=5, stubbornnessTable=None, randomOffset=0.05):
+        self.color = color
+        self.waitTime = waitTime
+        self.heuristicFunc = heuristicFunc
+        self.depth = depth
+        self.stubbornnessTable = stubbornnessTable
+        self.randomOffset = randomOffset
+
+    def isThinking():
+        return (self.minimaxThread is threading.thread and
+                self.minimaxThread.is_alive())
+
+    def play(board):
+        if self.isThinking():
+            raise RuntimeError("AI.py::AIPlayer:play(): An attempt to call the AI function was made while it is already running.")
+        self.waitTimer = self.waitTime
+        self.minimaxThread = threading.Thread(
+                target=minimaxAB, args=(board, depth, color, minimaxResult),
+                kwargs={heuristicFunc=self.heuristicFunc,
+                        stubbornnessTable = self.stubbornnessTable,
+                        randomOffset = self.randomOffset})
+        self.minimaxThread.start()
+    
+    def updateAndCheckCompletion(timeDelta):
+        self.waitTimer -= timeDelta
+        if not (self.waitTimer > 0 or self.isThinking()):
+            return minimaxResult
+        return False
+
+
+
