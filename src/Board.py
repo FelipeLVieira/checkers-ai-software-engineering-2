@@ -11,12 +11,11 @@ class Board:
             self.matrix = board.matrix
         self.matrix = self.newBoard()
 
+        self.pieceBestMoves = []
         self.selectedLegalMoves = None
         self.selectedPieceCoordinate = None
+        self.mouseClick = None
         self.turn = None
-        self.mousePos = None
-        self.bestMovesWHITE = []
-        self.bestMovesRED = []
 
     """-------------------+
     |  Board Initializer  |
@@ -173,6 +172,9 @@ class Board:
         return False
 
     def kingInitialLegalMove(self, currentCoordinate, auxCoordinateList, playerTurn, DIRECTION):
+
+        print("auxCoordinateList", auxCoordinateList, "currentCoord ", currentCoordinate)
+
         if auxCoordinateList:
             auxCoordinateList = [currentCoordinate]
             nextCoord = currentCoordinate
@@ -195,7 +197,8 @@ class Board:
         # After verify if the variable nextCoord didn't get new moves, verify if it can jump an adjacent
         if not auxCoordinateList and self.canJumpDirection(currentCoordinate, playerTurn, DIRECTION, None,
                                                            auxCoordinateList):
-            auxCoordinateList = [self.nextCoordinate(DIRECTION, currentCoordinate)]
+            auxCoordinateList = [currentCoordinate]
+            auxCoordinateList += [self.nextCoordinate(DIRECTION, currentCoordinate)]
             auxCoordinateList += [self.afterNextCoordinate(DIRECTION, currentCoordinate)]
 
         return auxCoordinateList
@@ -219,9 +222,10 @@ class Board:
                                 None, [],
                                 self.location(pieceCoordinate).occupant.king):
                         if move not in legalMoveSet:
+                            print("legalMoveSet append", move)
                             legalMoveSet.append(move)
 
-        return self.getLongestJumpMoves(legalMoveSet, playerTurn)
+        return self.getBestMoves(legalMoveSet, playerTurn)
 
     """--------------------------+
     |  Single Piece Moves Logic  |
@@ -285,6 +289,11 @@ class Board:
                 # Checks if the path is free to move and will stop at the first piece or end of board
                 auxNorthwestmove = self.kingInitialLegalMove(currentCoordinate, auxNorthwestmove, playerTurn, NORTHWEST)
 
+                for c in auxNorthwestmove:
+                    print(c.x, c.y)
+
+                print("auxNorthwestmove", auxNorthwestmove, len(auxNorthwestmove))
+
                 # Call recursivity to check for more jumps
                 if auxNorthwestmove:
                     legalMoves.append(self.legalMovesByPiece(playerTurn, auxNorthwestmove[-1],
@@ -296,6 +305,12 @@ class Board:
 
                 auxNortheastmove = self.kingInitialLegalMove(currentCoordinate, auxNortheastmove, playerTurn, NORTHEAST)
 
+                for c in auxNorthwestmove:
+                    print(c.x, c.y)
+
+                print("auxNortheastmove", auxNortheastmove,
+                      len(auxNortheastmove))
+
                 if auxNortheastmove:
                     legalMoves.append(self.legalMovesByPiece(playerTurn, auxNortheastmove[-1],
                                                              True, auxNortheastmove[-1], auxNortheastmove, king))
@@ -306,6 +321,9 @@ class Board:
 
                 auxSouthwestmove = self.kingInitialLegalMove(currentCoordinate, auxSouthwestmove, playerTurn, SOUTHWEST)
 
+                print("auxSouthwestmove", auxSouthwestmove,
+                      len(auxSouthwestmove))
+
                 if auxSouthwestmove:
                     legalMoves.append(self.legalMovesByPiece(playerTurn, auxSouthwestmove[-1],
                                                              True, auxSouthwestmove[-1], auxSouthwestmove, king))
@@ -315,6 +333,9 @@ class Board:
                 # SE
 
                 auxSoutheastmove = self.kingInitialLegalMove(currentCoordinate, auxSoutheastmove, playerTurn, SOUTHEAST)
+
+                print("auxSoutheastmove", auxSoutheastmove,
+                      len(auxSoutheastmove))
 
                 if auxSoutheastmove:
                     legalMoves.append(self.legalMovesByPiece(playerTurn, auxSoutheastmove[-1],
@@ -329,7 +350,8 @@ class Board:
 
                 # NW
                 if self.canJumpDirection(currentCoordinate, playerTurn, NORTHWEST, previous, move):
-                    move = [self.nextCoordinate(NORTHWEST, currentCoordinate)]
+                    move = currentCoordinate
+                    move += [self.nextCoordinate(NORTHWEST, currentCoordinate)]
                     move += [self.afterNextCoordinate(NORTHWEST, currentCoordinate)]
                     legalMoves.append(
                         self.legalMovesByPiece(playerTurn, self.afterNextCoordinate(NORTHWEST, currentCoordinate),
@@ -337,7 +359,8 @@ class Board:
 
                 # NE
                 if self.canJumpDirection(currentCoordinate, playerTurn, NORTHEAST, previous, move):
-                    move = [self.nextCoordinate(NORTHEAST, currentCoordinate)]
+                    move = currentCoordinate
+                    move += [self.nextCoordinate(NORTHEAST, currentCoordinate)]
                     move += [self.afterNextCoordinate(NORTHEAST, currentCoordinate)]
                     legalMoves.append(
                         self.legalMovesByPiece(playerTurn, self.afterNextCoordinate(NORTHEAST, currentCoordinate),
@@ -345,7 +368,8 @@ class Board:
 
                 # SW
                 if self.canJumpDirection(currentCoordinate, playerTurn, SOUTHWEST, previous, move):
-                    move = [self.nextCoordinate(SOUTHWEST, currentCoordinate)]
+                    move = currentCoordinate
+                    move += [self.nextCoordinate(SOUTHWEST, currentCoordinate)]
                     move += [self.afterNextCoordinate(SOUTHWEST, currentCoordinate)]
                     legalMoves.append(
                         self.legalMovesByPiece(playerTurn, self.afterNextCoordinate(SOUTHWEST, currentCoordinate),
@@ -353,7 +377,8 @@ class Board:
 
                 # SE
                 if self.canJumpDirection(currentCoordinate, playerTurn, SOUTHEAST, previous, move):
-                    move = [self.nextCoordinate(SOUTHEAST, currentCoordinate)]
+                    move = currentCoordinate
+                    move += [self.nextCoordinate(SOUTHEAST, currentCoordinate)]
                     move += [self.afterNextCoordinate(SOUTHEAST, currentCoordinate)]
                     legalMoves.append(
                         self.legalMovesByPiece(playerTurn, self.afterNextCoordinate(SOUTHEAST, currentCoordinate),
@@ -413,14 +438,17 @@ class Board:
         else:
             return legalMoves
 
-    def getLongestJumpMoves(self, legalMoves, playerTurn):
+    def getBestMoves(self, legalMoves, playerTurn):
         piecesJumped = 0
-        print("getLongestJumpMoves", legalMoves)
+        aux = 0
         for move in legalMoves:
             for coordinate in move:
                 if self.location(coordinate).occupant is not None \
                     and self.location(coordinate).occupant.color is not playerTurn:
-                        piecesJumped += 1
+                        aux += 1
+            if aux > piecesJumped:
+                piecesJumped = aux
+
         aux = 0
         longestJumpMoves = []
         for move in legalMoves:
@@ -428,42 +456,21 @@ class Board:
                 if self.location(coordinate).occupant is not None \
                     and self.location(coordinate).occupant.color is not playerTurn:
                         aux += 1
+            aux = 0
             if aux == piecesJumped:
                 longestJumpMoves.append(move)
                 aux = 0
 
-        print("longest jump moves", longestJumpMoves)
-        selectedPieceLegalMoves = []
+        print(piecesJumped)
+        self.pieceBestMoves = longestJumpMoves
+        pieceMoves = []
 
         for move in longestJumpMoves:
-            for coordinate in move:
+            for pos in move:
+                if self.location(pos) == self.location(self.selectedPieceCoordinate):
+                    pieceMoves.append(move)
 
-        return selectedPieceLegalMoves
-
-    def getLongestMoves(self, legalMoves, king):
-
-        """
-        Given a list of possible moves, filter the largest.
-        If draw, return all with the same size of the first largest move found
-        """
-
-        longestMoves = []
-
-        if legalMoves is None:
-            return
-
-        longest = []
-        for move in legalMoves:
-            if len(move) > len(longest):
-                longest = move
-
-        longestLegalMoves = []
-
-        for move in legalMoves:
-            if len(longest) == len(move):
-                longestLegalMoves.append(move)
-
-        return longestLegalMoves
+        return pieceMoves
 
     def filterMoves(self, moves):
 
@@ -504,18 +511,14 @@ class Board:
         self.king(endCoordinate)
 
     def executeMove(self, playerTurn):
-        if playerTurn is WHITE:
-            for movepath in self.bestMovesWHITE:
-                if self.location(movepath[-1]) == self.location(self.mousePos) \
-                        and not self.bestMovesWHITE:
-                    self.movePiece(self.selectedPieceCoordinate, movepath[-1])
-                    return True
-        if playerTurn is RED:
-            for movepath in self.bestMovesRED:
-                if self.location(movepath[-1]) == self.location(self.mousePos):
-                    self.movePiece(self.selectedPieceCoordinate, movepath[-1])
+        print("piece best moves", self.pieceBestMoves)
+        for move in self.pieceBestMoves:
+            for coord in move:
+                if self.location(coord) == self.location(self.mouseClick):
+                    self.movePiece(self.selectedPieceCoordinate, self.mouseClick)
                     return True
         return False
+
 
     def isEndSquare(self, coordinate):
         """
