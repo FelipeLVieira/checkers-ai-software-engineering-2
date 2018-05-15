@@ -20,8 +20,6 @@ class GameLoop:
 
         self.done = False
 
-        self.mousePos = None
-
         # Player's turn switcher
         self.board.turn = WHITE
 
@@ -45,31 +43,22 @@ class GameLoop:
         return
 
     def mainGameEventLoop(self):
-        self.mousePos = self.board.boardCoords(pygame.mouse.get_pos(),
+        self.board.mousePos = self.board.boardCoords(pygame.mouse.get_pos(),
                                                self.graphics.squareSize)  # what square is the mouse in?
-
         for event in pygame.event.get():
             # ESC quits the game (just for now)... (by the way, closing the window works too because of pygame.QUIT)
-
-
-
             if (event.type == pygame.QUIT) or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                 self.terminateGame()
 
             # Click event handling
             if event.type == pygame.MOUSEBUTTONDOWN:
 
-                self.board.mouseClick = self.mousePos
-
-                print("mouseClick x", self.board.mouseClick.x, " y ",
-                      self.board.mouseClick.y)
-
                 # Select piece and get legal moves
-                if self.board.location(self.board.mouseClick).occupant is not None \
-                        and self.board.location(self.board.mouseClick).occupant.color is self.board.turn:
+                if self.board.location(self.board.mousePos).occupant is not None \
+                        and self.board.location(self.board.mousePos).occupant.color is self.board.turn:
 
-                    self.board.selectedPieceCoordinate = Coordinate(self.board.mouseClick.x,
-                                                                    self.board.mouseClick.y)
+                    self.board.selectedPieceCoordinate = Coordinate(self.board.mousePos.x,
+                                                                    self.board.mousePos.y)
 
                     # Get legal moves and filter for the longest moves only
                     self.board.selectedLegalMoves = \
@@ -78,19 +67,16 @@ class GameLoop:
                     print("Selected Legal Moves ", self.board.selectedLegalMoves)
 
                 # Move piece to another position
-                elif self.board.location(self.board.mouseClick).occupant is None and \
-                        self.board.location(self.board.mouseClick) \
-                        is not self.board.location(self.board.selectedPieceCoordinate):
+                elif self.board.location(self.board.mousePos).occupant is None and \
+                    self.board.mousePos is not self.board.selectedPieceCoordinate:
 
                     executed = self.board.executeMove(self.board.turn)
 
                     if executed:
-                        self.board.pieceBestMoves = None
                         self.board.selectedPieceCoordinate = None
                         self.board.selectedLegalMoves = None
-                        self.board.mouseClick = None
-                        self.board.pieceBestMoves = None
                         self.endTurn()
+
 
     """-----------------+
     |  Screen Updaters  |
