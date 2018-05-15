@@ -365,6 +365,31 @@ class Board:
             if self.location(move[0]) == self.location(self.selectedPieceCoordinate):
                 self.pieceBestMoves.append(move)
 
+        aux = 0
+        jumpRef = 0
+        auxMoves = []
+
+        for move in self.pieceBestMoves:
+            for coord in move:
+                if self.location(coord).occupant:
+                    if self.location(coord).occupant.color is not playerTurn:
+                        aux += 1
+            aux = 0
+            if aux > jumpRef:
+                jumpRef = aux
+
+        for move in self.pieceBestMoves:
+            for coord in move:
+                if self.location(coord).occupant:
+                    if self.location(coord).occupant.color is not playerTurn:
+                        aux += 1
+            aux = 0
+            if aux == jumpRef:
+                auxMoves.append(move)
+
+        if jumpRef > 0:
+            self.pieceBestMoves = auxMoves
+
         return self.pieceBestMoves
 
     def filterMoves(self, moves):
@@ -412,6 +437,7 @@ class Board:
             for coord in move:
                 if self.location(coord) == self.location(self.mouseClick):
                     self.movePiece(self.selectedPieceCoordinate, self.mouseClick)
+                    self.removePiecesByMove(move, playerTurn)
                     return True
         return False
 
