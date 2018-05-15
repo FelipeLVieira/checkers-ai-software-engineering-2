@@ -18,9 +18,6 @@ class GameLoop:
         self.graphics = Graphics()
         self.board = Board()
 
-        self.selectedPieceCoordinate = None
-        self.mousePos = None
-        self.selectedLegalMoves = []
         self.done = False
 
         # Player's turn switcher
@@ -46,7 +43,7 @@ class GameLoop:
         return
 
     def mainGameEventLoop(self):
-        self.mousePos = self.board.boardCoords(pygame.mouse.get_pos(),
+        self.board.mousePos = self.board.boardCoords(pygame.mouse.get_pos(),
                                                self.graphics.squareSize)  # what square is the mouse in?
         for event in pygame.event.get():
             # ESC quits the game (just for now)... (by the way, closing the window works too because of pygame.QUIT)
@@ -56,45 +53,30 @@ class GameLoop:
             # Click event handling
             if event.type == pygame.MOUSEBUTTONDOWN:
 
-                # Get selected square object
-                selectedSquare = self.board.location(self.mousePos)
-                # Get coordinates
-                selectedSquareCoordinate = Coordinate(self.mousePos.x, self.mousePos.y)
-
                 # Select piece and get legal moves
-                if self.board.location(self.mousePos).occupant is not None \
-                        and selectedSquare.occupant.color is self.board.turn:
+                if self.board.location(self.board.mousePos).occupant is not None \
+                        and self.board.location(self.board.mousePos).occupant.color is self.board.turn:
 
-                    self.board.selectedPieceCoordinate = self.mousePos
+                    self.board.selectedPieceCoordinate = Coordinate(self.board.mousePos.x,
+                                                                    self.board.mousePos.y)
 
                     # Get legal moves and filter for the longest moves only
                     self.board.selectedLegalMoves = \
-                        self.board.legalMoves(self.board.turn, self.mousePos,
-                                              False, None, [], self.board.location(self.board.selectedPieceCoordinate).occupant.king)
-
-                    # Filter for the moves that jump over pieces
-                    self.board.selectedLegalMoves = self.board.getLongestMoves(self.board.selectedLegalMoves, self.board.location(
-                        self.board.selectedPieceCoordinate).occupant.king)
+                        self.board.getLegalMoves(self.board.turn)
 
                     print("Selected Legal Moves ", self.board.selectedLegalMoves)
 
-                # Cancel piece selection
-                elif self.board.location(self.mousePos) == self.board.location(self.board.selectedPieceCoordinate):
-                    self.board.selectedPieceCoordinate = None
-                    self.board.selectedLegalMoves = None
-
                 # Move piece to another position
-                elif self.board.location(self.mousePos).occupant is None and self.board.selectedPieceCoordinate is not None \
-                        and self.board.selectedLegalMoves is not None:
-                    selectedSquareCoordinate = Coordinate(self.mousePos.x, self.mousePos.y)
+                elif self.board.location(self.board.mousePos).occupant is None and \
+                    self.board.mousePos is not self.board.selectedPieceCoordinate:
 
-                    self.board.executeMove(selectedSquareCoordinate)
+                    executed = self.board.executeMove(self.board.turn)
 
-                    self.board.selectedPieceCoordinate = None
-                    self.board.selectedLegalMoves = None
-                    selectedSquare = None
+                    if executed:
+                        self.board.selectedPieceCoordinate = None
+                        self.board.selectedLegalMoves = None
+                        self.endTurn()
 
-                    self.endTurn()
 
     """-----------------+
     |  Screen Updaters  |

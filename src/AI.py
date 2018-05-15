@@ -49,9 +49,9 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
             if(board.matrix[x][y].occupant is Board.Piece
                     and board.matrix[x][y].occupant.color == 
                     contextColor(AIColor)):
-                for move in board.legalMoves(contextColor(AIColor),
-                        Coordinate(x, y)):
-                    if move is not in legalMoveSet:
+                for move in board.legalMovesByPiece(contextColor(AIColor),
+                                                    Coordinate(x, y)):
+                    if move not in legalMoveSet:
                         legalMoveSet.append(move)
 
     # If we're at the limit of our tree, use the heuristic to guess
