@@ -71,24 +71,24 @@ class GameLoop:
                                                                     self.board.mouseClick.y)
 
                     # Get legal moves and filter for the longest moves only
-                    self.board.selectedLegalMoves = \
-                        self.board.getLegalMoves()
+                    self.board.selectedPieceMoves = self.board.playerLegalMoves = self.board.getLegalMoves()
 
-                    print("Selected Legal Moves ", self.board.selectedLegalMoves)
+                    print("Selected Legal Moves ", self.board.selectedPieceMoves)
 
                 # Move piece to another position
                 elif self.board.location(self.board.mouseClick).occupant is None and \
                         self.board.location(self.board.mouseClick) \
                         is not self.board.location(self.board.selectedPieceCoordinate):
 
-                    executed = self.board.executeMove(self.board.playerTurn)
+                    print("execute move")
+                    executed = self.board.executeMove()
 
                     if executed:
-                        self.board.pieceBestMoves = None
                         self.board.selectedPieceCoordinate = None
-                        self.board.selectedLegalMoves = None
+                        self.board.selectedPieceMoves = None
+                        self.board.playerLegalMoves = None
                         self.board.mouseClick = None
-                        self.board.pieceBestMoves = None
+                        self.board.selectedPieceMoves = None
                         self.endTurn()
 
     """-----------------+
@@ -102,7 +102,7 @@ class GameLoop:
         return
 
     def updateMainGame(self):
-        self.graphics.updateMainGameDisplay(self.board, self.board.selectedLegalMoves, self.board.selectedPieceCoordinate)
+        self.graphics.updateMainGameDisplay(self.board, self.board.selectedPieceMoves, self.board.selectedPieceCoordinate)
         pygame.display.flip()
 
     """------------------+
