@@ -23,7 +23,7 @@ class GameLoop:
         self.mousePos = None
 
         # Player's turn switcher
-        self.board.turn = WHITE
+        self.board.playerTurn = WHITE
 
         # Boolean screen switchers
         self.startScreen = False
@@ -50,9 +50,6 @@ class GameLoop:
 
         for event in pygame.event.get():
             # ESC quits the game (just for now)... (by the way, closing the window works too because of pygame.QUIT)
-
-
-
             if (event.type == pygame.QUIT) or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                 self.terminateGame()
 
@@ -64,16 +61,18 @@ class GameLoop:
                 print("mouseClick x", self.board.mouseClick.x, " y ",
                       self.board.mouseClick.y)
 
+                print("Player color", self.board.playerTurn)
+
                 # Select piece and get legal moves
                 if self.board.location(self.board.mouseClick).occupant is not None \
-                        and self.board.location(self.board.mouseClick).occupant.color is self.board.turn:
-
+                        and self.board.location(self.board.mouseClick).occupant.color is self.board.playerTurn:
+                    print("entered selectedPieceCoordinate")
                     self.board.selectedPieceCoordinate = Coordinate(self.board.mouseClick.x,
                                                                     self.board.mouseClick.y)
 
                     # Get legal moves and filter for the longest moves only
                     self.board.selectedLegalMoves = \
-                        self.board.getLegalMoves(self.board.turn)
+                        self.board.getLegalMoves()
 
                     print("Selected Legal Moves ", self.board.selectedLegalMoves)
 
@@ -82,7 +81,7 @@ class GameLoop:
                         self.board.location(self.board.mouseClick) \
                         is not self.board.location(self.board.selectedPieceCoordinate):
 
-                    executed = self.board.executeMove(self.board.turn)
+                    executed = self.board.executeMove(self.board.playerTurn)
 
                     if executed:
                         self.board.pieceBestMoves = None
@@ -119,10 +118,10 @@ class GameLoop:
 
     def checkForEndgame(self):
 
-        if self.board.turn is WHITE:
-            self.board.turn = RED
+        if self.board.playerTurn is WHITE:
+            self.board.playerTurn = RED
         else:
-            self.board.turn = WHITE
+            self.board.playerTurn = WHITE
 
         return True
 
