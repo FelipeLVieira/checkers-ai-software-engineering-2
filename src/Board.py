@@ -266,27 +266,45 @@ class Board:
         return moveSet
 
     def getPieceJumps(self, move, king):
+        if not move:
+            return
 
-        refPiece = move[-1]
+        refSquare = move[-1]
         moveQueue = []
         finalMoveSet = []
         moveCopy = None
 
-        print("---")
-        print("move", move)
-        print("len(move)", len(move))
-        print("self.canJumpDirection(NORTHWEST, move[-1])",
-              self.canJumpDirection(NORTHWEST, refPiece))
-        print("---")
-
-        if self.canJumpDirection(NORTHWEST, refPiece):
+        if self.canJumpDirection(NORTHWEST, refSquare):
             moveCopy = copy.deepcopy(move)
-            moveCopy += self.nextCoordinate(NORTHWEST, refPiece)
-            moveCopy += self.afterNextCoordinate(NORTHEAST, refPiece)
-            if self.canJumpAdjacent(moveCopy[-1]):
-                finalMoveSet.append(moveCopy)
-        elif moveCopy and moveCopy not in finalMoveSet and not self.canJumpAdjacent(moveCopy[-1]):
-            finalMoveSet.append(copy.deepcopy(move))
+            moveCopy.append(self.nextCoordinate(NORTHWEST, refSquare))
+            moveCopy.append(self.afterNextCoordinate(NORTHWEST, refSquare))
+            moveCopy.append(finalMoveSet)
+        elif move not in finalMoveSet:
+            finalMoveSet.append(move)
+
+        if self.canJumpDirection(NORTHEAST, refSquare):
+            moveCopy = copy.deepcopy(move)
+            moveCopy.append(self.nextCoordinate(NORTHEAST, refSquare))
+            moveCopy.append(self.afterNextCoordinate(NORTHEAST, refSquare))
+            moveCopy.append(finalMoveSet)
+        elif move not in finalMoveSet:
+            finalMoveSet.append(move)
+
+        if self.canJumpDirection(SOUTHWEST, refSquare):
+            moveCopy = copy.deepcopy(move)
+            moveCopy.append(self.nextCoordinate(SOUTHWEST, refSquare))
+            moveCopy.append(self.afterNextCoordinate(SOUTHWEST, refSquare))
+            moveCopy.append(finalMoveSet)
+        elif move not in finalMoveSet:
+            finalMoveSet.append(move)
+
+        if self.canJumpDirection(SOUTHEAST, refSquare):
+            moveCopy = copy.deepcopy(move)
+            moveCopy.append(self.nextCoordinate(SOUTHEAST, refSquare))
+            moveCopy.append(self.afterNextCoordinate(SOUTHEAST, refSquare))
+            moveCopy.append(finalMoveSet)
+        elif move not in finalMoveSet:
+            finalMoveSet.append(move)
 
         """
         while moveQueue:
@@ -324,9 +342,6 @@ class Board:
                     auxCopy += self.afterNextCoordinate(SOUTHEAST, refPiece)
                     finalMoveSet.append(auxCopy)"""
 
-        print("before return moveQueue", moveQueue)
-        print("before return finalMoveSet", finalMoveSet)
-
         return finalMoveSet
 
     """-------------------------------+
@@ -356,29 +371,26 @@ class Board:
         """
         Look for all possible movements recursively and return a list of possible moves
         """
+        pieceMoves = []
+        returnValue = []
 
         # Get piece moves without jump
         legalMoves = self.getMovesByPiece(pieceCoordinate, king)
 
         # Extend jumps
-        # legalMoves = self.getJumpsByMoveSet(legalMoves, king)
 
-        return legalMoves
+        for move in legalMoves:
+            returnValue += self.getPieceJumps(move, king)
 
-    def getJumpsByMoveSet(self, moves, king):
-        aux = None
-        finalMoves = []
+        print("returnValue", returnValue)
 
-        for move in moves:
-            aux = self.getPieceJumps(move, king)
+        if returnValue:
+            for move in returnValue:
+                if move not in pieceMoves:
+                    pieceMoves.append(move)
 
-        if aux and len(aux) > 1:
-            for move in aux:
-                finalMoves.append(move)
-        else:
-            finalMoves.append(aux)
-
-        return moves
+        print("pieceMoves", pieceMoves)
+        return pieceMoves
 
     def getBestMoves(self, legalMoves, king):
 
