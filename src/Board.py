@@ -189,6 +189,88 @@ class Board:
 
         return auxCoordinateList
 
+    def getPieceMoves(self, pieceCoordinate, king):
+        if not pieceCoordinate:
+            return
+
+        move = []
+        moveSet = []
+
+        if not king and self.playerTurn is WHITE:
+            if self.canMoveDirection(NORTHWEST, pieceCoordinate):
+                move.append(pieceCoordinate)
+                move.append(self.nextCoordinate(NORTHWEST, pieceCoordinate))
+                moveSet.append(move)
+                move = []
+
+            if self.canMoveDirection(NORTHEAST, pieceCoordinate):
+                move.append(pieceCoordinate)
+                move.append(self.nextCoordinate(NORTHEAST, pieceCoordinate))
+                moveSet.append(move)
+                move = []
+
+            if self.canJumpDirection(NORTHWEST, pieceCoordinate):
+                move.append(pieceCoordinate)
+                move.append(self.nextCoordinate(NORTHWEST, pieceCoordinate))
+                move.append(self.afterNextCoordinate(NORTHWEST, pieceCoordinate))
+                moveSet.append(move)
+                move = []
+
+            if self.canJumpDirection(NORTHEAST, pieceCoordinate):
+                move.append(pieceCoordinate)
+                move.append(self.nextCoordinate(NORTHEAST, pieceCoordinate))
+                move.append(self.afterNextCoordinate(NORTHEAST, pieceCoordinate))
+                moveSet.append(move)
+                move = []
+
+        if not king and self.playerTurn is RED:
+            if self.canMoveDirection(SOUTHWEST, pieceCoordinate):
+                move.append(pieceCoordinate)
+                move.append(self.nextCoordinate(SOUTHWEST, pieceCoordinate))
+                moveSet.append(move)
+                move = []
+
+            if self.canMoveDirection(SOUTHEAST, pieceCoordinate):
+                move.append(pieceCoordinate)
+                move.append(self.nextCoordinate(SOUTHEAST, pieceCoordinate))
+                moveSet.append(move)
+                move = []
+
+        if king:
+            move.append(pieceCoordinate)
+            aux = pieceCoordinate
+            while self.canMoveDirection(NORTHWEST, aux):
+                aux = self.nextCoordinate(NORTHWEST, aux)
+                move.append(aux)
+            moveSet.append(move)
+            move = []
+
+            move.append(pieceCoordinate)
+            aux = pieceCoordinate
+            while self.canMoveDirection(NORTHEAST, aux):
+                aux = self.nextCoordinate(NORTHEAST, aux)
+                move.append(aux)
+            moveSet.append(move)
+            move = []
+
+            move.append(pieceCoordinate)
+            aux = pieceCoordinate
+            while self.canMoveDirection(SOUTHWEST, aux):
+                aux = self.nextCoordinate(SOUTHWEST, aux)
+                move.append(aux)
+            moveSet.append(move)
+            move = []
+
+            move.append(pieceCoordinate)
+            aux = pieceCoordinate
+            while self.canMoveDirection(SOUTHEAST, aux):
+                aux = self.nextCoordinate(SOUTHEAST, aux)
+                move.append(aux)
+            moveSet.append(move)
+            move = []
+
+        return moveSet
+
     def getPieceJumps(self, moveSet, king):
 
         if len(moveSet) == 1:
@@ -223,6 +305,37 @@ class Board:
             moveSetCopy += self.nextCoordinate(SOUTHEAST, refPiece)
             moveSetCopy += self.afterNextCoordinate(SOUTHEAST, refPiece)
             moveQueue.append(moveSetCopy)
+
+        while moveQueue:
+            for auxMove in moveQueue:
+                moveSet = copy.deepcopy(auxMove)
+                if self.canJumpDirection(NORTHWEST, moveSet):
+                    refPiece = moveSet[-1]
+                    moveSetCopy = copy.deepcopy(moveSet)
+                    moveSetCopy += self.nextCoordinate(NORTHWEST, refPiece)
+                    moveSetCopy += self.afterNextCoordinate(NORTHWEST, refPiece)
+                    moveQueue.append(moveSetCopy)
+
+                if self.canJumpDirection(NORTHEAST, moveSet):
+                    refPiece = moveSet[-1]
+                    moveSetCopy = copy.deepcopy(moveSet)
+                    moveSetCopy += self.nextCoordinate(NORTHEAST, refPiece)
+                    moveSetCopy += self.afterNextCoordinate(NORTHEAST, refPiece)
+                    moveQueue.append(moveSetCopy)
+
+                if self.canJumpDirection(SOUTHWEST, moveSet):
+                    refPiece = moveSet[-1]
+                    moveSetCopy = copy.deepcopy(moveSet)
+                    moveSetCopy += self.nextCoordinate(SOUTHWEST, refPiece)
+                    moveSetCopy += self.afterNextCoordinate(SOUTHWEST, refPiece)
+                    moveQueue.append(moveSetCopy)
+
+                if self.canJumpDirection(SOUTHEAST, moveSet):
+                    refPiece = moveSet[-1]
+                    moveSetCopy = copy.deepcopy(moveSet)
+                    moveSetCopy += self.nextCoordinate(SOUTHEAST, refPiece)
+                    moveSetCopy += self.afterNextCoordinate(SOUTHEAST, refPiece)
+                    moveQueue.append(moveSetCopy)
 
         return moveQueue
 
@@ -262,59 +375,7 @@ class Board:
         legalMove = []
         legalMoves = []
 
-        print("pieceCoordinate", pieceCoordinate)
-
-        if (self.playerTurn is WHITE or king) and self.canMoveDirection(NORTHWEST, pieceCoordinate):
-            legalMove.append(copy.deepcopy(pieceCoordinate))
-            legalMove.append(self.nextCoordinate(NORTHWEST, legalMove[0]))
-
-            print("legalMove", legalMove)
-            if king:
-                aux = legalMove[0]
-                while self.canMoveDirection(NORTHWEST, self.nextCoordinate(NORTHWEST, aux)):
-                    legalMove.append(self.nextCoordinate(NORTHWEST, aux))
-                    aux = self.nextCoordinate(NORTHWEST, aux)
-
-                if self.canJumpDirection(NORTHWEST, legalMove):
-                    legalMove.append(self.nextCoordinate(NORTHWEST, pieceCoordinate))
-                    legalMove.append(self.afterNextCoordinate(NORTHWEST, pieceCoordinate))
-                    # Jumped first piece
-                    # Get subsequent king jumps
-                    # moveSets = self.getPieceJumps(legalMove, king)
-                # else:
-                    # Get subsequent simple jumps
-                    # moveSets = self.getPieceJumps(legalMove, king)
-
-                # legalMoves.append(moveSets)
-                legalMoves.append(legalMove)
-                legalMove = []
-
-        if (self.playerTurn is WHITE or king) and self.canMoveDirection(NORTHEAST, pieceCoordinate):
-            legalMove.append(copy.deepcopy(pieceCoordinate))
-            legalMove.append(self.nextCoordinate(NORTHEAST, legalMove[0]))
-
-            print("legalMove", legalMove)
-            if king:
-                aux = legalMove[0]
-                while self.canMoveDirection(NORTHEAST, self.nextCoordinate(NORTHEAST, aux)):
-                    legalMove.append(self.nextCoordinate(NORTHEAST, aux))
-                    aux = self.nextCoordinate(NORTHEAST, aux)
-
-                if self.canJumpDirection(NORTHEAST, legalMove):
-                    legalMove.append(self.nextCoordinate(NORTHEAST, pieceCoordinate))
-                    legalMove.append(self.afterNextCoordinate(NORTHEAST, pieceCoordinate))
-                    # Jumped first piece
-                    # Get subsequent king jumps
-                    # moveSets = self.getPieceJumps(legalMove, king)
-                # else:
-                    # Get subsequent simple jumps
-                    # moveSets = self.getPieceJumps(legalMove, king)
-
-                # legalMoves.append(moveSets)
-                legalMoves.append(legalMove)
-                legalMove = []
-
-        print("legalMoves final", legalMoves)
+        legalMoves = self.getPieceMoves(pieceCoordinate, king)
 
         return legalMoves
 
@@ -397,8 +458,8 @@ class Board:
         self.king(endCoordinate)
 
     def executeMove(self, playerTurn):
-        print("executeMove")
-        print(self.pieceBestMoves)
+        if self.pieceBestMoves is None:
+            return
         for move in self.pieceBestMoves:
             for coord in move:
                 if self.location(coord) == self.location(self.mouseClick):
