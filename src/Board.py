@@ -169,34 +169,6 @@ class Board:
 
         return False
 
-    def kingInitialLegalMove(self, currentCoordinate, auxCoordinateList, playerTurn, DIRECTION):
-        print("auxCoordinateList", auxCoordinateList)
-        if self.canMoveDirection(DIRECTION, currentCoordinate):
-            auxCoordinateList = [currentCoordinate]
-            nextCoord = currentCoordinate
-            while self.canMoveDirection(DIRECTION, auxCoordinateList[-1]):
-                auxCoordinateList += [self.nextCoordinate(DIRECTION, nextCoord)]
-                if not self.canMoveDirection(DIRECTION, auxCoordinateList[-1]):
-                    break
-                else:
-                    nextCoord = self.nextCoordinate(DIRECTION, nextCoord)
-
-                # Checks if didn't enter inside while (it can't move except for jump pieces
-                if not auxCoordinateList[0] == nextCoord:
-                    # Can still jump after few cells move?
-                    if self.canJumpDirection(DIRECTION, auxCoordinateList):
-                        # Add the jump coordinates
-                        auxCoordinateList += [self.nextCoordinate(DIRECTION, auxCoordinateList[-1])]
-                        auxCoordinateList += [self.afterNextCoordinate(DIRECTION, currentCoordinate)]
-
-        # After verify if the variable nextCoord didn't get new moves, verify if it can jump an adjacent
-        if not auxCoordinateList and self.canJumpDirection(DIRECTION, currentCoordinate):
-            auxCoordinateList = [currentCoordinate]
-            auxCoordinateList += [self.nextCoordinate(DIRECTION, currentCoordinate)]
-            auxCoordinateList += [self.afterNextCoordinate(DIRECTION, currentCoordinate)]
-
-        return auxCoordinateList
-
     def getRegularMovesByPiece(self, pieceCoordinate, king):
         if not pieceCoordinate:
             return
