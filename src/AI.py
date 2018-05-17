@@ -49,8 +49,8 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
             if(board.matrix[x][y].occupant is Board.Piece
                     and board.matrix[x][y].occupant.color == 
                     contextColor(AIColor)):
-                for move in board.legalMovesByPiece(contextColor(AIColor),
-                                                    Coordinate(x, y)):
+                for move in board.getLegalMovesByPiece(contextColor(AIColor),
+                                                       Coordinate(x, y)):
                     if move not in legalMoveSet:
                         legalMoveSet.append(move)
 

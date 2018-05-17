@@ -197,7 +197,7 @@ class Board:
 
         return auxCoordinateList
 
-    def getMovesByPiece(self, pieceCoordinate, king):
+    def getRegularMovesByPiece(self, pieceCoordinate, king):
         if not pieceCoordinate:
             return
 
@@ -265,7 +265,7 @@ class Board:
 
         return moveSet
 
-    def getPieceJumps(self, move, king):
+    def getJumpsByPiece(self, move, king):
         if not move:
             return
 
@@ -357,7 +357,7 @@ class Board:
                 coordinate = Coordinate(x, y)
                 if self.matrix[x][y].occupant is not None \
                         and self.matrix[x][y].occupant.color is self.playerTurn:
-                    for move in self.legalMovesByPiece(coordinate, self.location(coordinate).occupant.king):
+                    for move in self.getLegalMovesByPiece(coordinate, self.location(coordinate).occupant.king):
                         if move and move not in legalMoveSet:
                             legalMoveSet.append(move)
 
@@ -367,7 +367,7 @@ class Board:
     |  Single Piece Moves Logic  |
     +--------------------------"""
 
-    def legalMovesByPiece(self, pieceCoordinate, king=False):
+    def getLegalMovesByPiece(self, pieceCoordinate, king=False):
         """
         Look for all possible movements recursively and return a list of possible moves
         """
@@ -375,12 +375,12 @@ class Board:
         returnValue = []
 
         # Get piece moves without jump
-        legalMoves = self.getMovesByPiece(pieceCoordinate, king)
+        legalMoveSet = self.getRegularMovesByPiece(pieceCoordinate, king)
 
         # Extend jumps
 
-        for move in legalMoves:
-            returnValue += self.getPieceJumps(move, king)
+        for move in legalMoveSet:
+            returnValue += self.getJumpsByPiece(move, king)
 
         print("returnValue", returnValue)
 
@@ -392,18 +392,18 @@ class Board:
         print("pieceMoves", pieceMoves)
         return pieceMoves
 
-    def getBestMoves(self, legalMoves, king):
+    def getBestMoves(self, legalMoveSet, king):
 
-        copyLegalMoves = copy.deepcopy(legalMoves)
-        legalMoves = []
+        copyLegalMoves = copy.deepcopy(legalMoveSet)
+        legalMoveSet = []
 
         for move in copyLegalMoves:
             if self.moveContainsCoordinate(self.selectedPieceCoordinate, move):
-                legalMoves.append(move)
+                legalMoveSet.append(move)
 
-        return legalMoves
+        return legalMoveSet
 
-    def filterMoves(self, moves):
+    def filterNoneOrEmptyMoves(self, moves):
 
         if not moves:
             return []
