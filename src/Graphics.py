@@ -41,8 +41,13 @@ class Graphics:
         self.screen.blit(self.background, (0, 0))
 
         board.drawBoardPieces(self.screen, self.redPiece, self.whitePiece)
-        board.highlightLegalMoves(self.screen, self.goldPiece)
+        board.highlightLegalMoves(legalMovements, selectedPiece, self.screen, self.goldPiece)
         board.drawBoardKings(self.screen, self.kingPiece)
+        board.verifyWinCondition()
+        if board.getPlayerRedLostInformation() is True:
+            print('Congratulations Player White! You Won!')
+        elif board.getPlayerWhiteLostInformation() is True:
+            print('Congratulations Player Red! You Won!')
 
         if self.message:
             self.screen.blit(self.text_surface_obj, self.text_rect_obj)
