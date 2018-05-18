@@ -54,7 +54,7 @@ class GameLoop:
                 self.terminateGame()
 
             # Click event handling
-            if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.type == pygame.MOUSEBUTTONDOWN and self.board.getDrawInformation() is False:
 
                 self.board.mouseClick = self.mousePos
 
