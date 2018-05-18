@@ -160,7 +160,8 @@ def heuristic(board, playerColor):
                     else:
                         opponentPieces += 1
 
-    return (myPieces - opponentPieces) * (1 + (24 - (myPieces + opponentPieces) / 2))
+    return ((myPieces - opponentPieces) * 
+            (1 + (24 - (myPieces + opponentPieces) / 2))
 
 
 def AIPlayer(board, playerColor):
@@ -198,7 +199,7 @@ def AIPlayer(board, playerColor):
     # +------------------------------+
     
 
-    def __init__(self, color=RED, waitTime=60, heuristicFunc=heuristic, 
+    def __init__(self, color=RED, waitTime=1.0, heuristicFunc=heuristic, 
             depth=5, stubbornnessTable=None, randomOffset=0.05):
         self.color = color
         self.waitTime = waitTime
