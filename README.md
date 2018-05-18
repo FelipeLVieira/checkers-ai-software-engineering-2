@@ -17,6 +17,10 @@ Será criada uma implementação do jogo de Damas, em que um jogador poderá jog
 - Nomes de variáveis/funções/whatever serão todos em INGLÊS. A única exceção será para textos a serem impressos na tela, obviamente.
 - Deve-se evitar deixar as linhas de código muito grandes sempre que possível. Principalmente quando se tratar de programação funcional.
 - É uma boa ideia evitar comentários em português sempre que possível.
+- É realizado o caching de variáveis utilizadas recorrentemente, tais como:
+    - Peça selecionada
+    - Turno atual
+    - Último click do mouse realizado
 
 # Componentes básicos do projeto
 - API/Framework básica; game loop
