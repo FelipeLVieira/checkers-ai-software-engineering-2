@@ -255,16 +255,15 @@ class Board:
         if not move:
             return
 
-        refSquare = move[-1]
+        refSquare = move[0]
         moveQueue = []
         finalMoveSet = []
-        moveCopy = None
 
         if self.canJumpDirection(NORTHWEST, refSquare):
             moveCopy = copy.deepcopy(move)
             moveCopy.append(self.nextCoordinate(NORTHWEST, refSquare))
             moveCopy.append(self.afterNextCoordinate(NORTHWEST, refSquare))
-            moveCopy.append(finalMoveSet)
+            finalMoveSet.append(moveCopy)
         elif move not in finalMoveSet:
             finalMoveSet.append(move)
 
@@ -272,7 +271,7 @@ class Board:
             moveCopy = copy.deepcopy(move)
             moveCopy.append(self.nextCoordinate(NORTHEAST, refSquare))
             moveCopy.append(self.afterNextCoordinate(NORTHEAST, refSquare))
-            moveCopy.append(finalMoveSet)
+            finalMoveSet.append(moveCopy)
         elif move not in finalMoveSet:
             finalMoveSet.append(move)
 
@@ -280,7 +279,7 @@ class Board:
             moveCopy = copy.deepcopy(move)
             moveCopy.append(self.nextCoordinate(SOUTHWEST, refSquare))
             moveCopy.append(self.afterNextCoordinate(SOUTHWEST, refSquare))
-            moveCopy.append(finalMoveSet)
+            finalMoveSet.append(moveCopy)
         elif move not in finalMoveSet:
             finalMoveSet.append(move)
 
@@ -288,7 +287,7 @@ class Board:
             moveCopy = copy.deepcopy(move)
             moveCopy.append(self.nextCoordinate(SOUTHEAST, refSquare))
             moveCopy.append(self.afterNextCoordinate(SOUTHEAST, refSquare))
-            moveCopy.append(finalMoveSet)
+            finalMoveSet.append(moveCopy)
         elif move not in finalMoveSet:
             finalMoveSet.append(move)
 
@@ -364,9 +363,8 @@ class Board:
         legalMoveSet = self.getRegularMovesByPiece(pieceCoordinate, king)
 
         # Extend jumps
-
-        for move in legalMoveSet:
-            returnValue += self.getJumpsByPiece(move, king)
+        for pieceMove in legalMoveSet:
+            returnValue += self.getJumpsByPiece(pieceMove, king)
 
         print("returnValue", returnValue)
 
