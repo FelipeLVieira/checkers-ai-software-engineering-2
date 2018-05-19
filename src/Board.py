@@ -358,7 +358,9 @@ class Board:
 
 
     def getDirection(self, previous, refSquare):
-        aux = self.nextCoordinate(refSquare, NORTHWEST)
+        print("previous", previous,"refSquare", refSquare)
+        aux = self.nextCoordinate(NORTHWEST, refSquare)
+        print("aux", aux)
         if aux.x == previous.x and aux.y == previous.y:
             return NORTHWEST
         aux = self.nextCoordinate(refSquare, NORTHEAST)
