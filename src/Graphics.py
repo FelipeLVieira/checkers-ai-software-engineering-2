@@ -43,6 +43,11 @@ class Graphics:
         board.drawBoardPieces(self.screen, self.redPiece, self.whitePiece)
         board.highlightLegalMoves(self.screen, self.goldPiece)
         board.drawBoardKings(self.screen, self.kingPiece)
+        #---------------------------------------------------------+
+        # VitinhoCarneiro: This function call below should be in  |
+        # the game loop, not here. Remove it, this whole function |
+        # will be rewritten anyway in the integration.            |
+        #---------------------------------------------------------+
         board.verifyWinCondition()
         if board.getPlayerRedLostInformation() is True:
             print('Congratulations Player White! You Won!')
