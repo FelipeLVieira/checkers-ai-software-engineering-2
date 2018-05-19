@@ -302,42 +302,39 @@ class Board:
             previous = move[-2]
             next = refSquare
             DIRECTION = self.getDirection(previous, refSquare)
-            while self.canMoveDirection(DIRECTION, refSquare):
+            # while self.canMoveDirection(DIRECTION, refSquare):
 
-
-            for move in moveQueue:
-                refPiece = move[-1]
-                if self.canJumpDirection(NORTHWEST, refSquare[-1]):
-                    auxCopy = copy.deepcopy(move)
-                    auxCopy = copy.deepcopy(refSquare)
-                    auxCopy += self.nextCoordinate(NORTHWEST, refPiece)
-                    auxCopy += self.afterNextCoordinate(NORTHWEST, refPiece)
-                    if self.canJumpAdjacent(auxCopy[-1]):
-                        moveQueue.append(auxCopy)
-                    else:
-                        finalMoveSet.append(auxCopy)
+            if self.canJumpDirection(NORTHWEST, refSquare):
+                auxCopy = copy.deepcopy(move)
+                auxCopy = copy.deepcopy(refSquare)
+                auxCopy += self.nextCoordinate(NORTHWEST, refSquare)
+                auxCopy += self.afterNextCoordinate(NORTHWEST, refSquare)
+                if self.canJumpAdjacent(auxCopy[-1]):
+                    moveQueue.append(auxCopy)
+                else:
                     finalMoveSet.append(auxCopy)
+                finalMoveSet.append(auxCopy)
 
-                if self.canJumpDirection(NORTHEAST, refSquare[-1]):
-                    auxCopy = copy.deepcopy(move)
-                    auxCopy = copy.deepcopy(refSquare)
-                    auxCopy += self.nextCoordinate(NORTHEAST, refPiece)
-                    auxCopy += self.afterNextCoordinate(NORTHEAST, refPiece)
-                    finalMoveSet.append(auxCopy)
+            if self.canJumpDirection(NORTHEAST, refSquare[-1]):
+                auxCopy = copy.deepcopy(move)
+                auxCopy = copy.deepcopy(refSquare)
+                auxCopy += self.nextCoordinate(NORTHEAST, refSquare)
+                auxCopy += self.afterNextCoordinate(NORTHEAST, refSquare)
+                finalMoveSet.append(auxCopy)
 
-                if self.canJumpDirection(SOUTHWEST, refSquare[-1]):
-                    auxCopy = copy.deepcopy(move)
-                    auxCopy = copy.deepcopy(refSquare)
-                    auxCopy += self.nextCoordinate(SOUTHWEST, refPiece)
-                    auxCopy += self.afterNextCoordinate(SOUTHWEST, refPiece)
-                    finalMoveSet.append(auxCopy)
+            if self.canJumpDirection(SOUTHWEST, refSquare[-1]):
+                auxCopy = copy.deepcopy(move)
+                auxCopy = copy.deepcopy(refSquare)
+                auxCopy += self.nextCoordinate(SOUTHWEST, refSquare)
+                auxCopy += self.afterNextCoordinate(SOUTHWEST, refSquare)
+                finalMoveSet.append(auxCopy)
 
-                if self.canJumpDirection(SOUTHEAST, refSquare[-1]):
-                    auxCopy = copy.deepcopy(move)
-                    auxCopy = copy.deepcopy(refSquare)
-                    auxCopy += self.nextCoordinate(SOUTHEAST, refPiece)
-                    auxCopy += self.afterNextCoordinate(SOUTHEAST, refPiece)
-                    finalMoveSet.append(auxCopy)
+            if self.canJumpDirection(SOUTHEAST, refSquare[-1]):
+                auxCopy = copy.deepcopy(move)
+                auxCopy = copy.deepcopy(refSquare)
+                auxCopy += self.nextCoordinate(SOUTHEAST, refSquare)
+                auxCopy += self.afterNextCoordinate(SOUTHEAST, refSquare)
+                finalMoveSet.append(auxCopy)
 
         return finalMoveSet
 
@@ -547,7 +544,6 @@ class Board:
 
     def getDrawInformation(self):
         return self.isDraw
-
 
     def isEndSquare(self, coordinate):
         """
