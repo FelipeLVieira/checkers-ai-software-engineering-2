@@ -1,4 +1,5 @@
 import pygame
+import pygame
 import copy
 from Constants import *
 
@@ -251,7 +252,7 @@ class Board:
 
         return moveSet
 
-    def getJumpsByPiece(self, move, king):
+    def getJumpsByPiece(self, move, previous, king):
         if not move:
             return
 
@@ -259,7 +260,91 @@ class Board:
         moveQueue = []
         finalMoveSet = []
 
-        if self.canJumpDirection(NORTHWEST, refSquare):
+        if previous[0].x == refSquare.x and previous[0].y == refSquare.y:#Primeiro caso, quando não existe anterior
+            if self.canJumpDirection(NORTHWEST, refSquare):
+                moveCopy = copy.deepcopy(move)
+                moveCopy.append(self.nextCoordinate(NORTHWEST, refSquare))
+                moveCopy.append(self.afterNextCoordinate(NORTHWEST, refSquare))
+                #finalMoveSet.append(moveCopy)
+                moveQueue.append(moveCopy)
+            elif not self.canJumpDirection(NORTHWEST, refSquare):
+                finalMoveSet.append(move)
+
+            if self.canJumpDirection(NORTHEAST, refSquare):
+                moveCopy = copy.deepcopy(move)
+                moveCopy.append(self.nextCoordinate(NORTHEAST, refSquare))
+                moveCopy.append(self.afterNextCoordinate(NORTHEAST, refSquare))
+                # finalMoveSet.append(moveCopy)
+                moveQueue.append(moveCopy)
+            elif not self.canJumpDirection(NORTHWEST, refSquare):
+                finalMoveSet.append(move)
+
+            if self.canJumpDirection(SOUTHWEST, refSquare):
+                moveCopy = copy.deepcopy(move)
+                moveCopy.append(self.nextCoordinate(SOUTHWEST, refSquare))
+                moveCopy.append(self.afterNextCoordinate(SOUTHWEST, refSquare))
+                # finalMoveSet.append(moveCopy)
+                moveQueue.append(moveCopy)
+            elif not self.canJumpDirection(NORTHWEST, refSquare):
+                finalMoveSet.append(move)
+
+            if self.canJumpDirection(SOUTHEAST, refSquare):
+                moveCopy = copy.deepcopy(move)
+                moveCopy.append(self.nextCoordinate(SOUTHEAST, refSquare))
+                moveCopy.append(self.afterNextCoordinate(SOUTHEAST, refSquare))
+                # finalMoveSet.append(moveCopy)
+                moveQueue.append(moveCopy)
+            elif not self.canJumpDirection(NORTHWEST, refSquare):
+                finalMoveSet.append(move)
+
+        elif previous[0].x > refSquare.x:
+            if previous[0].y > refSquare.y:
+                if self.canJumpDirection(NORTHWEST, refSquare):
+                    moveCopy = copy.deepcopy(move)
+                    moveCopy.append(self.nextCoordinate(NORTHWEST, refSquare))
+                    moveCopy.append(self.afterNextCoordinate(NORTHWEST, refSquare))
+                    # finalMoveSet.append(moveCopy)
+                    moveQueue.append(moveCopy)
+                    """elif not self.canJumpDirection(NORTHWEST, refSquare):"""
+                else:
+                    finalMoveSet.append(move)
+
+            else:
+                if self.canJumpDirection(SOUTHWEST, refSquare):
+                    moveCopy = copy.deepcopy(move)
+                    moveCopy.append(self.nextCoordinate(SOUTHWEST, refSquare))
+                    moveCopy.append(self.afterNextCoordinate(SOUTHWEST, refSquare))
+                    # finalMoveSet.append(moveCopy)
+                    moveQueue.append(moveCopy)
+                    """elif not self.canJumpDirection(NORTHWEST, refSquare):"""
+                else:
+                    finalMoveSet.append(move)
+
+        else:
+            if previous[0].y > refSquare.y:
+                if self.canJumpDirection(NORTHEAST, refSquare):
+                    moveCopy = copy.deepcopy(move)
+                    moveCopy.append(self.nextCoordinate(NORTHEAST, refSquare))
+                    moveCopy.append(self.afterNextCoordinate(NORTHEAST, refSquare))
+                    # finalMoveSet.append(moveCopy)
+                    moveQueue.append(moveCopy)
+                    """elif not self.canJumpDirection(NORTHWEST, refSquare):"""
+                else:
+                    finalMoveSet.append(move)
+
+            else:
+                if self.canJumpDirection(SOUTHEAST, refSquare):
+                    moveCopy = copy.deepcopy(move)
+                    moveCopy.append(self.nextCoordinate(SOUTHEAST, refSquare))
+                    moveCopy.append(self.afterNextCoordinate(SOUTHEAST, refSquare))
+                    # finalMoveSet.append(moveCopy)
+                    moveQueue.append(moveCopy)
+                    """elif not self.canJumpDirection(NORTHWEST, refSquare):"""
+                else:
+                    finalMoveSet.append(move)
+
+
+        """if self.canJumpDirection(NORTHWEST, refSquare):
             moveCopy = copy.deepcopy(move)
             moveCopy.append(self.nextCoordinate(NORTHWEST, refSquare))
             moveCopy.append(self.afterNextCoordinate(NORTHWEST, refSquare))
@@ -293,15 +378,19 @@ class Board:
             # finalMoveSet.append(moveCopy)
             moveQueue.append(moveCopy)
         elif not self.canJumpDirection(NORTHWEST, refSquare):
-            finalMoveSet.append(move)
+            finalMoveSet.append(move)"""
 
 
         while moveQueue:
+            print("\n\nTINHA QUE COMER")
             move = moveQueue.pop()
             refSquare = move[-1]
+            print("\n\n",refSquare.x, refSquare.y)
             previous = move[-2]
+            print("\n\n",previous.x, previous.y)
             next = refSquare
             DIRECTION = self.getDirection(previous, refSquare)
+            print("\n\n"+DIRECTION+"\n\n")
             expanded = False
             # while self.canMoveDirection(DIRECTION, refSquare):
 
@@ -322,7 +411,19 @@ class Board:
 
 
     def getDirection(self, previous, refSquare):
-        print("previous", previous,"refSquare", refSquare)
+        aux = self.nextCoordinate(NORTHWEST, previous)
+        if aux.x == refSquare.x and aux.y == refSquare.y:
+            return NORTHWEST
+        aux = self.nextCoordinate(NORTHEAST, previous)
+        if aux.x == refSquare.x and aux.y == refSquare.y:
+            return NORTHEAST
+        aux = self.nextCoordinate(SOUTHWEST, previous)
+        if aux.x == refSquare.x and aux.y == refSquare.y:
+            return SOUTHWEST
+        aux = self.nextCoordinate(SOUTHEAST, previous)
+        if aux.x == refSquare.x and aux.y == refSquare.y:
+            return SOUTHEAST
+        """print("previous", previous,"refSquare", refSquare)
         aux = self.nextCoordinate(NORTHWEST, refSquare)
         print("aux", aux)
         if aux.x == previous.x and aux.y == previous.y:
@@ -335,7 +436,7 @@ class Board:
             return SOUTHWEST
         aux = self.nextCoordinate(SOUTHEAST, refSquare)
         if aux.x == previous.x and aux.y == previous.y:
-            return SOUTHEAST
+            return SOUTHEAST"""
 
     """-------------------------------+
     |  Player all pieces Moves Logic  |
@@ -371,8 +472,13 @@ class Board:
         legalMoveSet = self.getRegularMovesByPiece(pieceCoordinate, king)
 
         # Extend jumps
+        c = -1
+        previous = legalMoveSet[0]
         for pieceMove in legalMoveSet:
-            returnMoves = self.getJumpsByPiece(pieceMove, king)
+            if c > -1:
+                previous = legalMoveSet[c]
+            c = c + 1
+            returnMoves = self.getJumpsByPiece(pieceMove, previous, king)
             print("returnMoves", returnMoves)
             for returnMove in returnMoves:
                 if returnMove not in pieceFinalLegalMoves:
