@@ -302,39 +302,57 @@ class Board:
             previous = move[-2]
             next = refSquare
             DIRECTION = self.getDirection(previous, refSquare)
+            expanded = False
             # while self.canMoveDirection(DIRECTION, refSquare):
 
             if self.canJumpDirection(NORTHWEST, refSquare):
+                expanded = True
                 auxCopy = copy.deepcopy(move)
-                auxCopy = copy.deepcopy(refSquare)
                 auxCopy += self.nextCoordinate(NORTHWEST, refSquare)
                 auxCopy += self.afterNextCoordinate(NORTHWEST, refSquare)
                 if self.canJumpAdjacent(auxCopy[-1]):
                     moveQueue.append(auxCopy)
                 else:
                     finalMoveSet.append(auxCopy)
-                finalMoveSet.append(auxCopy)
 
             if self.canJumpDirection(NORTHEAST, refSquare[-1]):
+                expanded = True
                 auxCopy = copy.deepcopy(move)
                 auxCopy = copy.deepcopy(refSquare)
                 auxCopy += self.nextCoordinate(NORTHEAST, refSquare)
                 auxCopy += self.afterNextCoordinate(NORTHEAST, refSquare)
                 finalMoveSet.append(auxCopy)
+                if self.canJumpAdjacent(auxCopy[-1]):
+                    moveQueue.append(auxCopy)
+                else:
+                    finalMoveSet.append(auxCopy)
 
             if self.canJumpDirection(SOUTHWEST, refSquare[-1]):
+                expanded = True
                 auxCopy = copy.deepcopy(move)
                 auxCopy = copy.deepcopy(refSquare)
                 auxCopy += self.nextCoordinate(SOUTHWEST, refSquare)
                 auxCopy += self.afterNextCoordinate(SOUTHWEST, refSquare)
                 finalMoveSet.append(auxCopy)
+                if self.canJumpAdjacent(auxCopy[-1]):
+                    moveQueue.append(auxCopy)
+                else:
+                    finalMoveSet.append(auxCopy)
 
             if self.canJumpDirection(SOUTHEAST, refSquare[-1]):
+                expanded = True
                 auxCopy = copy.deepcopy(move)
                 auxCopy = copy.deepcopy(refSquare)
                 auxCopy += self.nextCoordinate(SOUTHEAST, refSquare)
                 auxCopy += self.afterNextCoordinate(SOUTHEAST, refSquare)
                 finalMoveSet.append(auxCopy)
+                if self.canJumpAdjacent(auxCopy[-1]):
+                    moveQueue.append(auxCopy)
+                else:
+                    finalMoveSet.append(auxCopy)
+
+            if not expanded:
+                finalMoveSet.append(move)
 
         return finalMoveSet
 
