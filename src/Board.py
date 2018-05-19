@@ -305,41 +305,11 @@ class Board:
             expanded = False
             # while self.canMoveDirection(DIRECTION, refSquare):
 
-            if self.canJumpDirection(NORTHWEST, refSquare):
+            if self.canJumpDirection(DIRECTION, refSquare):
                 expanded = True
                 auxCopy = copy.deepcopy(move)
-                auxCopy += [self.nextCoordinate(NORTHWEST, refSquare)]
-                auxCopy += [self.afterNextCoordinate(NORTHWEST, refSquare)]
-                if self.canJumpAdjacent(auxCopy[-1]):
-                    moveQueue.append(auxCopy)
-                else:
-                    finalMoveSet.append(auxCopy)
-
-            if self.canJumpDirection(NORTHEAST, refSquare):
-                expanded = True
-                auxCopy = copy.deepcopy(move)
-                auxCopy += [self.nextCoordinate(NORTHEAST, refSquare)]
-                auxCopy += [self.afterNextCoordinate(NORTHEAST, refSquare)]
-                if self.canJumpAdjacent(auxCopy[-1]):
-                    moveQueue.append(auxCopy)
-                else:
-                    finalMoveSet.append(auxCopy)
-
-            if self.canJumpDirection(SOUTHWEST, refSquare):
-                expanded = True
-                auxCopy = copy.deepcopy(move)
-                auxCopy += [self.nextCoordinate(SOUTHWEST, refSquare)]
-                auxCopy += [self.afterNextCoordinate(SOUTHWEST, refSquare)]
-                if self.canJumpAdjacent(auxCopy[-1]):
-                    moveQueue.append(auxCopy)
-                else:
-                    finalMoveSet.append(auxCopy)
-
-            if self.canJumpDirection(SOUTHEAST, refSquare):
-                expanded = True
-                auxCopy = copy.deepcopy(move)
-                auxCopy += [self.nextCoordinate(SOUTHEAST, refSquare)]
-                auxCopy += [self.afterNextCoordinate(SOUTHEAST, refSquare)]
+                auxCopy += [self.nextCoordinate(DIRECTION, refSquare)]
+                auxCopy += [self.afterNextCoordinate(DIRECTION, refSquare)]
                 if self.canJumpAdjacent(auxCopy[-1]):
                     moveQueue.append(auxCopy)
                 else:
@@ -362,7 +332,7 @@ class Board:
             return NORTHEAST
         aux = self.nextCoordinate(SOUTHWEST, refSquare)
         if aux.x == previous.x and aux.y == previous.y:
-            return NORTHEAST
+            return SOUTHWEST
         aux = self.nextCoordinate(SOUTHEAST, refSquare)
         if aux.x == previous.x and aux.y == previous.y:
             return SOUTHEAST
