@@ -8,7 +8,7 @@ class Board:
         # This allows us to make a copy of the board for the AI to safely
         # recurse on.
         if board is Board:
-            self.matrix = board.matrix
+            self.matrix = copy.deepcopy(board.matrix)
         self.matrix = self.newBoard()
 
         self.selectedPieceMoves = None
