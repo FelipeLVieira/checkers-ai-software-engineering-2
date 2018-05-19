@@ -363,13 +363,13 @@ class Board:
         print("aux", aux)
         if aux.x == previous.x and aux.y == previous.y:
             return NORTHWEST
-        aux = self.nextCoordinate(refSquare, NORTHEAST)
+        aux = self.nextCoordinate(NORTHEAST, refSquare)
         if aux.x == previous.x and aux.y == previous.y:
             return NORTHEAST
-        aux = self.nextCoordinate(refSquare, SOUTHWEST)
+        aux = self.nextCoordinate(SOUTHWEST, refSquare)
         if aux.x == previous.x and aux.y == previous.y:
             return NORTHEAST
-        aux = self.nextCoordinate(refSquare, SOUTHEAST)
+        aux = self.nextCoordinate(SOUTHEAST, refSquare)
         if aux.x == previous.x and aux.y == previous.y:
             return SOUTHEAST
 
