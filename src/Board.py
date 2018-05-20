@@ -519,9 +519,13 @@ class Board:
         """
         Removes enemy pieces from a move (x,y).
         """
-        for coordinate in move:
+        mouseCheck = False
+        for idxCoord, coordinate in enumerate(move):
+            if self.location(coordinate) is self.location(self.mouseClick):
+                mouseCheck = True
             if self.location(coordinate).occupant:
-                if self.location(coordinate).occupant.color is not self.playerTurn:
+                if self.location(
+                        coordinate).occupant.color is not self.playerTurn and mouseCheck:
                     self.matrix[coordinate.x][coordinate.y].occupant = None
 
     def removePiece(self, coordinate):
@@ -545,6 +549,7 @@ class Board:
         print("self.selectedPieceMoves", self.selectedPieceMoves)
         if self.selectedPieceMoves is None:
             return False
+
         for move in self.selectedPieceMoves:
             for coord in move:
                 if self.location(coord) == self.location(self.mouseClick):
