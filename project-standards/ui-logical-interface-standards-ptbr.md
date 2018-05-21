@@ -14,6 +14,8 @@ Esta função recebe os seguintes parâmetros:
 - Lista de possíveis movimentos a serem mostrados 
 - Coordenada do tabuleiro sobre a qual o mouse está, se estiver (para o highlight de hover)
 - Se o mouse está sobre o botão de pause, ou de exit, ou não está
+- timeDelta
+- Se o jogo está pausado ou não
 
 Para mostrar quando um movimento for feito, com peças comidas ou não, haverá uma função separada para isso.
 
