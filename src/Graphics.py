@@ -25,22 +25,60 @@ class Graphics:
         self.message = False
 
         # Assets
-        self.background = pygame.image.load("../assets/images/bg-game.png")
-        self.redHoverPiece = pygame.image.load("../assets/images/highlight-possible_spot_marker-f9.png")
-        self.whiteHoverPiece = pygame.image.load("../assets/images/highlight-possible_spot_marker-f9.png")
-        self.kingWhitePiece = pygame.image.load("../assets/images/king_marker-white_piece.png")
-        self.kingRedPiece = pygame.image.load("../assets/images/king_marker-red_piece.png")
-        self.redPiece = pygame.image.load("../assets/images/piece-red.png")
-        self.whitePiece = pygame.image.load("../assets/images/piece-white.png")
+        self.background = Graphic("../assets/images/bg-game.png")
+        self.selMoveMarkerPath = "../assets/images/highlight-possible_spot_marker-"
+        self.kingWhitePiece = Graphic("../assets/images/king_marker-white_piece.png")
+        self.kingRedPiece = Graphic("../assets/images/king_marker-red_piece.png")
+        self.redPiece = Graphic("../assets/images/piece-red.png")
+        self.whitePiece = Graphic("../assets/images/piece-white.png")
+        self.redPieceHover = Graphic("../assets/images/piece-red-hover.png")
+        self.whitePieceHover = Graphic("../assets/images/piece-white-hover.png")
+        self.ingameButtonHover = Graphic("../assets/images/highlight-ingame_buttons-hover-f5.png")
+
+        # Coordinates
+        self.pauseButtonCoords = (877, 619)
+        self.exitButtonCoords = (1012, 619)
+        self.upperScoreBaselineCoords = (988, 250)
+        self.lowerScoreBaselineCoords = (988, 520)
+        self.turnTextBaselineCoords = (988, 330)
+        self.upperNameBaselineCoords = (988, 60)
+        self.lowerNameBaselineCoords = (988, 580)
+
+        # UI object containers
+        self.textObjects = 
+                {"upperName": TextElement(OPPONENT_NAME, upperNameBaselineCoords,
+                alignment=FONT_ALIGN_CENTER),
+                "lowerName": TextElement(PLAYER_NAME_DEFAULT, 
+                lowerNameBaselineCoords, alignment=FONT_ALIGN_CENTER),
+                "turnText": DynamicTextElement(TURNSTRING.format(1), 
+                turnTextBaselineCoords, alignment=FONT_ALIGN_CENTER),
+                "upperScore": DynamicTextElement("12", upperScoreBaselineCoords,
+                alignment=FONT_ALIGN_CENTER, fontSize=100, fontFace=
+                "../assets/fonts/NimbusSansNarrow-Bold.otf"),
+                "lowerScore": DynamicTextElement("12", lowerScoreBaselineCoords,
+                alignment=FONT_ALIGN_CENTER, fontSize=100, fontFace=
+                "../assets/fonts/NimbusSansNarrow-Bold.otf")
+                }
+
+
+        self.selMoveAnimations = [[None] * 8] * 8
 
     def setupWindow(self):
         pygame.init()
         pygame.display.set_caption(self.caption)
 
+
+"""
     def updateMainGameDisplay(self, board, legalMovements, selectedPiece, playerTurn):
+
+        """ 
+
         """
         This updates the current display.
+        """ 
+
         """
+
         self.screen.blit(self.background, (0, 0))
 
         board.drawBoardPieces(self.screen, self.redPiece, self.whitePiece)
@@ -55,15 +93,122 @@ class Graphics:
 
 
     def draw_message(self, message):
+
+        """
+
         """
         Draws message to the screen.
+        """ 
+
         """
         self.message = True
         self.font_obj = pygame.font.Font('freesansbold.ttf', 44)
         self.text_surface_obj = self.font_obj.render(message, True, HIGH, BLACK)
         self.text_rect_obj = self.text_surface_obj.get_rect()
         self.text_rect_obj.center = (self.windowSize / 2, self.windowSize / 2)
+"""
 
+    def updateAndDraw(self, hoverPiece, selectedPiece, boardHoverCoords, hoverButton, 
+            gamePaused, isPlayerTurn, timeDelta):
+        self.background.blitAt(self.screen, (0, 0))
+        self.drawBoardPieces()
+        self.updateAndDrawPossibleMoves()
+        self.drawHoverPiece(hoverPiece)
+        self.drawHoverButton(hoverButton)
+        self.updateAndDrawSidebarText(currentTurn)
+        self.drawPauseMenu() # TODO
+
+
+
+    def drawBoardPieces(self):
+        for col in range(8):
+            for row in range(8):
+                if self.board.matrix[col][row].occupant is not None:
+                    if self.board.matrix[col][row].occupant.color is RED:
+                        self.redPiece.blitAt(self.screen, 
+                                mapToScrCoords((col, row)))
+
+                        if self.board.matrix[col][row].occupant.king:
+                            self.kingRedPiece.blitAt(self.screen,
+                                    mapToScrCoords((col, row)))
+
+                    elif self.board.matrix[col][row].occupant.color is WHITE:
+                        self.whitePiece.blitAt(self.screen, 
+                                mapToScrCoords((col, row)))
+
+                        if self.board.matrix[col][row].occupant.king:
+                            self.kingwhitePiece.blitAt(self.screen,
+                                    mapToScrCoords((col, row)))
+
+                    else: raise RuntimeError("Graphics.py::Graphics:drawBoardPieces: Invalid piece color `{}'".format(self.board.matrix[col][row].occupant.color))
+
+    def setPossibleMoves(self, selPossibleMoves):
+        for path in selPossibleMoves:
+            for coord in path:
+                if coord is not None 
+                        and lookup(self.selMoveAnimations, coord) is None
+                        and not board.location(coord).occupant:
+                    lookup(self.selMoveAnimations, coord) = AnimatedGraphic(
+                            self.selMoveMarkerPath, 1)
+    
+    def clearPossibleMoves(self):
+        for col in self.selMoveAnimations:
+            for cell in col:
+                cell = None
+    
+    def updateAndDrawPossibleMoves(self):
+        for x in range(8):
+            for y in range(8):
+                self.selMoveAnimations[x][y].update()
+                self.selMoveAnimations[x][y].blitAt(self.screen, 
+                        mapToScrCoords((x, y)))
+
+    def drawHoverPiece(self, hoverPiece):
+        if hoverPiece is tuple and board.location(hoverPiece).occupant:
+            if board.location(hoverPiece).occupant.color is RED:
+                self.redPieceHover.blitAt(self.screen, mapToScrCoords(hoverPiece))
+
+            elif board.location(hoverPiece).occupant.color is WHITE:
+                self.whitePieceHover.blitAt(self.screen, mapToScrCoords(hoverPiece))
+
+            else: raise RuntimeError("Graphics.py::Graphics:drawHoverPiece: Invalid piece color `{}'".format(board.location(hoverPiece).occupant.color)
+
+    def drawHoverButton(self, hoverButton):
+        if hoverButton is BUTTON_INGAME_HOVER_NONE:
+            return
+
+        elif hoverButton is BUTTON_INGAME_HOVER_PAUSE:
+            self.ingameButtonHover.blitAt(self.screen, self.pauseButtonCoords)
+
+        elif hoverButton is BUTTON_INGAME_HOVER_EXIT:
+            self.ingameButtonHover.blitAt(self.screen, self.exitButtonCoords)
+
+        else: raise RuntimeError("Graphics.py::Graphics:drawHoverPiece: Invalid UI button `{}'".format(hoverButton))
+
+    def updateAndDrawSidebarText(self, isPlayerTurn):
+        if isPlayerTurn:
+            #turnNumber = self.board.turnNumber
+            turnNumber = 1
+            self.textObjects["turnText"].update(TURNSTRING.format(turnNumber))
+        else:
+            self.textObjects["turnText"].update(WAITSTRING)
+        #self.textObjects["upperScore"].update(str(12 - self.board.whiteCounterAux))
+        #self.textObjects["lowerScore"].update(str(12 - self.board.redCounterAux))
+        self.textObjects["upperScore"].update(str(12 - 0))
+        self.textObjects["lowerScore"].update(str(12 - 0))
+        for o in self.textObjects:
+            o.blitAt(self.screen)
+
+def lookup(matrix, index):
+    """Looks up an index, defined by a tuple, in a multidimensional array."""
+    result = matrix
+    for i in index:
+        result = result[i]
+    return result
+
+def mapToScrCoords(coords):
+    """Maps board coordinates to screen coordinates."""
+    return (coords[0] * 82 + 140, coords[1] * 82 + 35)
 
 class Graphic:
     """Implements a graphic object that caches an image surface."""
@@ -280,9 +425,9 @@ class TextElement:
         if(self.alignment == FONT_ALIGN_LEFT):
             return (coords[0], coords[1] - self.fontFace.get_linesize())
         elif(self.alignment == FONT_ALIGN_RIGHT):
-            return (coords[0] - self.surface.get_width(), coords[1] - self.fontFace.get_ascent())
+            return (coords[0] - self.surface.get_width(), coords[1] - self.fontFace.get_linesize())
         else:
-            return (coords[0] - (self.surface.get_width() / 2), coords[1] - self.fontFace.get_ascent())
+            return (coords[0] - (self.surface.get_width() / 2), coords[1] - self.fontFace.get_linesize())
 
     def update(self, value=None, newCoords=None):
         if newCoords is tuple: self.coords = newCoords
