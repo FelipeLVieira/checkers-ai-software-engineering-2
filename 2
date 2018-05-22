@@ -6,9 +6,6 @@ import sys
 import copy
 from Constants import *
 
-# For testing only
-import random
-
 pygame.font.init()
 
 
@@ -29,7 +26,7 @@ class Graphics:
 
         # Assets
         self.background = Graphic("../assets/images/bg-game.png")
-        self.selMoveMarkerPath = "../assets/images/highlight-possible_spot_marker-f*"
+        self.selMoveMarkerPath = "../assets/images/highlight-possible_spot_marker-"
         self.kingWhitePiece = Graphic("../assets/images/king_marker-white_piece.png")
         self.kingRedPiece = Graphic("../assets/images/king_marker-red_piece.png")
         self.redPiece = Graphic("../assets/images/piece-red.png")
@@ -45,24 +42,24 @@ class Graphics:
         # Coordinates
         self.pauseButtonCoords = (877, 619)
         self.exitButtonCoords = (1012, 619)
-        self.upperScoreBaselineCoords = (980, 256)
-        self.lowerScoreBaselineCoords = (980, 524)
-        self.turnTextBaselineCoords = (988, 323)
-        self.upperNameBaselineCoords = (988, 48)
-        self.lowerNameBaselineCoords = (988, 590)
+        self.upperScoreBaselineCoords = (988, 260)
+        self.lowerScoreBaselineCoords = (988, 530)
+        self.turnTextBaselineCoords = (988, 322)
+        self.upperNameBaselineCoords = (988, 56)
+        self.lowerNameBaselineCoords = (988, 583)
         self.pauseBannerBaselineCoords = (640, 224)
-        self.pauseContinueBaselineCoords = (640, 333)
+        self.pauseContinueBaselineCoords = (640, 340)
         self.pauseRestartBaselineCoords = (640, 400)
-        self.pauseExitBaselineCoords = (640, 467)
+        self.pauseExitBaselineCoords = (640, 460)
         self.pauseContinueButtonCoords = (499, 295)
         self.pauseRestartButtonCoords = (499, 362)
         self.pauseExitButtonCoords = (499, 429)
 
-        self.boardUpperLeftCoords = (139, 37)
+        self.boardUpperLeftCoords = (138, 36)
 
         # Other values
         self.boardSpacing = 82
-        self.pieceBaseMoveSpeed = 320
+        self.pieceBaseMoveSpeed = 224
 
         # UI object containers
         self.textObjects = {
@@ -74,34 +71,30 @@ class Graphics:
                         alignment=FONT_ALIGN_CENTER, fontSize=36),
                 "turnText": DynamicTextElement(TURNSTRING.format(1), 
                         self.turnTextBaselineCoords, 
-                        alignment=FONT_ALIGN_CENTER, fontSize=32),
+                        alignment=FONT_ALIGN_CENTER, fontSize=30),
                 "upperScore": DynamicTextElement("12", 
                         self.upperScoreBaselineCoords,
-                        alignment=FONT_ALIGN_CENTER, fontSize=228, fontFace=
+                        alignment=FONT_ALIGN_CENTER, fontSize=235, fontFace=
                         "../assets/fonts/NimbusSansNarrow-Bold.otf"),
                 "lowerScore": DynamicTextElement("12", 
                         self.lowerScoreBaselineCoords,
-                        alignment=FONT_ALIGN_CENTER, fontSize=228, fontFace=
+                        alignment=FONT_ALIGN_CENTER, fontSize=235, fontFace=
                         "../assets/fonts/NimbusSansNarrow-Bold.otf"),
                 }
 
         self.pauseTextObjects = {
                 "pauseBanner": TextElement(PAUSE_BANNER, 
                         self.pauseBannerBaselineCoords, 
-                        alignment=FONT_ALIGN_CENTER, fontSize=100, fontFace=
-                        "../assets/fonts/OpenSans-Bold.ttf"),
-                "pauseContinue": TextElement(PAUSE_CONTINUE, 
+                        alignment=FONT_ALIGN_CENTER),
+                "pauseContinue": TextElement(PLAYER_NAME_DEFAULT, 
                         self.pauseContinueBaselineCoords, 
-                        alignment=FONT_ALIGN_CENTER, fontSize=26,
-                        color=pygame.color.Color(64, 64, 64, 255)),
-                "pauseRestart": TextElement(PAUSE_RESTART, 
+                        alignment=FONT_ALIGN_CENTER),
+                "pauseRestart": TextElement(PLAYER_NAME_DEFAULT, 
                         self.pauseRestartBaselineCoords, 
-                        alignment=FONT_ALIGN_CENTER, fontSize=26,
-                        color=pygame.color.Color(48, 48, 48, 255)),
-                "pauseExit": TextElement(PAUSE_QUIT, 
+                        alignment=FONT_ALIGN_CENTER),
+                "pauseExit": TextElement(PLAYER_NAME_DEFAULT, 
                         self.pauseExitBaselineCoords, 
-                        alignment=FONT_ALIGN_CENTER, fontSize=26,
-                        color=pygame.color.Color(68, 40, 40, 255)),
+                        alignment=FONT_ALIGN_CENTER)
                 }
 
         self.UIButtonsHoverCoords = {
@@ -117,11 +110,7 @@ class Graphics:
                 BUTTON_PAUSE_HOVER_EXIT: self.pauseExitButtonCoords
                 }
 
-        self.selMoveAnimations = []
-        for i in range(8):
-            self.selMoveAnimations.append([])
-            for j in range(8):
-                self.selMoveAnimations[-1].append(None)
+        self.selMoveAnimations = [[None] * 8] * 8
         
         self.movingPiece = None
         self.maskedPiece = None
@@ -133,13 +122,12 @@ class Graphics:
 
 
 
-    def vanishPiece(self, event):
-        self.board.removePiece(event.coords)
 
-    def registerMove(self, newBoard, movement, eatenPieces):
+
+    def registerMove(newBoard, movement, eatenPieces):
         pieceColor = self.board.location(movement[0]).occupant.color
         self.maskedPiece = movement[0]
-        path = [PathNode(self.mapToScrCoords(movement[0]), 1)]
+        path = [PathNode(movement[0], 1)]
         # The path always begins as an arc of length zero
         arcing = True
         nextCoord = None
@@ -150,7 +138,7 @@ class Graphics:
             if coord not in eatenPieces:
                 if not arcing:
                     # Exit the capture node with a decelerated movement
-                    self.appendNode(path, coord, False, True, 1)
+                    appendNode(path, coord, False, True, 1)
                     # Start an arc - an arc is a node that jumps over multiple
                     # coordinates
                     arcing = True
@@ -162,19 +150,18 @@ class Graphics:
             else:
                 if arcing and arcLength > 0:
                     # End the current arc before adding the capture node
-                    self.appendNode(path, nextCoord, True, True, arcLength)
+                    appendNode(path, nextCoord, True, True, arcLength)
                     arcing = False
 
                 event = pygame.event.Event(pygame.USEREVENT, 
                         eventType=EVENT_PIECE_VANISH, coords=coord)
-                self.appendNode(path, coord, True, False, 1, event)
+                appendNode(path, coord, True, False, 1, event)
 
         # End an unfinished arc
         if arcing and arcLength > 0:
-            self.appendNode(path, nextCoord, True, True, arcLength)
-
-        path[-1].eventOnComplete = pygame.event.Event(pygame.USEREVENT,
+            event = pygame.event.Event(pygame.USEREVENT,
                     eventType=EVENT_PATH_END)
+            appendNode(path, nextCoord, True, True, arcLength)
 
         # Instance the moving piece
         if pieceColor is RED:
@@ -192,16 +179,16 @@ class Graphics:
         self.movingPiece = None
         self.board = self.auxBoard
 
-    def updateAndDraw(self, hoverPosition, selectedPiece, hoverButton, gamePaused,
+    def updateAndDraw(self, hoverPiece, selectedPiece, hoverButton, gamePaused,
             isPlayerTurn):
-        self.timeDelta = self.clock.tick(self.fps) / 1000
+        self.timeDelta = self.clock.tick(self.fps)
         self.background.blitAt(self.screen, (0, 0))
         self.drawBoardPieces()
         self.drawSelectedPiece(selectedPiece)
-        self.drawHoverPiece(hoverPosition)
+        self.drawHoverPiece(hoverPiece)
         self.updateAndDrawPossibleMoves(gamePaused)
         self.updateAndDrawMovingPiece(gamePaused, self.timeDelta)
-        if not gamePaused: self.drawHoverButton(hoverButton)
+        self.drawHoverButton(hoverButton)
         self.updateAndDrawSidebarText(isPlayerTurn)
         if gamePaused: self.drawPauseMenu(hoverButton)
 
@@ -239,11 +226,10 @@ class Graphics:
             for c in range(len(path)):
                 if (path[c] is not None 
                         and lookup(self.selMoveAnimations, path[c]) is None 
-                        and not self.board.location(path[c]).occupant):
-                    self.selMoveAnimations[path[c][0]][path[c][1]] = ( 
-                            AnimatedGraphic(self.selMoveMarkerPath, 1, 
-                            delayStart=(c)))
-        #print(self.selMoveAnimations)
+                        and not board.location(path[c]).occupant):
+                    square = lookup(self.selMoveAnimations, path[c])
+                    square = AnimatedGraphic(self.selMoveMarkerPath, 1, 
+                            delayStart=(c * 2))
     
     def clearPossibleMoves(self):
         for col in self.selMoveAnimations:
@@ -253,7 +239,7 @@ class Graphics:
     def updateAndDrawPossibleMoves(self, gamePaused):
         for x in range(8):
             for y in range(8):
-                if not (self.selMoveAnimations[x][y] is None):
+                if self.selMoveAnimations[x][y] is not None:
                     if not gamePaused: 
                         self.selMoveAnimations[x][y].update()
                     self.selMoveAnimations[x][y].blitAt(self.screen, 
@@ -263,26 +249,21 @@ class Graphics:
         if isinstance(self.movingPiece, tuple):
             if not gamePaused:
                 self.movingPiece[1].update(timeDelta)
-            #print(self.movingPiece[1].currentPos)
             self.movingPiece[0].blitAt(self.screen,
                     self.movingPiece[1].currentPos)
 
     def drawHoverPiece(self, hoverPiece):
-        if (isinstance(hoverPiece, tuple)):
-            if (self.board.location(hoverPiece).occupant 
-                    and not hoverPiece == self.maskedPiece):
-                if self.board.location(hoverPiece).occupant.color is RED:
-                    self.redPieceHover.blitAt(self.screen, 
-                         self.mapToScrCoords(hoverPiece))
-
-                elif self.board.location(hoverPiece).occupant.color is WHITE:
-                    self.whitePieceHover.blitAt(self.screen, 
-                            self.mapToScrCoords(hoverPiece))
-
-                else: raise RuntimeError("Graphics.py::Graphics:drawHoverPiece: Invalid piece color `{}'".format(self.board.location(hoverPiece).occupant.color))
-            elif lookup(self.selMoveAnimations, hoverPiece) is not None:
-                lookup(self.selMoveAnimations, hoverPiece).blitAt(self.screen,
+        if (isinstance(hoverPiece, tuple) and self.board.location(hoverPiece).occupant 
+                and not hoverPiece == self.maskedPiece):
+            if self.board.location(hoverPiece).occupant.color is RED:
+                self.redPieceHover.blitAt(self.screen, 
                         self.mapToScrCoords(hoverPiece))
+
+            elif self.board.location(hoverPiece).occupant.color is WHITE:
+                self.whitePieceHover.blitAt(self.screen, 
+                        self.mapToScrCoords(hoverPiece))
+
+            else: raise RuntimeError("Graphics.py::Graphics:drawHoverPiece: Invalid piece color `{}'".format(self.board.location(hoverPiece).occupant.color))
 
     def drawSelectedPiece(self, selectedPiece):
         if (isinstance(selectedPiece, tuple)
@@ -320,13 +301,13 @@ class Graphics:
             o.blitAt(self.screen)
 
     def drawPauseMenu(self, hoverButton):
-        self.pauseOverlay.blitAt(self.screen, (0, 0))
-        for (key, o) in self.pauseTextObjects.items():
+        pauseOverlay.blitAt(self.screen, (0, 0))
+        for (key, o) in pauseTextObjects.items():
             o.blitAt(self.screen)
         
-        if hoverButton in self.pauseButtonsHoverCoords:
-            self.pauseButtonHover.blitAt(self.screen, 
-                    self.pauseButtonsHoverCoords[hoverButton])
+        if hoverButton in pauseButtonsHoverCoords:
+            pauseButtonHover.blitAt(self.screen, 
+                    pauseButtonsHoverCoords[hoverButton])
         else: raise RuntimeError(
                 "Graphics.py::Graphics:drawPauseMenu: Invalid pause button `{}'".format(hoverButton))
 
@@ -336,12 +317,10 @@ class Graphics:
                 coords[1] * self.boardSpacing + self.boardUpperLeftCoords[1])
 
 
-    def appendNode(self, path, coord, accelerated, decelerated, moveLength, 
-            event=None):
-        speed = self.pieceBaseMoveSpeed * (moveLength ** 0.5)
-        path.append(PathNode(self.mapToScrCoords(coord), speed, 
-                accelerate=accelerated, decelerate=decelerated, 
-                eventOnComplete=event))
+def appendNode(path, coord, accelerated, decelerated, moveLength,  event=None):
+    speed = self.pieceBaseMoveSpeed * (moveLength ** 0.5)
+    path.append(PathNode(coord, speed, accelerate=accelerated, 
+        decelerate=decelerated, eventOnComplete=event))
 
 
 def lookup(matrix, index):
@@ -368,7 +347,6 @@ class Graphic:
         pass
 
 
-
 class AnimatedGraphic(Graphic):
     """Implements an animated graphic object."""
     surfaces = None
@@ -379,13 +357,13 @@ class AnimatedGraphic(Graphic):
 
     def __init__(self, path, frameDelay, loop=False, delayStart=0):
         paths = sorted(glob.glob(path))
-        #print(paths)
+        print(paths)
         self.surfaces = list(map(pygame.image.load, paths))
         self.frameDelay = frameDelay
         self.frameDelayCounter = frameDelay + delayStart
         self.frame = 0
         self.looping = loop
-        Graphic.__init__(self, paths[0])
+        Graphic.__init__(self, paths[1])
 
     def update(self):
         """Updates the animation. Must be called every frame."""
@@ -394,10 +372,9 @@ class AnimatedGraphic(Graphic):
             if not self.frameDelayCounter > 0:
                 self.frameDelayCounter = self.frameDelay
                 self.frame += 1
-                if self.looping and self.frame >= len(self.surfaces):
+                if self.frame >= len(self.surfaces):
                     self.frame = 0
-                if self.frame < len(self.surfaces):
-                    self.surface = self.surfaces[self.frame]
+                self.surface = self.surfaces[self.frame]
 
 
 class Motion:
@@ -525,17 +502,17 @@ class EasingMotion(Motion):
         if self.decelerate and self.accelerate:
             # This function is decomposed into two quadratic curves. 1st half:
             if (self.nodeCompletion < 0.5):
-                return (self.coord2[0] * (2.0 * (self.nodeCompletion ** 2)) + 
-                        self.coord1[0] * (1.0 - (2.0 * (self.nodeCompletion ** 2))),
-                        self.coord2[1] * (2.0 * (self.nodeCompletion ** 2)) + 
-                        self.coord1[1] * (1.0 - (2.0 * (self.nodeCompletion ** 2))))
+                return (self.coord2[0] * (2.0 * self.nodeCompletion ** 2) / 2.0 + 
+                        self.coord1[0] * (1.0 - ((2.0 * self.nodeCompletion) ** 2) / 2.0),
+                        self.coord2[1] * (2.0 * self.nodeCompletion ** 2) / 2.0 + 
+                        self.coord1[1] * (1.0 - ((2.0 * self.nodeCompletion) ** 2) / 2.0))
 
             # 2nd half:
             else:
-                return (self.coord2[0] * (1.0 - (2.0 * ((1.0 - self.nodeCompletion) ** 2)))
-                      + self.coord1[0] * (2.0 * ((1.0 - self.nodeCompletion) ** 2)), 
-                        self.coord2[1] * (1.0 - (2.0 * ((1.0 - self.nodeCompletion) ** 2)))
-                      + self.coord1[1] * (2.0 * ((1.0 - self.nodeCompletion) ** 2)))
+                return (self.coord2[0] * (1.0 - (2.0 * (1.0 - self.nodeCompletion) ** 2 / 2.0))
+                      + self.coord1[0] * (2.0 * (1.0 - self.nodeCompletion) ** 2 / 2.0), 
+                        self.coord2[1] * (1.0 - (2.0 * (1.0 - self.nodeCompletion) ** 2 / 2.0))
+                      + self.coord1[1] * (2.0 * (1.0 - self.nodeCompletion) ** 2 / 2.0))
 
 
         # Case 4: linear motion (not accelerated or decelerated)
@@ -591,45 +568,11 @@ def euclideanDist(coord1, coord2):
     return math.sqrt((coord2[0] - coord1[0]) ** 2 + (coord2[1] - coord1[1]) ** 2)
 
 def main():
-    random.seed()
     testBoard = Board()
     graphics = Graphics(testBoard)
-    #graphics.setPossibleMoves([[(0, 3), (1, 4), (2, 3), (3, 4), (4, 3), (5, 4), (6, 3), (7, 4)]])
-    moveList = [[(0, 5), (1, 4)], [(3, 2), (2, 3)]]
-    hoverPos = (0, 5)
-    path = False
-    paused = False
-    button = 0
     while True:
-        if (random.random() < 0.1):
-            hoverPos = (int(random.random() * 8), int(random.random() * 8))
-        timeDelta = graphics.updateAndDraw(hoverPos, (2, 5), 
-                button, paused, True)
-        if (not path and len(moveList) > 0 and random.random() < 0.04):
-            p = moveList.pop(0)
-            #print(p)
-            testBoard.movePiece(Coordinate(p[0][0], p[0][1]), Coordinate(p[1][0], p[1][1]))
-            graphics.registerMove(testBoard, p, [])
-            path = True
-        if (not paused and random.random() < 0.01):
-            paused = True
-            button = int(random.random() * 3) + 3
-        if (paused and random.random() < 0.04):
-            paused = False
-            button = int(random.random() * 3)
-        if (random.random() < 0.07):
-            button = int(random.random() * 3)
-            if paused: button += 3 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            elif event.type == pygame.USEREVENT:
-                if event.eventType == EVENT_PIECE_VANISH:
-                    graphics.vanishPiece(event)
-                elif event.eventType == EVENT_PATH_END:
-                    graphics.endPath()
-                    path = False
-                    
+        timeDelta = graphics.updateAndDraw((0, 5), (2, 5), 
+                BUTTON_INGAME_HOVER_PAUSE, False, True)
+        graphics.textObjects
 
 if __name__ == "__main__": main()

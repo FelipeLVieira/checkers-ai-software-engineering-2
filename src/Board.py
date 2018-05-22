@@ -110,7 +110,9 @@ class Board:
         This can be faster than writing something like self.matrix[coords[0]][coords[1]]
         """
         if coordinate is None:
-            return
+            return None
+        if isinstance(coordinate, tuple):
+            return self.matrix[coordinate[0]][coordinate[1]]
         return self.matrix[coordinate.x][coordinate.y]
 
     def moveContainsCoordinate(self, coordinate, move):
@@ -538,7 +540,10 @@ class Board:
         """
         Removes a piece from the board at position (x,y).
         """
-        self.matrix[coordinate.x][coordinate.y].occupant = None
+        if isinstance(coordinate, tuple):
+            self.matrix[coordinate[0]][coordinate[1]].occupant = None
+        else:
+            self.matrix[coordinate.x][coordinate.y].occupant = None
 
     def movePiece(self, startCoordinate, endCoordinate):
         """

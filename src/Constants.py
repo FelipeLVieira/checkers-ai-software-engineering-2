@@ -29,8 +29,12 @@ EVENT_PIECE_VANISH = 0
 EVENT_PATH_END = 1
 
 # Strings:
-TURNSTRING = "Turno {}"
+TURNSTRING = "Turno - {}"
 WAITSTRING = "Aguarde..."
 OPPONENT_NAME = "Computador"
 PLAYER_NAME_DEFAULT = "Jogador"
 WINDOW_CAPTION = "Checkers"
+PAUSE_BANNER = "Jogo pausado"
+PAUSE_CONTINUE = "Continuar"
+PAUSE_RESTART = "Reiniciar jogo"
+PAUSE_QUIT = "Sair"
