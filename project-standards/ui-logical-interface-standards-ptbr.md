@@ -11,13 +11,14 @@ Esta classe é responsável por:
 
 ### Função de update principal
 Esta função recebe os seguintes parâmetros:
-- Lista de possíveis movimentos a serem mostrados 
+- Lista de possíveis movimentos a serem mostrados, se houverem
 - Coordenada do tabuleiro sobre a qual o mouse está, se estiver (para o highlight de hover)
-- Se o mouse está sobre o botão de pause, ou de exit, ou não está
-- timeDelta
+- Peça que está selecionada, se houver (para highlighting)
+- Botão sobre o qual o mouse está posicionado
 - Se o jogo está pausado ou não
+- Se é a vez do jogador ou não
 
-Para mostrar quando um movimento for feito, com peças comidas ou não, haverá uma função separada para isso.
+Ela chama a classe de timing do pygame, atualiza os elementos necessários, desenha a tela de jogo, e retorna o valor do timeDelta, que deve ser capturado para uso na função de IA que precisa dele para timing.
 
 ### Highlights
 Há alguns tipos de highlights que a classe deve lidar:
@@ -25,13 +26,16 @@ Há alguns tipos de highlights que a classe deve lidar:
 - Highlighting de possíveis caminhos - quando uma peça é selecionada, os possíveis caminhos devem ser mostrados utilizando a animação de pop-in do highlight de movimento. Cada vez que um possível caminho é adicionado, a animação e as coordenadas correspondentes são armazenadas em uma lista, e os elementos lá dentro são atualizados e desenhados todo frame.
 
 ### Animação de movimento de peças
-Quando ocorre um movimento, a classe deverá receber o tabuleiro resultante, as coordenadas do movimento, e aonde as peças são comidas, caso houver. A classe irá então construir um caminho de movimento, incluindo os triggers para a remoção visual das peças, e disparar a animação (adicionando-a em uma lista). O tabuleiro recebido pela função é armazenado, e o tabuleiro interno da classe só é atualizado ao fim da animação.
+Quando ocorre um movimento, a classe deverá receber:
+- O tabuleiro resultante
+- As coordenadas do movimento
+- Aonde as peças são comidas (coordenadas), caso houver
 
-## Classe para controlar o desenho dos textos de UI
+A classe irá então construir um caminho de movimento, incluindo os triggers para a remoção visual das peças, e disparar a animação (adicionando-a em uma lista). O tabuleiro recebido pela função é armazenado, e o tabuleiro interno da classe só é atualizado ao fim da animação.
 
-Esta classe é responsável por:
+O game loop não deverá permitir que o usuário ou a IA joguem enquanto a animação está em progresso.
 
-- A cada frame, receber o número do turno atual, qual jogador está jogando, e a quantidade de peças possuídas por cada jogador (que não deve ser calculada todo frame pelo game loop, apenas quando houver movimentação), atualizar os textos, e desenhá-los na tela.
+O game loop deverá capturar os eventos pygame.USEREVENT referentes aos triggers que são disparados e executar as funções correspondentes para que haja atualização na tela.
 
 ### Turnos
 A classe deverá exibir, como registrado no mockup, o número do turno atual no scoreboard.
