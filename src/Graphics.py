@@ -194,18 +194,54 @@ class Graphics:
 
     def updateAndDraw(self, hoverPosition, selectedPiece, hoverButton, gamePaused,
             isPlayerTurn):
-        self.timeDelta = self.clock.tick(self.fps) / 1000
+        startTime = pygame.time.get_ticks()
+        auxTime = startTime
+        self.timeDelta = self.clock.tick(self.fps) / 1000.
+        print("Graphics:    timeDelta took              %3dms" % (int(self.timeDelta * 1000)))
+        print("+-----------------New frame------------------+")
         self.background.blitAt(self.screen, (0, 0))
+        nowTime = pygame.time.get_ticks() - auxTime
+        print("Graphics:background.blitAt took          %3dms" % (nowTime))
+        auxTime += nowTime
         self.drawBoardPieces()
+        nowTime = pygame.time.get_ticks() - auxTime
+        print("Graphics:drawBoardPiecces took           %3dms" % (nowTime))
+        auxTime += nowTime
         self.drawSelectedPiece(selectedPiece)
+        nowTime = pygame.time.get_ticks() - auxTime
+        print("Graphics:drawSelectedPiece took          %3dms" % (nowTime))
+        auxTime += nowTime
         self.drawHoverPiece(hoverPosition)
+        nowTime = pygame.time.get_ticks() - auxTime
+        print("Graphics:drawHoverPiece took             %3dms" % (nowTime))
+        auxTime += nowTime
         self.updateAndDrawPossibleMoves(gamePaused)
+        nowTime = pygame.time.get_ticks() - auxTime
+        print("Graphics:updateAndDrawPossibleMoves took %3dms" % (nowTime))
+        auxTime += nowTime
         self.updateAndDrawMovingPiece(gamePaused, self.timeDelta)
+        nowTime = pygame.time.get_ticks() - auxTime
+        print("Graphics:updateAndDrawMovingPiece took   %3dms" % (nowTime))
+        auxTime += nowTime
         if not gamePaused: self.drawHoverButton(hoverButton)
+        nowTime = pygame.time.get_ticks() - auxTime
+        print("Graphics:drawHoverButton took            %3dms" % (nowTime))
+        auxTime += nowTime
         self.updateAndDrawSidebarText(isPlayerTurn)
+        nowTime = pygame.time.get_ticks() - auxTime
+        print("Graphics:updateAndDrawSidebarText took   %3dms" % (nowTime))
+        auxTime += nowTime
         if gamePaused: self.drawPauseMenu(hoverButton)
+        nowTime = pygame.time.get_ticks() - auxTime
+        print("Graphics:drawPauseMenu took              %3dms" % (nowTime))
+        auxTime += nowTime
 
         pygame.display.update()
+        nowTime = pygame.time.get_ticks() - auxTime
+        print("Graphics:pygame.display.update took      %3dms" % (nowTime))
+        auxTime += nowTime
+        print("----------------------------------------------")
+        print("Graphics:Total runtime of updateAndDraw: %3dms" % (auxTime - startTime))
 
         return self.timeDelta
 
@@ -357,7 +393,7 @@ class Graphic:
     surface = None
 
     def __init__(self, path):
-        self.surface = pygame.image.load(path)
+        self.surface = pygame.image.load(path).convert_alpha()
 
     def blitAt(self, surface, coords):
         """Blits this graphic's surface over another surface."""
