@@ -2,7 +2,7 @@ import pygame
 import copy
 from Constants import *
 
-def test_simple:
+def test_simple():
     boardStart = [
             "#r#r#r#r",
             "r#r#r#r#",
@@ -17,12 +17,12 @@ def test_simple:
     movement = [[(2, 5), (1, 4)], [(2, 5), (3, 4)]]
     board = Board(boardStart)
     result = board.getLegalMovesByPiece(selectedPiece, 
-            lookup(board.matrix, index).occupant.king)
+            lookup(board.matrix, selectedPiece).occupant.king)
     assert len(result) == len(movement)
     for move in result:
         assert move in movement
 
-def test_capture_simple:
+def test_capture_simple():
     boardStart = [
             "#r#r#r#r",
             "r#r#r#r#",
@@ -37,12 +37,12 @@ def test_capture_simple:
     movement = [[(3, 4), (4, 3), (5, 2)]]
     board = Board(boardStart)
     result = board.getLegalMovesByPiece(selectedPiece, 
-            lookup(board.matrix, index).occupant.king)
+            lookup(board.matrix, selectedPiece).occupant.king)
     assert len(result) == len(movement)
     for move in result:
         assert move in movement
 
-def test_capture_enforce:
+def test_capture_enforce():
     boardStart = [
             "#r#r#r#r",
             "r#r#r#r#",
@@ -57,12 +57,12 @@ def test_capture_enforce:
     movement = []
     board = Board(boardStart)
     result = board.getLegalMovesByPiece(selectedPiece, 
-            lookup(board.matrix, index).occupant.king)
+            lookup(board.matrix, selectedPiece).occupant.king)
     assert len(result) == len(movement)
     for move in result:
         assert move in movement
 
-def test_capture_multiple:
+def test_capture_multiple():
     boardStart = [
             "#r#r#r# ",
             "r#r#r#r#",
@@ -77,12 +77,12 @@ def test_capture_multiple:
     movement = [[(3, 4), (4, 3), (5, 2), (6, 1), (7, 0)]]
     board = Board(boardStart)
     result = board.getLegalMovesByPiece(selectedPiece, 
-            lookup(board.matrix, index).occupant.king)
+            lookup(board.matrix, selectedPiece).occupant.king)
     assert len(result) == len(movement)
     for move in result:
         assert move in movement
 
-def test_capture_multiple_enforce:
+def test_capture_multiple_enforce():
     boardStart = [
             "#r#r#r# ",
             "r#r#r#r#",
@@ -97,12 +97,12 @@ def test_capture_multiple_enforce:
     movement = [[(3, 4), (4, 3), (5, 2), (6, 1), (7, 0)]]
     board = Board(boardStart)
     result = board.getLegalMovesByPiece(selectedPiece, 
-            lookup(board.matrix, index).occupant.king)
+            lookup(board.matrix, selectedPiece).occupant.king)
     assert len(result) == len(movement)
     for move in result:
         assert move in movement
 
-def test_capture_multiple_crosspaths:
+def test_capture_multiple_crosspaths():
     boardStart = [
             "#r# #r# ",
             "r#r#r#r#",
@@ -410,18 +410,31 @@ class Board:
         finalMoveSet = []
         refSquare = move[-1]
         moveQueue = []
-
-        if king and self.location(move[-1]).occupant is None:
+        if len(move) > 1:
             direction = self.getDirection(move[-2], move[-1])
-            print("direction", direction)
+
+        if king and self.location(refSquare).occupant is None:
+            direction = self.getDirection(move[-2], refSquare)
             if self.canJumpDirection(direction, refSquare):
-                move.append(self.nextCoordinate(direction, move[-1]))
-                move.append(self.afterNextCoordinate(direction, move[-1]))
-                moveQueue.append(move)
+                copyMove = copy.deepcopy(move)
+                copyMove.append(self.nextCoordinate(direction, move[-1]))
+                copyMove.append(self.afterNextCoordinate(direction, move[-1]))
+                moveQueue.append(copyMove)
+                finalMoveSet.append(copyMove)
             else:
                 finalMoveSet.append(move)
 
-        finalMoveSet.append(move)
+        if len(move) == 1:
+            for direction in (NORTHWEST, NORTHEAST, SOUTHWEST, SOUTHEAST):
+                if self.canJumpDirection(direction, refSquare):
+                    if self.canJumpDirection(direction, refSquare):
+                        copyMove = copy.deepcopy(move)
+                        copyMove.append(self.nextCoordinate(direction, move[-1]))
+                        copyMove.append(self.afterNextCoordinate(direction, move[-1]))
+                        moveQueue.append(copyMove)
+                        finalMoveSet.append(copyMove)
+                    else:
+                        finalMoveSet.append(move)
 
         return finalMoveSet
 
