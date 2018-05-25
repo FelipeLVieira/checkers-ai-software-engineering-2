@@ -429,7 +429,10 @@ class Board:
                 copyMove = copy.deepcopy(move)
                 copyMove.append(self.nextCoordinate(direction, move[-1]))
                 copyMove.append(self.afterNextCoordinate(direction, move[-1]))
-                moveQueue.append(copyMove)
+                while self.canMoveDirection(direction, copyMove[-1]):
+                    copyMove.append(self.nextCoordinate(direction, copyMove[-1]))
+                if copyMove not in moveQueue:
+                    moveQueue.append(copyMove)
 
         while moveQueue:
             auxMove = moveQueue.pop(0)
