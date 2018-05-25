@@ -18,6 +18,114 @@ def test_simple:
     board = Board(boardStart)
     result = board.getLegalMovesByPiece(selectedPiece, 
             lookup(board.matrix, index).occupant.king)
+    assert len(result) == len(movement)
+    for move in result:
+        assert move in movement
+
+def test_capture_simple:
+    boardStart = [
+            "#r#r#r#r",
+            "r#r#r#r#",
+            "#r#r# #r",
+            " # #r# #",
+            "# #w# # ",
+            "w# #w#w#",
+            "#w#w#w#w",
+            "w#w#w#w#"
+            ]
+    selectedPiece = (3, 4)
+    movement = [[(3, 4), (4, 3), (5, 2)]]
+    board = Board(boardStart)
+    result = board.getLegalMovesByPiece(selectedPiece, 
+            lookup(board.matrix, index).occupant.king)
+    assert len(result) == len(movement)
+    for move in result:
+        assert move in movement
+
+def test_capture_enforce:
+    boardStart = [
+            "#r#r#r#r",
+            "r#r#r#r#",
+            "#r#r# #r",
+            " # #r# #",
+            "# #w# # ",
+            "w# #w#w#",
+            "#w#w#w#w",
+            "w#w#w#w#"
+            ]
+    selectedPiece = (4, 5)
+    movement = []
+    board = Board(boardStart)
+    result = board.getLegalMovesByPiece(selectedPiece, 
+            lookup(board.matrix, index).occupant.king)
+    assert len(result) == len(movement)
+    for move in result:
+        assert move in movement
+
+def test_capture_multiple:
+    boardStart = [
+            "#r#r#r# ",
+            "r#r#r#r#",
+            "#r#r# #r",
+            " # #r# #",
+            "# #w# # ",
+            "w# #w#w#",
+            "#w#w#w#w",
+            "w#w#w#w#"
+            ]
+    selectedPiece = (3, 4)
+    movement = [[(3, 4), (4, 3), (5, 2), (6, 1), (7, 0)]]
+    board = Board(boardStart)
+    result = board.getLegalMovesByPiece(selectedPiece, 
+            lookup(board.matrix, index).occupant.king)
+    assert len(result) == len(movement)
+    for move in result:
+        assert move in movement
+
+def test_capture_multiple_enforce:
+    boardStart = [
+            "#r#r#r# ",
+            "r#r#r#r#",
+            "# #r# #r",
+            " #r#r# #",
+            "# #w# # ",
+            "w# #w#w#",
+            "#w#w#w#w",
+            "w#w#w#w#"
+            ]
+    selectedPiece = (3, 4)
+    movement = [[(3, 4), (4, 3), (5, 2), (6, 1), (7, 0)]]
+    board = Board(boardStart)
+    result = board.getLegalMovesByPiece(selectedPiece, 
+            lookup(board.matrix, index).occupant.king)
+    assert len(result) == len(movement)
+    for move in result:
+        assert move in movement
+
+def test_capture_multiple_crosspaths:
+    boardStart = [
+            "#r# #r# ",
+            "r#r#r#r#",
+            "# #r# #r",
+            " #r#r# #",
+            "# #w# # ",
+            "w# #w#w#",
+            "#w#w#w#w",
+            "w#w#w#w#"
+            ]
+    selectedPiece = (3, 4)
+    movement = [
+            [(3, 4), (4, 3), (5, 2), (4, 1), 
+                    (3, 0), (2, 1), (1, 2), (2, 3), (3, 4)], 
+            [(3, 4), (2, 3), (1, 2), (2, 1), 
+                    (3, 0), (4, 1), (5, 2), (4, 3), (3, 4)],
+            [(3, 4), (2, 3), (1, 2), (2, 1), 
+                    (3, 0), (4, 1), (5, 2), (6, 1), (7, 0)]        
+            ]
+    board = Board(boardStart)
+    result = board.getLegalMovesByPiece(selectedPiece, 
+            lookup(board.matrix, index).occupant.king)
+    assert len(result) == len(movement)
     for move in result:
         assert move in movement
 
