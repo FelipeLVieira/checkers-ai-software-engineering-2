@@ -519,14 +519,16 @@ class Board:
         """
         Removes enemy pieces from a move (x,y).
         """
-        mouseCheck = False
-        for idxCoord, coordinate in enumerate(move):
-            if self.location(coordinate) is self.location(self.mouseClick):
-                mouseCheck = True
-            if self.location(coordinate).occupant:
+        auxCopy = copy.deepcopy(move)
+        auxCoordinate = auxCopy.pop(0)
+        while auxCoordinate:
+            if self.location(auxCoordinate) is self.location(self.mouseClick):
+                break
+            if self.location(auxCoordinate).occupant:
                 if self.location(
-                        coordinate).occupant.color is not self.playerTurn and mouseCheck:
-                    self.matrix[coordinate.x][coordinate.y].occupant = None
+                        auxCoordinate).occupant.color is not self.playerTurn:
+                    self.matrix[auxCoordinate.x][auxCoordinate.y].occupant = None
+            auxCoordinate = auxCopy.pop(0)
 
     def removePiece(self, coordinate):
         """
