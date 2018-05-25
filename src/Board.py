@@ -427,14 +427,14 @@ class Board:
         if len(move) == 1:
             for direction in (NORTHWEST, NORTHEAST, SOUTHWEST, SOUTHEAST):
                 if self.canJumpDirection(direction, refSquare):
-                    if self.canJumpDirection(direction, refSquare):
-                        copyMove = copy.deepcopy(move)
-                        copyMove.append(self.nextCoordinate(direction, move[-1]))
-                        copyMove.append(self.afterNextCoordinate(direction, move[-1]))
-                        moveQueue.append(copyMove)
-                        finalMoveSet.append(copyMove)
-                    else:
-                        finalMoveSet.append(move)
+                    copyMove = copy.deepcopy(move)
+                    copyMove.append(self.nextCoordinate(direction, move[-1]))
+                    copyMove.append(self.afterNextCoordinate(direction, move[-1]))
+                    moveQueue.append(copyMove)
+                    finalMoveSet.append(copyMove)
+                else:
+                    finalMoveSet.append(move)
+
 
         return finalMoveSet
 
