@@ -425,7 +425,7 @@ class Board:
                 finalMoveSet.append(move)
 
         for direction in (NORTHWEST, NORTHEAST, SOUTHWEST, SOUTHEAST):
-            if self.canJumpDirection(direction, refSquare):
+            if self.canJumpDirection(direction, refSquare) and len(move) == 1:
                 copyMove = copy.deepcopy(move)
                 copyMove.append(self.nextCoordinate(direction, move[-1]))
                 copyMove.append(self.afterNextCoordinate(direction, move[-1]))
