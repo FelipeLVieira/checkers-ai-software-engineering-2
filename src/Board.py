@@ -410,8 +410,6 @@ class Board:
         finalMoveSet = []
         refSquare = move[-1]
         moveQueue = []
-        if len(move) > 1:
-            direction = self.getDirection(move[-2], move[-1])
 
         if king and self.location(refSquare).occupant is None:
             direction = self.getDirection(move[-2], refSquare)
@@ -419,22 +417,39 @@ class Board:
                 copyMove = copy.deepcopy(move)
                 copyMove.append(self.nextCoordinate(direction, move[-1]))
                 copyMove.append(self.afterNextCoordinate(direction, move[-1]))
+                while self.canMoveDirection(direction, copyMove[-1]):
+                    copyMove.append(
+                        self.nextCoordinate(direction, copyMove[-1]))
                 moveQueue.append(copyMove)
-                finalMoveSet.append(copyMove)
             else:
                 finalMoveSet.append(move)
 
-        if len(move) == 1:
-            for direction in (NORTHWEST, NORTHEAST, SOUTHWEST, SOUTHEAST):
-                if self.canJumpDirection(direction, refSquare):
-                    copyMove = copy.deepcopy(move)
-                    copyMove.append(self.nextCoordinate(direction, move[-1]))
-                    copyMove.append(self.afterNextCoordinate(direction, move[-1]))
-                    moveQueue.append(copyMove)
-                    finalMoveSet.append(copyMove)
-                else:
-                    finalMoveSet.append(move)
+        for direction in (NORTHWEST, NORTHEAST, SOUTHWEST, SOUTHEAST):
+            if self.canJumpDirection(direction, refSquare):
+                copyMove = copy.deepcopy(move)
+                copyMove.append(self.nextCoordinate(direction, move[-1]))
+                copyMove.append(self.afterNextCoordinate(direction, move[-1]))
+                moveQueue.append(copyMove)
 
+        while moveQueue:
+            auxMove = moveQueue.pop(0)
+            refSquare = auxMove[-1]
+            previous = auxMove[-3]
+
+            for direction in (NORTHWEST, NORTHEAST, SOUTHWEST, SOUTHEAST):
+                if self.canJumpDirection(direction, refSquare) and \
+                        self.afterNextCoordinate(direction, refSquare).x != previous.x \
+                        and self.afterNextCoordinate(direction, refSquare).y != previous.y:
+                    copyMove = copy.deepcopy(move)
+                    copyMove.append(self.nextCoordinate(direction, refSquare))
+                    copyMove.append(self.afterNextCoordinate(direction, refSquare))
+                    while self.canMoveDirection(direction, refSquare):
+                        copyMove.append(self.nextCoordinate(direction, refSquare))
+                    if copyMove not in moveQueue:
+                        moveQueue.append(copyMove)
+                else:
+                    if auxMove not in finalMoveSet:
+                        finalMoveSet.append(auxMove)
 
         return finalMoveSet
 
