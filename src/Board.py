@@ -1,15 +1,42 @@
 import pygame
-import pygame
 import copy
 from Constants import *
 
+def test_simple:
+    boardStart = [
+            "#r#r#r#r",
+            "r#r#r#r#",
+            "#r#r#r#r",
+            " # # # #",
+            "# # # # ",
+            "w#w#w#w#",
+            "#w#w#w#w",
+            "w#w#w#w#"
+            ]
+    selectedPiece = (2, 5)
+    movement = [[(2, 5), (1, 4)], [(2, 5), (3, 4)]]
+    board = Board(boardStart)
+    result = board.getLegalMovesByPiece(selectedPiece, 
+            lookup(board.matrix, index).occupant.king)
+    for move in result:
+        assert move in movement
+
+
+def lookup(matrix, index):
+    """Looks up an index, defined by a tuple, in a multidimensional array."""
+    result = matrix
+    for i in index:
+        result = result[i]
+    return result
 
 class Board:
     def __init__(self, board=None):
         # This allows us to make a copy of the board for the AI to safely
         # recurse on.
-        if board is Board:
+        if isinstance(board, Board):
             self.matrix = copy.deepcopy(board.matrix)
+        if isinstance(board, list):
+            self.matrix = boardFromStrings(board)
         self.matrix = self.newBoard()
 
         self.selectedPieceMoves = None
@@ -64,27 +91,62 @@ class Board:
 
         return matrix
 
-    def boardString(self, board):
+    def boardFromStrings(boardDescription):
+        """
+        Takes a board string description and returns a matrix containing the 
+        corresponding board pieces.
+        """
+        boardMatrix = [[Square(WHITE)] * 8 for i in range(8)]
+
+        parseDict = {
+                "w": (WHITE, False),
+                "W": (WHITE, True),
+                "r": (RED,   False),
+                "R": (RED,   True)
+                }
+
+        for x in range(0, 8):
+            for y in range(0, 8):
+                if (x & 1) ^ (y & 1):
+                    boardMatrix[x][y].color = BLACK
+                    if boardDescription[y][x] in parseDict:
+                        boardMatrix[x][y].occupant = (
+                                Piece(parseDict[boardDescription[y][x]][0],
+                                        parseDict[boardDescription[y][x]][1]))
+                else:
+                    boardMatrix[x][y].color = WHITE
+
+        return boardMatrix
+
+    def boardToString(self, board):
         """
         Takes a board and returns a matrix of the board space colors. Used for testing new_board()
         """
 
-        boardString = [[None] * 8 for i in range(8)]
-
+        boardString = [" " * 8 for i in range(8)]
+        
         for x in range(0, 8):
             for y in range(0, 8):
                 if board[x][y].color is BLACK:
                     if board[x][y].occupant is None:
-                        boardString[x][y] = "B"
+                        boardString[y][x] = " "
+                        continue
+                    elif (board[x][y].occupant.color is WHITE and
+                            board[x][y].occupant.king):
+                        boardString[y][x] = "W"
+                        continue
+                    elif (board[x][y].occupant.color is RED and
+                            board[x][y].occupant.king):
+                        boardString[y][x] = "R"
                         continue
                     elif board[x][y].occupant.color is WHITE:
-                        boardString[x][y] = "WHITE"
+                        boardString[y][x] = "w"
                         continue
                     elif board[x][y].occupant.color is RED:
-                        boardString[x][y] = "RED"
+                        boardString[y][x] = "r"
                         continue
                 else:
-                    boardString[x][y] = "W"
+                    boardString[y][x] = "#"
                     continue
 
         return boardString
