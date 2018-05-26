@@ -192,10 +192,10 @@ class Board:
         for x in range(8):
             for y in range(3):
                 if matrix[x][y].color == BLACK:
-                    matrix[x][y].occupant = Piece(RED, True)
+                    matrix[x][y].occupant = Piece(RED)
             for y in range(5, 8):
                 if matrix[x][y].color == BLACK:
-                    matrix[x][y].occupant = Piece(WHITE, True)
+                    matrix[x][y].occupant = Piece(WHITE)
 
         return matrix
 
@@ -377,7 +377,6 @@ class Board:
                     auxMove.append(pieceCoordinate)
                     auxMove.append(self.nextCoordinate(DIRECTION, pieceCoordinate))
                     moveSet.append(auxMove)
-                    print("AUX MOVE", auxMove)
                 else:
                     if pieceCoordinate not in moveSet:
                         moveSet.append([pieceCoordinate])
@@ -394,13 +393,12 @@ class Board:
                         moveSet.append([pieceCoordinate])
                 auxMove = []
 
-        for move in moveSet:
-            print("move in moveSet", move)
-            if len(move) > 1:
-                direction = self.getDirection(move[-2], move[-1])
-                while self.canMoveDirection(direction, move[-1]):
-                    move.append(self.nextCoordinate(direction, move[-1]))
-
+        if king:
+            for move in moveSet:
+                if len(move) > 1:
+                    direction = self.getDirection(move[-2], move[-1])
+                    while self.canMoveDirection(direction, move[-1]):
+                        move.append(self.nextCoordinate(direction, move[-1]))
         return moveSet
 
     def getJumpsByPiece(self, move, previous, king):
@@ -429,11 +427,16 @@ class Board:
                 copyMove = copy.deepcopy(move)
                 copyMove.append(self.nextCoordinate(direction, move[-1]))
                 copyMove.append(self.afterNextCoordinate(direction, move[-1]))
-                while self.canMoveDirection(direction, copyMove[-1]):
-                    copyMove.append(self.nextCoordinate(direction, copyMove[-1]))
-                if copyMove not in moveQueue:
-                    moveQueue.append(copyMove)
+                if king:
+                    while self.canMoveDirection(direction, copyMove[-1]):
+                        copyMove.append(self.nextCoordinate(direction, copyMove[-1]))
+            elif move not in moveQueue:
+                moveQueue.append(move)
 
+        for move in moveQueue:
+            print("printando move em movequeue", move)
+            finalMoveSet.append(move)
+        """
         while moveQueue:
             auxMove = moveQueue.pop(0)
             refSquare = auxMove[-1]
@@ -443,17 +446,20 @@ class Board:
                 if self.canJumpDirection(direction, refSquare) and \
                         self.afterNextCoordinate(direction, refSquare).x != previous.x \
                         and self.afterNextCoordinate(direction, refSquare).y != previous.y:
+                    print("entrou if while")
                     copyMove = copy.deepcopy(move)
                     copyMove.append(self.nextCoordinate(direction, refSquare))
                     copyMove.append(self.afterNextCoordinate(direction, refSquare))
-                    while self.canMoveDirection(direction, refSquare):
-                        copyMove.append(self.nextCoordinate(direction, refSquare))
+                    if king:
+                        while self.canMoveDirection(direction, refSquare):
+                            copyMove.append(self.nextCoordinate(direction, refSquare))
                     if copyMove not in moveQueue:
                         moveQueue.append(copyMove)
                 else:
-                    if auxMove not in finalMoveSet:
-                        finalMoveSet.append(auxMove)
-
+                    print("AUXMOVE", auxMove)
+                    finalMoveSet.append(auxMove)"""
+        print
+        print("FINALMOVESET", finalMoveSet)
         return finalMoveSet
 
     def getDirection(self, previous, refSquare):
@@ -521,8 +527,8 @@ class Board:
         # Extend jumps
         for move in legalMovesSet:
             previous = move[-1]
-            auxMoves = self.getJumpsByPiece(move, previous, king)
-            pieceFinalLegalMoves += auxMoves
+            pieceFinalLegalMoves += self.getJumpsByPiece(move, previous, king)
+            print("pieceFinal legal moves", pieceFinalLegalMoves)
 
         print("pieceFinalLegalMoves", pieceFinalLegalMoves)
 
