@@ -201,7 +201,7 @@ class Board:
 
     def boardFromStrings(boardDescription):
         """
-        Takes a board string description and returns a matrix containing the 
+        Takes a board string description and returns a matrix containing the
         corresponding board pieces.
         """
         boardMatrix = [[Square(WHITE)] * 8 for i in range(8)]
@@ -232,7 +232,7 @@ class Board:
         """
 
         boardString = [" " * 8 for i in range(8)]
-        
+
         for x in range(0, 8):
             for y in range(0, 8):
                 if board[x][y].color is BLACK:
@@ -423,16 +423,14 @@ class Board:
                 finalMoveSet.append(move)
 
         for direction in (NORTHWEST, NORTHEAST, SOUTHWEST, SOUTHEAST):
-            print("LEN MOVE", len(move))
-            print("self.canJumpDirection(direction, refSquare)", self.canJumpDirection(direction, refSquare))
-            if self.canJumpDirection(direction, refSquare) and len(move) == 1:
-                print("pode pular")
-                copyMove = copy.deepcopy(move)
-                copyMove.append(self.nextCoordinate(direction, move[-1]))
-                copyMove.append(self.afterNextCoordinate(direction, move[-1]))
+            if self.canJumpDirection(direction, move[0]):
+                copyMove = [move[0]]
+                copyMove.append(self.nextCoordinate(direction, move[0]))
+                copyMove.append(self.afterNextCoordinate(direction, move[0]))
                 if king:
                     while self.canMoveDirection(direction, copyMove[-1]):
                         copyMove.append(self.nextCoordinate(direction, copyMove[-1]))
+                moveQueue.append(copyMove)
             elif move not in moveQueue:
                 moveQueue.append(move)
 
@@ -509,6 +507,8 @@ class Board:
                         if move and move not in legalMoveSet:
                             legalMoveSet.append(move)
 
+        self.selectedPieceMoves = self.getBestMoves(
+            legalMoveSet, True)
         print("getLegalMoves - legalMoveSet ", legalMoveSet)
         return legalMoveSet
 
@@ -520,33 +520,67 @@ class Board:
         """
         Look for all possible movements recursively and return a list of possible moves
         """
-        pieceFinalLegalMoves = []
+        auxLegalMoves = []
 
         # Get piece moves without jump
         print(pieceCoordinate)
         legalMovesSet = self.getRegularMovesByPiece(pieceCoordinate, king)
 
-        print("LEGAL MOVE SET BEFORE JUMP", legalMovesSet)
         # Extend jumps
         for move in legalMovesSet:
             previous = move[-1]
-            pieceFinalLegalMoves += self.getJumpsByPiece(move, previous, king)
-            print("pieceFinal legal moves", pieceFinalLegalMoves)
+            auxLegalMoves += self.getJumpsByPiece(move, previous, king)
 
-        print("pieceFinalLegalMoves", pieceFinalLegalMoves)
+        bestMoves = self.getBestMoves(auxLegalMoves, king)
 
-        return pieceFinalLegalMoves
+        return bestMoves
 
     def getBestMoves(self, legalMoveSet, king):
 
-        copyLegalMoves = copy.deepcopy(legalMoveSet)
-        legalMoveSet = []
+        if not legalMoveSet:
+            return
 
-        for move in copyLegalMoves:
-            if self.moveContainsCoordinate(self.selectedPieceCoordinate, move) and move not in legalMoveSet:
-                legalMoveSet.append(move)
+        auxSet = []
 
-        return legalMoveSet
+        for move in legalMoveSet:
+            if move[0].x == self.selectedPieceCoordinate.x and \
+                    move[0].y == self.selectedPieceCoordinate.y:
+                auxSet.append(move)
+
+        jumpCounter = 0
+        mostJumps = 0
+        for move in auxSet:
+            for coordinate in move:
+                if self.location(coordinate).occupant:
+                    if self.location(coordinate).occupant.color is not self.playerTurn:
+                        jumpCounter += 1
+            if jumpCounter > mostJumps:
+                mostJumps = jumpCounter
+            jumpCounter = 0
+
+        if mostJumps == 0:
+            return auxSet
+
+        bestJumps = []
+        jumpCounter = 0
+        for move in legalMoveSet:
+            for coordinate in move:
+                if self.location(coordinate).occupant:
+                    if self.location(coordinate).occupant.color is not self.playerTurn:
+                        jumpCounter += 1
+            if mostJumps == jumpCounter:
+                bestJumps.append(move)
+            jumpCounter = 0
+
+        return bestJumps
+
+    def coordToTuple(self, coordinate):
+        tup = (coordinate.x, coordinate.y)
+        return tup
+
+    def tupToCoordinate(self, tup):
+        coord = Coordinate(tup.x, tup.y)
+        return coord
 
     def filterNoneOrEmptyMoves(self, moves):
 
