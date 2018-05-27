@@ -190,12 +190,12 @@ class Board:
 
         # initialize the pieces and put them in the appropriate squares
         for x in range(8):
-            for y in range(3):
+            for y in range(1):
                 if matrix[x][y].color == BLACK:
-                    matrix[x][y].occupant = Piece(RED)
-            for y in range(5, 8):
+                    matrix[x][y].occupant = Piece(RED, True)
+            for y in range(7, 8):
                 if matrix[x][y].color == BLACK:
-                    matrix[x][y].occupant = Piece(WHITE)
+                    matrix[x][y].occupant = Piece(WHITE, True)
 
         return matrix
 
@@ -411,17 +411,35 @@ class Board:
         finalMoveSet = []
         refSquare = move[-1]
         moveQueue = []
+        firstMoveDirection = ""
 
         if king and self.location(refSquare).occupant is None:
             direction = self.getDirection(move[-2], refSquare)
+            firstMoveDirection = direction
             if self.canJumpDirection(direction, refSquare):
                 copyMove = copy.deepcopy(move)
                 copyMove.append(self.nextCoordinate(direction, move[-1]))
                 copyMove.append(self.afterNextCoordinate(direction, move[-1]))
-                while self.canMoveDirection(direction, copyMove[-1]):
+                squareAfter = copyMove[-1]
+                nextMoves = []
+                while self.canMoveDirection(direction, squareAfter):
+                    if len(nextMoves) == 0:
+                        nextMoves.append(copyMove[:])
+                        moveQueue.append(copyMove[:])
+                    else:
+                        nextMoves.append(nextMoves[-1][:])
+
+                    nextMoves[-1].append(
+                        self.nextCoordinate(direction, squareAfter))
+                    moveQueue.append(nextMoves[-1][:])
+
+                    squareAfter = self.nextCoordinate(direction, squareAfter)
+                if len(moveQueue) == 0:
+                    moveQueue.append(copyMove[:])
+                """while self.canMoveDirection(direction, copyMove[-1]):
                     copyMove.append(
                         self.nextCoordinate(direction, copyMove[-1]))
-                moveQueue.append(copyMove)
+                moveQueue.append(copyMove)"""
             else:
                 finalMoveSet.append(move)
 
@@ -431,10 +449,30 @@ class Board:
                 copyMove.append(self.nextCoordinate(direction, refSquare))
                 copyMove.append(self.afterNextCoordinate(direction, refSquare))
                 if king:
-                    while self.canMoveDirection(direction, copyMove[-1]):
-                        copyMove.append(self.nextCoordinate(direction, copyMove[-1]))
-                if copyMove not in moveQueue:
+                    squareAfter = refSquare
+                    nextMoves = []
+                    entrouLoop = False
+                    while self.canMoveDirection(direction, squareAfter):
+                        entrouLoop = True
+                        if len(nextMoves) == 0:
+                            nextMoves.append(copyMove[:])
+                            moveQueue.append(copyMove[:])
+                        else:
+                            nextMoves.append(nextMoves[-1][:])
+
+                        nextMoves[-1].append(
+                            self.nextCoordinate(direction, squareAfter))
+                        moveQueue.append(nextMoves[-1][:])
+
+                        squareAfter = self.nextCoordinate(direction, squareAfter)
+                    if entrouLoop is False:
+                        moveQueue.append(copyMove)
+                else:
                     moveQueue.append(copyMove)
+                    """while self.canMoveDirection(direction, copyMove[-1]):
+                        copyMove.append(self.nextCoordinate(direction, copyMove[-1]))"""
+                """if copyMove not in moveQueue:
+                    moveQueue.append(copyMove)"""
 
         while moveQueue:
             auxMove = moveQueue.pop(0)
@@ -450,15 +488,71 @@ class Board:
                     copyMove.append(self.nextCoordinate(direction, refSquare))
                     copyMove.append(self.afterNextCoordinate(direction, refSquare))
                     if king:
-                        while self.canMoveDirection(direction, refSquare):
-                            copyMove.append(self.nextCoordinate(direction, refSquare))
-                    if copyMove not in moveQueue:
+                        squareAfter = self.afterNextCoordinate(direction, refSquare)
+                        nextMoves = []
+                        entrouLoop = False
+                        while self.canMoveDirection(direction, squareAfter):
+                            entrouLoop = True
+                            if len(nextMoves) == 0:
+                                nextMoves.append(copyMove[:])
+                                moveQueue.append(copyMove[:])
+                            else:
+                                nextMoves.append(nextMoves[-1][:])
+
+                            nextMoves[-1].append(
+                                self.nextCoordinate(direction, squareAfter))
+                            moveQueue.append(nextMoves[-1][:])
+
+                            squareAfter = self.nextCoordinate(direction, squareAfter)
+                        if entrouLoop is False:
+                            moveQueue.append(copyMove)
+                    else:
                         moveQueue.append(copyMove)
+                        """refSquareAux = refSquare
+                        refSquareAux = self.afterNextCoordinate(direction, refSquareAux)
+                        while self.canMoveDirection(direction, refSquareAux):
+                            copyMove.append(self.nextCoordinate(direction, refSquareAux))
+                            refSquareAux = self.nextCoordinate(direction, refSquareAux)
+                    if copyMove not in moveQueue:
+                        moveQueue.append(copyMove)"""
                 else:
                     if auxMove not in finalMoveSet:
                         finalMoveSet.append(auxMove)
 
+            """if king:
+                antigos = len(moveQueue)
+                newDirections = self.getDirectionsAfterJump(firstMoveDirection)
+                for directionAux in newDirections:
+                    refSquareAux = refSquare
+                    copyMove = copy.deepcopy(auxMove)
+                    while self.canMoveDirection(directionAux, refSquareAux):
+                        copyMove.append(self.nextCoordinate(directionAux, refSquareAux))
+                        refSquareAux = self.nextCoordinate(directionAux, refSquareAux)
+                    if self.canJumpDirection(directionAux, refSquareAux):
+                        contador = contador + 1
+                        newfirstMoveDirection = directionAux
+                        copyMove.append(self.nextCoordinate(directionAux, refSquareAux))
+                        copyMove.append(self.afterNextCoordinate(directionAux, refSquareAux))
+                        refSquareAux = self.afterNextCoordinate(directionAux, refSquareAux)
+                        while self.canMoveDirection(directionAux, refSquareAux):
+                            copyMove.append(self.nextCoordinate(directionAux, refSquareAux))
+                            refSquareAux = self.nextCoordinate(directionAux, refSquareAux)
+                        moveQueue.append(copyMove[:])
+                        if copyMove not in moveQueue:
+                            moveQueueAux.append(copyMove[:])"""
+
+
         return finalMoveSet
+
+    def getDirectionsAfterJump(self, direction):
+        if direction == NORTHWEST:
+            return [NORTHEAST, SOUTHWEST]
+        elif direction == NORTHEAST:
+            return [NORTHWEST, SOUTHEAST]
+        elif direction == SOUTHWEST:
+            return [NORTHWEST, SOUTHEAST]
+        elif direction == SOUTHEAST:
+            return [NORTHEAST, SOUTHWEST]
 
     def getDirection(self, previous, refSquare):
         aux = self.nextCoordinate(NORTHWEST, previous)
@@ -596,10 +690,11 @@ class Board:
         self.verifyDrawCondition()
 
     def showCoordinates(self):
-        for move in self.selectedPieceMoves:
-            print("\n")
-            for coord in move:
-                print("(", coord.x, coord.y, ") ")
+        if self.selectedPieceMoves is not None:
+            for move in self.selectedPieceMoves:
+                print("\n")
+                for coord in move:
+                    print("(", coord.x, coord.y, ") ")
 
     def executeMove(self):
         self.showCoordinates()
