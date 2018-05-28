@@ -16,8 +16,8 @@ def test_simple():
     selectedPiece = (2, 5)
     movement = [[(2, 5), (1, 4)], [(2, 5), (3, 4)]]
     board = Board(boardStart)
-    result = board.getLegalMovesByPiece(selectedPiece, 
-            lookup(board.matrix, selectedPiece).occupant.king)
+    result = board.getLegalMoves(selectedPiece,
+                                      lookup(board.matrix, selectedPiece).occupant.king)
     assert len(result) == len(movement)
     for move in result:
         assert move in movement
@@ -36,8 +36,8 @@ def test_capture_simple():
     selectedPiece = (3, 4)
     movement = [[(3, 4), (4, 3), (5, 2)]]
     board = Board(boardStart)
-    result = board.getLegalMovesByPiece(selectedPiece, 
-            lookup(board.matrix, selectedPiece).occupant.king)
+    result = board.getLegalMoves(selectedPiece,
+                                      lookup(board.matrix, selectedPiece).occupant.king)
     assert len(result) == len(movement)
     for move in result:
         assert move in movement
@@ -56,8 +56,8 @@ def test_capture_enforce():
     selectedPiece = (4, 5)
     movement = []
     board = Board(boardStart)
-    result = board.getLegalMovesByPiece(selectedPiece, 
-            lookup(board.matrix, selectedPiece).occupant.king)
+    result = board.getLegalMoves(selectedPiece,
+                                      lookup(board.matrix, selectedPiece).occupant.king)
     assert len(result) == len(movement)
     for move in result:
         assert move in movement
@@ -76,8 +76,8 @@ def test_capture_multiple():
     selectedPiece = (3, 4)
     movement = [[(3, 4), (4, 3), (5, 2), (6, 1), (7, 0)]]
     board = Board(boardStart)
-    result = board.getLegalMovesByPiece(selectedPiece, 
-            lookup(board.matrix, selectedPiece).occupant.king)
+    result = board.getLegalMoves(selectedPiece,
+                                      lookup(board.matrix, selectedPiece).occupant.king)
     assert len(result) == len(movement)
     for move in result:
         assert move in movement
@@ -96,8 +96,8 @@ def test_capture_multiple_enforce():
     selectedPiece = (3, 4)
     movement = [[(3, 4), (4, 3), (5, 2), (6, 1), (7, 0)]]
     board = Board(boardStart)
-    result = board.getLegalMovesByPiece(selectedPiece, 
-            lookup(board.matrix, selectedPiece).occupant.king)
+    result = board.getLegalMoves(selectedPiece,
+                                      lookup(board.matrix, selectedPiece).occupant.king)
     assert len(result) == len(movement)
     for move in result:
         assert move in movement
@@ -123,8 +123,8 @@ def test_capture_multiple_crosspaths():
                     (3, 0), (4, 1), (5, 2), (6, 1), (7, 0)]        
             ]
     board = Board(boardStart)
-    result = board.getLegalMovesByPiece(selectedPiece, 
-            lookup(board.matrix, index).occupant.king)
+    result = board.getLegalMoves(selectedPiece,
+                                      lookup(board.matrix, index).occupant.king)
     assert len(result) == len(movement)
     for move in result:
         assert move in movement
@@ -586,7 +586,7 @@ class Board:
     |  Player all pieces Moves Logic  |
     +-------------------------------"""
 
-    def getLegalMoves(self, ):
+    def getLegalMoves(self, pieceCoordinate, king):
 
         # Get a list of all legal moves
         legalMoveSet = []
@@ -595,22 +595,19 @@ class Board:
                 coordinate = Coordinate(x, y)
                 if self.matrix[x][y].occupant is not None \
                         and self.matrix[x][y].occupant.color is self.playerTurn:
-                    for move in self.getLegalMovesByPiece(coordinate, self.location(coordinate).occupant.king):
+                    for move in self.getRawMovesByPiece(coordinate, king):
                         if move and move not in legalMoveSet:
                             legalMoveSet.append(move)
 
-        print("legalMoveSet len", len(legalMoveSet))
-        legalMoveSet = self.getBestMovesByPiece(self.selectedPieceCoordinate, legalMoveSet)
-        print("legalMoveSet len", len(legalMoveSet))
+        legalMoveSet = self.getBestMovesByPiece(pieceCoordinate, legalMoveSet)
 
-        print("getLegalMoves - legalMoveSet ", legalMoveSet)
         return legalMoveSet
 
     """--------------------------+
     |  Single Piece Moves Logic  |
     +--------------------------"""
 
-    def getLegalMovesByPiece(self, pieceCoordinate, king=False):
+    def getRawMovesByPiece(self, pieceCoordinate, king=False):
         """
         Look for all possible movements recursively and return a list of possible moves
         """
@@ -629,8 +626,6 @@ class Board:
         if len(pieceFinalLegalMoves) == 0:
             print("\n\npieceFinalLegalMoves antes: ", pieceFinalLegalMoves)
             pieceFinalLegalMoves = legalMovesSet
-
-        pieceFinalLegalMoves = self.getBestMovesByPiece(pieceCoordinate, pieceFinalLegalMoves)
 
         print("\n\npieceFinalLegalMoves", pieceFinalLegalMoves)
 
