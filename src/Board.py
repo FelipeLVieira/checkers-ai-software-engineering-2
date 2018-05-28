@@ -190,12 +190,12 @@ class Board:
 
         # initialize the pieces and put them in the appropriate squares
         for x in range(8):
-            for y in range(1):
+            for y in range(3):
                 if matrix[x][y].color == BLACK:
-                    matrix[x][y].occupant = Piece(RED, True)
-            for y in range(7, 8):
+                    matrix[x][y].occupant = Piece(RED)
+            for y in range(5, 8):
                 if matrix[x][y].color == BLACK:
-                    matrix[x][y].occupant = Piece(WHITE, True)
+                    matrix[x][y].occupant = Piece(WHITE)
 
         return matrix
 
@@ -586,7 +586,7 @@ class Board:
     |  Player all pieces Moves Logic  |
     +-------------------------------"""
 
-    def getLegalMoves(self):
+    def getLegalMoves(self, ):
 
         # Get a list of all legal moves
         legalMoveSet = []
@@ -598,6 +598,10 @@ class Board:
                     for move in self.getLegalMovesByPiece(coordinate, self.location(coordinate).occupant.king):
                         if move and move not in legalMoveSet:
                             legalMoveSet.append(move)
+
+        print("legalMoveSet len", len(legalMoveSet))
+        legalMoveSet = self.getBestMovesByPiece(self.selectedPieceCoordinate, legalMoveSet)
+        print("legalMoveSet len", len(legalMoveSet))
 
         print("getLegalMoves - legalMoveSet ", legalMoveSet)
         return legalMoveSet
@@ -626,22 +630,21 @@ class Board:
             print("\n\npieceFinalLegalMoves antes: ", pieceFinalLegalMoves)
             pieceFinalLegalMoves = legalMovesSet
 
+        pieceFinalLegalMoves = self.getBestMovesByPiece(pieceCoordinate, pieceFinalLegalMoves)
+
         print("\n\npieceFinalLegalMoves", pieceFinalLegalMoves)
 
         return pieceFinalLegalMoves
 
-    def getBestMoves(self, legalMoveSet, king):
+    def getBestMovesByPiece(self, pieceCoordinate, legalMoveSet):
 
-        copyLegalMoves = copy.deepcopy(legalMoveSet)
-        bestMoves = []
-
-        for move in legalMoveSet:
-            if move[0].x is self.selectedPieceCoordinate.x and move[0].y is self.selectedPieceCoordinate.y:
-                bestMoves.append(move)
+        if not legalMoveSet:
+            return
 
         jumpCounter = 0
         mostJumps = 0
-        for move in bestMoves:
+
+        for move in legalMoveSet:
             for coord in move:
                 if self.location(coord).occupant:
                     if self.location(coord).occupant.color is not self.playerTurn:
@@ -650,23 +653,27 @@ class Board:
                 mostJumps = jumpCounter
             jumpCounter = 0
 
-        print("jumpCounter", mostJumps)
-        if mostJumps is 0:
-            return bestMoves
+        bestMoves = []
+        if mostJumps is not 0:
+            auxBestMoves = []
+            for move in legalMoveSet:
+                for coord in move:
+                    if self.location(coord).occupant:
+                        if self.location(coord).occupant.color is not self.playerTurn:
+                            jumpCounter += 1
+                if jumpCounter is mostJumps:
+                    auxBestMoves.append(move)
+                jumpCounter = 0
 
-        auxBestMoves = []
+            for move in auxBestMoves:
+                if move[0].x is pieceCoordinate.x and move[0].y is pieceCoordinate.y:
+                    bestMoves.append(move)
+        else:
+            for move in legalMoveSet:
+                if move[0].x is pieceCoordinate.x and move[0].y is pieceCoordinate.y:
+                    bestMoves.append(move)
 
-        for move in bestMoves:
-            for coord in move:
-                if self.location(coord).occupant:
-                    if self.location(coord).occupant.color is not self.playerTurn:
-                        jumpCounter += 1
-            if jumpCounter is mostJumps:
-                auxBestMoves.append(move)
-            jumpCounter = 0
-
-        print(" len auxBestMoves", len(auxBestMoves))
-        return auxBestMoves
+        return bestMoves
 
     def coordToTuple(self, coordinate):
         tup = (coordinate.x, coordinate.y)
