@@ -440,8 +440,8 @@ class Board:
                     copyMove.append(
                         self.nextCoordinate(direction, copyMove[-1]))
                 moveQueue.append(copyMove)"""
-            else:
-                finalMoveSet.append(move)
+            """else:
+                finalMoveSet.append(move)"""
 
         for direction in (NORTHWEST, NORTHEAST, SOUTHWEST, SOUTHEAST):
             if self.canJumpDirection(direction, refSquare) and len(move) == 1:
