@@ -73,6 +73,8 @@ class GameLoop:
                     # Get legal moves and filter for the longest moves only
                     self.board.playerLegalMoves = self.board.getLegalMoves()
 
+                    self.board.selectedPieceMoves = self.board.getBestMoves(self.board.playerLegalMoves, True)
+
                     print("Selected Legal Moves ", self.board.selectedPieceMoves)
 
                 # Move piece to another position
