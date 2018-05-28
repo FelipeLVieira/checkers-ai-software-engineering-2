@@ -633,13 +633,48 @@ class Board:
     def getBestMoves(self, legalMoveSet, king):
 
         copyLegalMoves = copy.deepcopy(legalMoveSet)
-        legalMoveSet = []
+        bestMoves = []
 
-        for move in copyLegalMoves:
-            if self.moveContainsCoordinate(self.selectedPieceCoordinate, move) and move not in legalMoveSet:
-                legalMoveSet.append(move)
+        for move in legalMoveSet:
+            if move[0].x is self.selectedPieceCoordinate.x and move[0].y is self.selectedPieceCoordinate.y:
+                bestMoves.append(move)
 
-        return legalMoveSet
+        jumpCounter = 0
+        mostJumps = 0
+        for move in bestMoves:
+            for coord in move:
+                if self.location(coord).occupant:
+                    if self.location(coord).occupant.color is not self.playerTurn:
+                        jumpCounter += 1
+            if jumpCounter > mostJumps:
+                mostJumps = jumpCounter
+            jumpCounter = 0
+
+        print("jumpCounter", mostJumps)
+        if mostJumps is 0:
+            return bestMoves
+
+        auxBestMoves = []
+
+        for move in bestMoves:
+            for coord in move:
+                if self.location(coord).occupant:
+                    if self.location(coord).occupant.color is not self.playerTurn:
+                        jumpCounter += 1
+            if jumpCounter is mostJumps:
+                auxBestMoves.append(move)
+            jumpCounter = 0
+
+        print(" len auxBestMoves", len(auxBestMoves))
+        return auxBestMoves
+
+    def coordToTuple(self, coordinate):
+        tup = (coordinate.x, coordinate.y)
+        return tup
+
+    def tupToCoordinate(self, tup):
+        coord = Coordinate(tup.x, tup.y)
+        return coord
 
     def filterNoneOrEmptyMoves(self, moves):
 
