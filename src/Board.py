@@ -449,7 +449,7 @@ class Board:
                 copyMove.append(self.nextCoordinate(direction, refSquare))
                 copyMove.append(self.afterNextCoordinate(direction, refSquare))
                 if king:
-                    squareAfter = refSquare
+                    squareAfter = copyMove[-1]
                     nextMoves = []
                     entrouLoop = False
                     while self.canMoveDirection(direction, squareAfter):
