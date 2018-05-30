@@ -9,21 +9,32 @@ from Constants import *
 # For testing only
 import random
 
-pygame.font.init()
 
-
-class Graphics:
-    def __init__(self, board):
-        self.caption = WINDOW_CAPTION
-
+class GraphicsBackend:
+    def __init__(self):
         self.fps = 60
         self.clock = pygame.time.Clock()
         self.timeDelta = 0
 
         self.windowWidth = 1280
         self.windowHeight = 720
+
+        pygame.init()
+        pygame.font.init()
         self.screen = pygame.display.set_mode((self.windowWidth, self.windowHeight))
-        
+        pygame.display.set_caption(WINDOW_CAPTION)
+
+
+
+class Graphics:
+    def __init__(self, graphicsBackend, board):
+        self.fps = graphicsBackend.fps
+        self.clock = graphicsBackend.clock
+        self.timeDelta = graphicsBackend.timeDelta
+        self.windowWidth = graphicsBackend.windowWidth
+        self.windowHeight = graphicsBackend.windowHeight
+        self.screen = graphicsBackend.screen
+
         self.board = copy.deepcopy(board)
         self.auxBoard = None
 
@@ -194,8 +205,6 @@ class Graphics:
 
     def updateAndDraw(self, hoverPosition, selectedPiece, hoverButton, gamePaused,
             isPlayerTurn):
-        startTime = pygame.time.get_ticks()
-        auxTime = startTime
         self.timeDelta = self.clock.tick(self.fps) / 1000.
         self.background.blitAt(self.screen, (0, 0))
         self.drawBoardPieces()
@@ -582,9 +591,13 @@ class DynamicTextElement(TextElement):
     def __init__(self, initialValue, coords, fontFace="../assets/fonts/Cantarell-Regular.otf", fontSize=36, alignment=FONT_ALIGN_LEFT, color=pygame.Color(255, 255, 255, 255)):
         TextElement.__init__(self, initialValue, coords, fontFace, fontSize, alignment, color)
 
-    def update(self, newValue, newCoords=None):
-        if newValue != self.text:
-            self.text = newValue
+    def update(self, newValue=None, newCoords=None, newColor=None):
+        if ((newValue is not None and newValue != self.text) 
+                or newColor is not None):
+            if newValue is not None: 
+                self.text = newValue
+            if newColor is not None: 
+                self.color = newColor
             self.render()
         if isinstance(newCoords, tuple): self.coords = newCoords
 

@@ -1,0 +1,10 @@
+[
+  "BoardLogic.py::test_simple",
+  "BoardLogic.py::test_capture_simple",
+  "BoardLogic.py::test_capture_enforce",
+  "BoardLogic.py::test_capture_multiple",
+  "BoardLogic.py::test_capture_multiple_enforce",
+  "BoardLogic.py::test_capture_multiple_crosspaths",
+  "BoardLogic.py::test_king_move",
+  "BoardLogic.py::test_king_capture"
+]

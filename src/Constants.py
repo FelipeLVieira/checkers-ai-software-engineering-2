@@ -38,3 +38,18 @@ PAUSE_BANNER = "Jogo pausado"
 PAUSE_CONTINUE = "Continuar"
 PAUSE_RESTART = "Reiniciar jogo"
 PAUSE_QUIT = "Sair"
+
+TITLE_LINE1 = "teste"
+TITLE_LINE2 = "Damas"
+
+TITLE_PLAYERNAME_EMPTY = "digite seu nome..."
+
+TITLE_DIFFICULTYLABEL = "Dificuldade:"
+TITLE_DIFFICULTY1 = "Principiante"
+TITLE_DIFFICULTY2 = "Casual"
+TITLE_DIFFICULTY3 = "Desafiador"
+TITLE_DIFFICULTY4 = "Experiente"
+TITLE_DIFFICULTY5 = "Mestre"
+
+TITLE_START = "Iniciar jogo"
+
