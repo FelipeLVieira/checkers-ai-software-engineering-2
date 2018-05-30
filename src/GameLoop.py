@@ -1,4 +1,5 @@
-import pygame, sys
+import sys
+import pygame
 from Graphics import Graphics
 from Board import *
 from Constants import *
@@ -21,9 +22,6 @@ class GameLoop:
         self.done = False
 
         self.mousePos = None
-
-        # Player's turn switcher
-        self.board.playerTurn = WHITE
 
         # Boolean screen switchers
         self.startScreen = False
@@ -50,7 +48,8 @@ class GameLoop:
 
         for event in pygame.event.get():
             # ESC quits the game (just for now)... (by the way, closing the window works too because of pygame.QUIT)
-            if (event.type == pygame.QUIT) or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+            if (event.type == pygame.QUIT) or (
+                    event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                 self.terminateGame()
 
             # Click event handling
@@ -64,23 +63,28 @@ class GameLoop:
                 print("Player color", self.board.playerTurn)
 
                 # Select piece and get legal moves
-                if self.board.location(self.board.mouseClick).occupant is not None \
-                        and self.board.location(self.board.mouseClick).occupant.color is self.board.playerTurn:
+                if self.board.location(
+                        self.board.mouseClick).occupant is not None \
+                        and self.board.location(
+                    self.board.mouseClick).occupant.color is self.board.playerTurn:
                     print("entered selectedPieceCoordinate")
-                    self.board.selectedPieceCoordinate = Coordinate(self.board.mouseClick.x,
-                                                                    self.board.mouseClick.y)
+                    self.board.selectedPieceCoordinate = Coordinate(
+                        self.board.mouseClick.x,
+                        self.board.mouseClick.y)
 
                     # Get legal moves and filter for the longest moves only
                     self.board.selectedPieceMoves = self.board.getLegalMoves(
-                        self.board.selectedPieceCoordinate, self.board.location(
-                            self.board.selectedPieceCoordinate).occupant.king)
+                        self.board.selectedPieceCoordinate)
 
-                    print("Selected Legal Moves ", self.board.selectedPieceMoves)
+                    print("Selected Legal Moves ",
+                          self.board.selectedPieceMoves)
 
                 # Move piece to another position
-                elif self.board.location(self.board.mouseClick).occupant is None and \
+                elif self.board.location(
+                        self.board.mouseClick).occupant is None and \
                         self.board.location(self.board.mouseClick) \
-                        is not self.board.location(self.board.selectedPieceCoordinate):
+                        is not self.board.location(
+                    self.board.selectedPieceCoordinate):
 
                     print("execute move")
                     executed = self.board.executeMove()
@@ -104,7 +108,9 @@ class GameLoop:
         return
 
     def updateMainGame(self):
-        self.graphics.updateMainGameDisplay(self.board, self.board.selectedPieceMoves, self.board.selectedPieceCoordinate)
+        self.graphics.updateMainGameDisplay(self.board,
+                                            self.board.selectedPieceMoves,
+                                            self.board.selectedPieceCoordinate)
         pygame.display.flip()
 
     """------------------+
