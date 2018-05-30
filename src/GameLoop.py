@@ -3,7 +3,6 @@ import pygame
 from Graphics import Graphics
 from Board import *
 from Constants import *
-from pygame.locals import *
 
 # Using 'import numpy as np' to have a better view of printed array
 
@@ -57,8 +56,8 @@ class GameLoop:
 
                 self.board.mouseClick = self.mousePos
 
-                print("mouseClick x", self.board.mouseClick.x, " y ",
-                      self.board.mouseClick.y)
+                print("mouseClick x", self.board.mouseClick[0], " y ",
+                      self.board.mouseClick[1])
 
                 print("Player color", self.board.playerTurn)
 
@@ -66,36 +65,36 @@ class GameLoop:
                 if self.board.location(
                         self.board.mouseClick).occupant is not None \
                         and self.board.location(
-                    self.board.mouseClick).occupant.color is self.board.playerTurn:
+                    self.board.mouseClick).occupant.color == self.board.playerTurn:
                     print("entered selectedPieceCoordinate")
-                    self.board.selectedPieceCoordinate = Coordinate(
-                        self.board.mouseClick.x,
-                        self.board.mouseClick.y)
+                    self.board.selectedPieceCoordinate = self.board.mouseClick
 
                     # Get legal moves and filter for the longest moves only
-                    self.board.selectedPieceMoves = self.board.getLegalMoves(
-                        self.board.selectedPieceCoordinate)
+                    if len(self.board.nextPossibleCoords) == 0:
+                        self.board.legalMoveSet = self.board.getLegalMoves(
+                            self.board.selectedPieceCoordinate)
 
-                    print("Selected Legal Moves ",
-                          self.board.selectedPieceMoves)
+                        # Save the end square of legal moves and possible next moves
+                        self.board.getNextPossibleMoves()
+
+                    print("self.board.legalMoveSet ",
+                          self.board.legalMoveSet)
 
                 # Move piece to another position
-                elif self.board.location(
-                        self.board.mouseClick).occupant is None and \
-                        self.board.location(self.board.mouseClick) \
-                        is not self.board.location(
-                    self.board.selectedPieceCoordinate):
+                elif len(self.board.nextPossibleCoords) > 0:
+                    print("self.board.executeMove()")
+                    self.board.executeMove()
 
-                    print("execute move")
-                    executed = self.board.executeMove()
-
-                    if executed:
+                    print("legalmoveset len", len(self.board.legalMoveSet))
+                    if self.board.finishMoveExec:
+                        self.board.nextPossibleCoords = []
+                        self.board.legalMoveSet = []
                         self.board.selectedPieceCoordinate = None
-                        self.board.selectedPieceMoves = None
                         self.board.playerLegalMoves = None
                         self.board.mouseClick = None
-                        self.board.selectedPieceMoves = None
+                        self.board.finishMoveExec = False
                         self.endTurn()
+
 
     """-----------------+
     |  Screen Updaters  |
@@ -109,7 +108,7 @@ class GameLoop:
 
     def updateMainGame(self):
         self.graphics.updateMainGameDisplay(self.board,
-                                            self.board.selectedPieceMoves,
+                                            self.board.legalMoveSet,
                                             self.board.selectedPieceCoordinate)
         pygame.display.flip()
 

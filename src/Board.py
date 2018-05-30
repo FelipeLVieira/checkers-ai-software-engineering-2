@@ -23,19 +23,20 @@ class Board:
         else:
             self.matrix = self.newBoard()
 
-        # Cache of list of legal moves for the board in this turn;
+        # Cache of list of legal moves for the board in this turn
         # Must be set to None at the end of a turn.
         self.legalMoveSet = None
 
         # Indicates which player is currently playing.
         self.playerTurn = WHITE
 
-        # Cache of moves list from selected piece
-        self.selectedPieceMoves = None
         # Cache of selected piece
         self.selectedPieceCoordinate = None
         # Cache of mouse click
         self.mouseClick = None
+
+        self.finishMoveExec = False
+        self.nextPossibleCoords = []
 
         self.isPlayerRedLost = False
         self.isPlayerWhiteLost = False
@@ -70,14 +71,17 @@ class Board:
         """
         Returns the coordinates one square in a different direction to (x,y).
         """
+        direction = self.tupleToCoord(direction)
+        coordinate = self.tupleToCoord(coordinate)
+
         if direction == NORTHWEST:
-            return Coordinate(coordinate.x - 1, coordinate.y - 1)
+            return (coordinate.x - 1, coordinate.y - 1)
         elif direction == NORTHEAST:
-            return Coordinate(coordinate.x + 1, coordinate.y - 1)
+            return (coordinate.x + 1, coordinate.y - 1)
         elif direction == SOUTHWEST:
-            return Coordinate(coordinate.x - 1, coordinate.y + 1)
+            return (coordinate.x - 1, coordinate.y + 1)
         elif direction == SOUTHEAST:
-            return Coordinate(coordinate.x + 1, coordinate.y + 1)
+            return (coordinate.x + 1, coordinate.y + 1)
         else:
             return 0
 
@@ -85,91 +89,35 @@ class Board:
         """
         Returns the coordinates one square in a different direction to (x,y).
         """
+        direction = self.tupleToCoord(direction)
+        coordinate = self.tupleToCoord(coordinate)
+
         if direction == NORTHWEST:
-            return Coordinate(coordinate.x - 2, coordinate.y - 2)
+            return (coordinate.x - 2, coordinate.y - 2)
         elif direction == NORTHEAST:
-            return Coordinate(coordinate.x + 2, coordinate.y - 2)
+            return (coordinate.x + 2, coordinate.y - 2)
         elif direction == SOUTHWEST:
-            return Coordinate(coordinate.x - 2, coordinate.y + 2)
+            return (coordinate.x - 2, coordinate.y + 2)
         elif direction == SOUTHEAST:
-            return Coordinate(coordinate.x + 2, coordinate.y + 2)
+            return (coordinate.x + 2, coordinate.y + 2)
         else:
             return 0
-
-    def canJumpAdjacent(self, coordinate):
-        """
-        Returns a list of squares locations that are adjacent (on a diagonal) to (x,y).
-        """
-
-        return self.canJumpDirection(NORTHWEST, self.nextCoordinate(NORTHWEST,
-                                                                    coordinate)) \
-               or self.canJumpDirection(NORTHEAST,
-                                        self.nextCoordinate(NORTHEAST,
-                                                            coordinate)) \
-               or self.canJumpDirection(SOUTHWEST,
-                                        self.nextCoordinate(SOUTHWEST,
-                                                            coordinate)) \
-               or self.canJumpDirection(SOUTHEAST,
-                                        self.nextCoordinate(SOUTHEAST,
-                                                            coordinate))
-
-    def canMoveAdjacent(self, coordinate):
-        """
-        Returns a list of squares locations that are adjacent (on a diagonal) to (x,y).
-        """
-
-        return self.canMoveDirection(NORTHWEST, self.nextCoordinate(NORTHWEST,
-                                                                    coordinate)) \
-               or self.canMoveDirection(NORTHEAST,
-                                        self.nextCoordinate(NORTHEAST,
-                                                            coordinate)) \
-               or self.canMoveDirection(SOUTHWEST,
-                                        self.nextCoordinate(SOUTHWEST,
-                                                            coordinate)) \
-               or self.canMoveDirection(SOUTHEAST,
-                                        self.nextCoordinate(SOUTHEAST,
-                                                            coordinate))
-
-    def adjacent(self, coordinate):
-        """
-        Returns a list of squares locations that are adjacent (on a diagonal) to (x,y).
-        """
-
-        return [self.nextCoordinate(NORTHWEST, coordinate),
-                self.nextCoordinate(NORTHEAST, coordinate),
-                self.nextCoordinate(SOUTHWEST, coordinate),
-                self.nextCoordinate(SOUTHEAST, coordinate)]
 
     def location(self, coordinate):
         """
         Takes a set of coordinates as arguments and returns self.matrix[x][y]
         This can be faster than writing something like self.matrix[coords[0]][coords[1]]
         """
+
         if not coordinate:
             return
-        return self.matrix[coordinate.x][coordinate.y]
-
-    def moveContainsCoordinate(self, coordinate, move):
-        """
-        Check if the coordinate already exists in the move coordinate list
-        """
-        for m in move:
-            if m.x == coordinate.x and m.y == coordinate.y:
-                return True
-        return False
-
-    def canMoveDirection(self, direction, currentCoordinate):
-        if self.onBoard(self.nextCoordinate(direction, currentCoordinate)):
-            if self.location(self.nextCoordinate(direction,
-                                                 currentCoordinate)).occupant is None:
-                return True
-            else:
-                return False
+        return self.matrix[coordinate[0]][coordinate[1]]
 
     def canJumpDirection(self, direction, coordinate):
         """
             Given a coordinate, color, direction and a list of moves, checks if there's another available jump
         """
+        direction = self.tupleToCoord(direction)
 
         if not coordinate:
             return
@@ -187,34 +135,6 @@ class Board:
 
         return False
 
-    def getDirection(self, previous, refSquare):
-        aux = self.nextCoordinate(NORTHWEST, previous)
-        if aux.x == refSquare.x and aux.y == refSquare.y:
-            return NORTHWEST
-        aux = self.nextCoordinate(NORTHEAST, previous)
-        if aux.x == refSquare.x and aux.y == refSquare.y:
-            return NORTHEAST
-        aux = self.nextCoordinate(SOUTHWEST, previous)
-        if aux.x == refSquare.x and aux.y == refSquare.y:
-            return SOUTHWEST
-        aux = self.nextCoordinate(SOUTHEAST, previous)
-        if aux.x == refSquare.x and aux.y == refSquare.y:
-            return SOUTHEAST
-
-    def getDirectionByJump(self, previous, refSquare):
-        aux = self.afterNextCoordinate(NORTHWEST, previous)
-        if aux.x == refSquare.x and aux.y == refSquare.y:
-            return NORTHWEST
-        aux = self.afterNextCoordinate(NORTHEAST, previous)
-        if aux.x == refSquare.x and aux.y == refSquare.y:
-            return NORTHEAST
-        aux = self.afterNextCoordinate(SOUTHWEST, previous)
-        if aux.x == refSquare.x and aux.y == refSquare.y:
-            return SOUTHWEST
-        aux = self.afterNextCoordinate(SOUTHEAST, previous)
-        if aux.x == refSquare.x and aux.y == refSquare.y:
-            return SOUTHEAST
-
     """-------------------------------------------------+
     |         MAIN MOVEMENT EVALUATION FUNCTIONS        |
     +-------------------------------------------------"""
@@ -226,7 +146,12 @@ class Board:
 
         # Select in the legal move set, where the first coordinate is the
         # desired piece's coordinate
-        return list(filter(lambda m: m[0] == coordinate, self.legalMoveSet))
+        self.legalMoveSet = list(
+            filter(lambda m: m[0] == coordinate, self.legalMoveSet))
+
+        self.legalMoveSet = self.getBestMoves()
+
+        return self.legalMoveSet
 
     """--------------------------------------------------------------------"""
 
@@ -273,7 +198,8 @@ class Board:
         # print("BoardLogic.py::Board:getAllLegalMoves: Legal moves:")
         # for move in self.legalMoveSet: print(move)
 
-        print ("return self.legalMoveSet from getAllLegalMoves", self.legalMoveSet)
+        print("return self.legalMoveSet from getAllLegalMoves",
+              self.legalMoveSet)
         return self.legalMoveSet
 
     """-----------------------------------------+
@@ -436,14 +362,14 @@ class Board:
     |        UTILITY FUNCTIONS        |
     +-------------------------------"""
 
-    def getBestMovesByPiece(self, pieceCoordinate, legalMoveSet):
-        if not legalMoveSet:
+    def getBestMoves(self):
+        if not self.legalMoveSet:
             return
 
         jumpCounter = 0
         mostJumps = 0
 
-        for move in legalMoveSet:
+        for move in self.legalMoveSet:
             for coord in move:
                 if self.location(coord).occupant:
                     if self.location(
@@ -453,35 +379,36 @@ class Board:
                 mostJumps = jumpCounter
             jumpCounter = 0
 
-        bestMoves = []
-        if mostJumps is not 0:
-            auxBestMoves = []
-            for move in legalMoveSet:
-                for coord in move:
-                    if self.location(coord).occupant:
-                        if self.location(
-                                coord).occupant.color is not self.playerTurn:
-                            jumpCounter += 1
-                if jumpCounter is mostJumps:
-                    auxBestMoves.append(move)
-                jumpCounter = 0
+        # No jumps, nothing to filter
+        if jumpCounter is 0:
+            return self.legalMoveSet
 
-            for move in auxBestMoves:
-                if move[0].x is pieceCoordinate.x and move[
-                    0].y is pieceCoordinate.y:
-                    bestMoves.append(move)
+        filteredBestMoves = []
+        jumpCounter = 0
+        for move in self.legalMoveSet:
+            for coord in move:
+                if self.location(coord).occupant:
+                    if self.location(
+                            coord).occupant.color is not self.playerTurn:
+                        jumpCounter += 1
+            if jumpCounter is mostJumps:
+                filteredBestMoves.append(move)
+            jumpCounter = 0
+
+        return filteredBestMoves
+
+    def coordToTuple(self, coordinate):
+        if isinstance(coordinate, Coordinate):
+            tup = (coordinate.x, coordinate.y)
         else:
-            for move in legalMoveSet:
-                if move[0].x is pieceCoordinate.x and move[
-                    0].y is pieceCoordinate.y:
-                    bestMoves.append(move)
-
-    def coordToTuple(coordinate):
-        tup = (coordinate.x, coordinate.y)
+            return coordinate
         return tup
 
-    def tupleToCoord(tup):
-        coord = Coordinate(tup[0], tup[1])
+    def tupleToCoord(self, tup):
+        if isinstance(tup, tuple):
+            coord = Coordinate(tup[0], tup[1])
+        else:
+            return tup
         return coord
 
     def filterNoneOrEmptyMoves(self, movesSet):
@@ -489,11 +416,8 @@ class Board:
         if not movesSet:
             return []
 
-        movesSet = [x for x in movesSet if x]
-
-        for move in movesSet:
-            if None in move or [] in move:
-                move.pop()
+        movesSet = list(
+            list(filter(None.__ne__, movesSet)))
 
         return movesSet
 
@@ -520,60 +444,92 @@ class Board:
         """
         Removes a piece from the board at position (x,y).
         """
-        self.matrix[coordinate.x][coordinate.y].occupant = None
+
+        self.matrix[coordinate[0]][coordinate[1]].occupant = None
 
     def movePiece(self, startCoordinate, endCoordinate):
         """
         Move a piece from (start_x, start_y) to (end_x, end_y).
         """
+        if not startCoordinate or not endCoordinate:
+            return
+
         if self.onBoard(startCoordinate) and self.onBoard(endCoordinate):
-            self.matrix[endCoordinate.x][endCoordinate.y].occupant = \
-                self.matrix[startCoordinate.x][
-                    startCoordinate.y].occupant
+            self.matrix[endCoordinate[0]][endCoordinate[1]].occupant = \
+                self.matrix[startCoordinate[0]][
+                    startCoordinate[1]].occupant
             self.removePiece(startCoordinate)
         self.king(endCoordinate)
         self.verifyDrawCondition()
 
     def showCoordinates(self):
-        if self.selectedPieceMoves is not None:
-            for move in self.selectedPieceMoves:
+        if self.legalMoveSet is not None:
+            for move in self.legalMoveSet:
                 print("\n")
                 for coord in move:
-                    print("(", coord.x, coord.y, ") ")
+                    print("(", coord[0], coord[1], ") ")
 
     def executeMove(self):
         self.showCoordinates()
-        if self.selectedPieceMoves is None:
-            return False
+        if self.legalMoveSet is None:
+            return
 
-        if self.location(self.selectedPieceCoordinate).occupant.king == False:
-            longestMove = 0
-            for move in self.selectedPieceMoves:
-                if len(move) > longestMove:
-                    longestMove = len(move)
+        print("nextPossibleCoords", self.nextPossibleCoords)
+        print("mouseClick", self.mouseClick)
+        print("selectedPieceCoordinate", self.selectedPieceCoordinate)
+        for coord in self.nextPossibleCoords:
+            print(self.mouseClick == coord)
+            if self.mouseClick == coord:
+                self.movePiece(self.selectedPieceCoordinate, coord)
+                self.selectedPieceCoordinate = [coord]
+                self.refinePartialMoves()
 
-            for move in self.selectedPieceMoves:
-                if len(move) == longestMove:
-                    contador = 0
-                    for coord in move:
-                        contador = contador + 1
-                        if self.location(coord) == self.location(
-                                self.mouseClick) and \
-                                contador == longestMove:
-                            self.movePiece(self.selectedPieceCoordinate,
-                                           self.mouseClick)
-                            self.removePiecesByMove(move)
-                            return True
-        else:
-            for move in self.selectedPieceMoves:
-                for coord in move:
-                    if self.location(coord) == self.location(self.mouseClick):
-                        self.movePiece(self.selectedPieceCoordinate,
-                                       self.mouseClick)
-                        self.removePiecesByMove(move)
-                        return True
+        for move in self.legalMoveSet:
+            if self.selectedPieceCoordinate == move[-1]:
+                print("self.selectedPieceCoordinate == move[-1]", self.selectedPieceCoordinate == move[-1])
+                self.finishMoveExec = True
+        return
 
-        return False
+    def refinePartialMoves(self):
+        for idx, move in enumerate(self.legalMoveSet):
+            while move[0] != self.selectedPieceCoordinate:
+                print("move[0] != self.selectedPieceCoordinate", move[0] != self.selectedPieceCoordinate)
+                if len(self.legalMoveSet) > 0:
+                    self.legalMoveSet.pop(0)
+                else:
+                    break
+
+
+    def getNextPossibleMoves(self):
+        if not self.legalMoveSet:
+            return
+
+        nextCandidateMoves = []
+
+        if not self.location(self.selectedPieceCoordinate).occupant.king:
+
+            # Check if the next jump is a move or jump
+            for move in self.legalMoveSet:
+                if not self.location(move[1]).occupant:
+                    nextCandidateMoves.append(move[1])
+                    continue
+                if self.location(move[1]).occupant and \
+                        not self.location(move[2]).occupant:
+                    nextCandidateMoves.append(move[2])
+                    continue
+
+        self.nextPossibleCoords = nextCandidateMoves
+
+    def getMovesEndSquare(self):
+        # Save the end square of legalMovements
+        if not self.legalMoveSet:
+            return
+
+        if len(self.legalMoveSet) > 0:
+            self.legalMovesEndSquare = []
+            for move in self.legalMoveSet:
+                self.legalMovesEndSquare.append(
+                    move[-1])
 
     def verifyWinCondition(self):
         self.isPlayerRedLost = True
@@ -587,7 +543,7 @@ class Board:
                     y].occupant.color is WHITE:
                     self.isPlayerWhiteLost = False
                 if self.isPlayerRedLost is False and self.isPlayerWhiteLost is False:
-                    break;
+                    break
 
     def getPlayerWhiteLostInformation(self):
         return self.isPlayerWhiteLost
@@ -673,8 +629,9 @@ class Board:
         Is passed a coordinate tuple (x,y), and returns true or
         false depending on if that square on the board is an end square.
         """
+        coordinate = self.tupleToCoord(coordinate)
 
-        if coordinate.x == 0 or coordinate.x == 7:
+        if coordinate[0] == 0 or coordinate[0] == 7:
             return True
         else:
             return False
@@ -685,7 +642,8 @@ class Board:
         If it does, then on_board() return True. Otherwise it returns false.
         """
 
-        if coordinate.x < 0 or coordinate.y < 0 or coordinate.x > 7 or coordinate.y > 7:
+        if coordinate[0] < 0 or coordinate[1] < 0 or coordinate[0] > 7 or \
+                coordinate[1] > 7:
             return False
         else:
             return True
@@ -697,9 +655,11 @@ class Board:
         """
         if self.location(coordinate).occupant is not None:
             if (self.location(
-                    coordinate).occupant.color == WHITE and coordinate.y == 0) or (
+                    coordinate).occupant.color == WHITE and coordinate[
+                    1] == 0) or (
                     self.location(
-                        coordinate).occupant.color == RED and coordinate.y == 7):
+                        coordinate).occupant.color == RED and coordinate[
+                        1] == 7):
                 self.location(coordinate).occupant.king = True
 
     def drawBoardSquares(self, graphics):
@@ -733,14 +693,14 @@ class Board:
                     screen.blit(kingPiece, (x * 90, y * 90))
 
     def highlightLegalMoves(self, screen, goldPiece):
-        if self.selectedPieceCoordinate is not None and self.selectedPieceMoves is not None:
+        if self.selectedPieceCoordinate is not None and self.legalMoveSet is not None:
 
-            for movePath in self.selectedPieceMoves:
+            for movePath in self.legalMoveSet:
                 for coordinate in movePath:
                     if coordinate is not None and not self.location(
                             coordinate).occupant:
                         screen.blit(goldPiece,
-                                    (coordinate.x * 90, coordinate.y * 90))
+                                    (coordinate[0] * 90, coordinate[1] * 90))
 
     def pixelCoords(self, coordinate, squareSize, pieceSize):
         """
@@ -748,22 +708,22 @@ class Board:
             and returns the pixel coordinates of the center of the square at that location.
         """
         return (
-            coordinate.x * squareSize + pieceSize,
-            coordinate.y * squareSize + pieceSize)
+            coordinate[0] * squareSize + pieceSize,
+            coordinate[1] * squareSize + pieceSize)
 
     def boardCoords(self, pixelCoordinate, squareSize):
         """
            Does the reverse of pixel_coords(). Takes in a tuple of of pixel coordinates and returns what square they are in.
         """
         return (int(pixelCoordinate[0] / squareSize),
-                          int(pixelCoordinate[1] / squareSize))
+                int(pixelCoordinate[1] / squareSize))
 
     def pixelToSquarePosition(self, pixelCoordinate, squareSize):
         """
             Does the reverse of pixel_coords(). Takes in a tuple of of pixel coordinates and returns what square they are in.
         """
-        return Coordinate(pixelCoordinate.x / squareSize,
-                          pixelCoordinate.y / squareSize)
+        return (pixelCoordinate[0] / squareSize,
+                pixelCoordinate[1] / squareSize)
 
     def piecePositionToPixel(self, boardPiece):
         return True
