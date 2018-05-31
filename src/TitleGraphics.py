@@ -25,7 +25,7 @@ class TitleGraphics:
         self.title1BaselineCoords = (640, -152)
         self.title2BaselineCoords = (640, -32)
         self.titleLineSpacing = 120
-        self.playerNameBaselineCoords = (640, 350)
+        self.playerNameBaselineCoords = (640, 347)
         self.diffLabelBaselineCoords = (640, 424)
         self.diff1BaselineCoords = (296, 485)
         self.diff2BaselineCoords = (468, 485)
