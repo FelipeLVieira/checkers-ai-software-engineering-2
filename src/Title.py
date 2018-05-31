@@ -69,6 +69,9 @@ class Title:
         if self.cursorPos < 0:
             return
         else:
+            self.titleGraphics.cursorDrawFlag = True
+            self.titleGraphics.cursorDrawTimer = \
+                    self.titleGraphics.cursorBlinkInterval
             if len(event.unicode) > 0 and event.unicode.isprintable():
                 #print("captured printable `{}' ({})".format(event.unicode, ord(event.unicode)))
                 tempPlayerName = ''.join([
