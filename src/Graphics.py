@@ -3,75 +3,364 @@ from Board import *
 import glob
 import math
 import sys
+import copy
 from Constants import *
 
-pygame.font.init()
+# For testing only
+import random
+
+
+class GraphicsBackend:
+    def __init__(self):
+        self.fps = 60
+        self.clock = pygame.time.Clock()
+        self.timeDelta = 0
+
+        self.windowWidth = 1280
+        self.windowHeight = 720
+
+        pygame.init()
+        pygame.font.init()
+        self.screen = pygame.display.set_mode((self.windowWidth, self.windowHeight))
+        pygame.display.set_caption(WINDOW_CAPTION)
+
 
 
 class Graphics:
-    def __init__(self):
-        self.caption = "Checkers"
+    def __init__(self, graphicsBackend, board):
+        self.fps = graphicsBackend.fps
+        self.clock = graphicsBackend.clock
+        self.timeDelta = graphicsBackend.timeDelta
+        self.windowWidth = graphicsBackend.windowWidth
+        self.windowHeight = graphicsBackend.windowHeight
+        self.screen = graphicsBackend.screen
 
-        self.fps = 60
-        self.clock = pygame.time.Clock()
-
-        self.windowSize = 720
-        self.screen = pygame.display.set_mode((self.windowSize, self.windowSize))
-
-        self.squareSize = int(round(self.windowSize / 8))
-        self.pieceSize = int(round(self.squareSize / 2))
-
-        self.message = False
+        self.board = copy.deepcopy(board)
+        self.auxBoard = None
 
         # Assets
-        self.background = pygame.image.load("../graphics-proto/checker.png")
-        self.goldPiece = pygame.image.load("../graphics-proto/gold.png")
-        self.kingPiece = pygame.image.load("../assets/images/king_marker-white_piece.png")
-        self.redPiece = pygame.image.load("../graphics-proto/piece_red.png")
-        self.whitePiece = pygame.image.load("../graphics-proto/piece_white.png")
+        self.background = Graphic("../assets/images/bg-game.png")
+        self.selMoveMarkerPath = "../assets/images/highlight-possible_spot_marker-f*"
+        self.kingWhitePiece = Graphic("../assets/images/king_marker-white_piece.png")
+        self.kingRedPiece = Graphic("../assets/images/king_marker-red_piece.png")
+        self.redPiece = Graphic("../assets/images/piece-red.png")
+        self.whitePiece = Graphic("../assets/images/piece-white.png")
+        self.redPieceHover = Graphic("../assets/images/piece-red-hover.png")
+        self.whitePieceHover = Graphic("../assets/images/piece-white-hover.png")
+        self.redPieceSelected = Graphic("../assets/images/piece-red-select.png")
+        self.whitePieceSelected = Graphic("../assets/images/piece-white-select.png")
+        self.ingameButtonHover = Graphic("../assets/images/highlight-ingame_buttons-hover-f5.png")
+        self.pauseButtonHover = Graphic("../assets/images/highlight-pause_menu-button-hover.png")
+        self.pauseOverlay = Graphic("../assets/images/overlay-pause.png")
+
+        # Coordinates
+        self.pauseButtonCoords = (877, 619)
+        self.exitButtonCoords = (1012, 619)
+        self.upperScoreBaselineCoords = (980, 256)
+        self.lowerScoreBaselineCoords = (980, 524)
+        self.turnTextBaselineCoords = (988, 323)
+        self.upperNameBaselineCoords = (988, 48)
+        self.lowerNameBaselineCoords = (988, 590)
+        self.pauseBannerBaselineCoords = (640, 224)
+        self.pauseContinueBaselineCoords = (640, 333)
+        self.pauseRestartBaselineCoords = (640, 400)
+        self.pauseExitBaselineCoords = (640, 467)
+        self.pauseContinueButtonCoords = (499, 295)
+        self.pauseRestartButtonCoords = (499, 362)
+        self.pauseExitButtonCoords = (499, 429)
+
+        self.boardUpperLeftCoords = (139, 37)
+
+        # Other values
+        self.boardSpacing = 82
+        self.pieceBaseMoveSpeed = 320
+
+        # UI object containers
+        self.textObjects = {
+                "upperName": TextElement(OPPONENT_NAME, 
+                        self.upperNameBaselineCoords, 
+                        alignment=FONT_ALIGN_CENTER, fontSize=36),
+                "lowerName": TextElement(PLAYER_NAME_DEFAULT, 
+                        self.lowerNameBaselineCoords, 
+                        alignment=FONT_ALIGN_CENTER, fontSize=36),
+                "turnText": DynamicTextElement(TURNSTRING.format(1), 
+                        self.turnTextBaselineCoords, 
+                        alignment=FONT_ALIGN_CENTER, fontSize=32),
+                "upperScore": DynamicTextElement("12", 
+                        self.upperScoreBaselineCoords,
+                        alignment=FONT_ALIGN_CENTER, fontSize=228, fontFace=
+                        "../assets/fonts/NimbusSansNarrow-Bold.otf"),
+                "lowerScore": DynamicTextElement("12", 
+                        self.lowerScoreBaselineCoords,
+                        alignment=FONT_ALIGN_CENTER, fontSize=228, fontFace=
+                        "../assets/fonts/NimbusSansNarrow-Bold.otf"),
+                }
+
+        self.pauseTextObjects = {
+                "pauseBanner": TextElement(PAUSE_BANNER, 
+                        self.pauseBannerBaselineCoords, 
+                        alignment=FONT_ALIGN_CENTER, fontSize=100, fontFace=
+                        "../assets/fonts/OpenSans-Bold.ttf"),
+                "pauseContinue": TextElement(PAUSE_CONTINUE, 
+                        self.pauseContinueBaselineCoords, 
+                        alignment=FONT_ALIGN_CENTER, fontSize=26,
+                        color=pygame.color.Color(64, 64, 64, 255)),
+                "pauseRestart": TextElement(PAUSE_RESTART, 
+                        self.pauseRestartBaselineCoords, 
+                        alignment=FONT_ALIGN_CENTER, fontSize=26,
+                        color=pygame.color.Color(48, 48, 48, 255)),
+                "pauseExit": TextElement(PAUSE_QUIT, 
+                        self.pauseExitBaselineCoords, 
+                        alignment=FONT_ALIGN_CENTER, fontSize=26,
+                        color=pygame.color.Color(68, 40, 40, 255)),
+                }
+
+        self.UIButtonsHoverCoords = {
+                BUTTON_INGAME_HOVER_NONE: None,
+                BUTTON_INGAME_HOVER_PAUSE: self.pauseButtonCoords,
+                BUTTON_INGAME_HOVER_EXIT: self.exitButtonCoords
+                }
+
+        self.pauseButtonsHoverCoords = {
+                BUTTON_PAUSE_HOVER_NONE: None,
+                BUTTON_PAUSE_HOVER_CONTINUE: self.pauseContinueButtonCoords,
+                BUTTON_PAUSE_HOVER_RESTART: self.pauseRestartButtonCoords,
+                BUTTON_PAUSE_HOVER_EXIT: self.pauseExitButtonCoords
+                }
+
+        self.selMoveAnimations = []
+        for i in range(8):
+            self.selMoveAnimations.append([])
+            for j in range(8):
+                self.selMoveAnimations[-1].append(None)
+        
+        self.movingPiece = None
+        self.maskedPiece = None
 
     def setupWindow(self):
         pygame.init()
         pygame.display.set_caption(self.caption)
 
-    def updateMainGameDisplay(self, board, legalMovements, selectedPiece):
-        """
-        This updates the current display.
-        """
-        self.screen.blit(self.background, (0, 0))
 
-        board.drawBoardPieces(self.screen, self.redPiece, self.whitePiece)
-        board.highlightLegalMoves(self.screen, self.goldPiece)
-        board.drawBoardKings(self.screen, self.kingPiece)
-        #---------------------------------------------------------+
-        # VitinhoCarneiro: This function call below should be in  |
-        # the game loop, not here. Remove it, this whole function |
-        # will be rewritten anyway in the integration.            |
-        #---------------------------------------------------------+
-        board.verifyWinCondition()
-        if board.getPlayerRedLostInformation() is True:
-            print('Congratulations Player White! You Won!')
-        elif board.getPlayerWhiteLostInformation() is True:
-            print('Congratulations Player Red! You Won!')
-        if board.getDrawInformation() is True:
-            print('Draw!')
 
-        if self.message:
-            self.screen.blit(self.text_surface_obj, self.text_rect_obj)
+
+    def vanishPiece(self, event):
+        self.board.removePiece(event.coords)
+
+    def registerMove(self, newBoard, movement, eatenPieces):
+        pieceColor = self.board.location(movement[0]).occupant.color
+        self.maskedPiece = movement[0]
+        path = [PathNode(self.mapToScrCoords(movement[0]), 1)]
+        # The path always begins as an arc of length zero
+        arcing = True
+        nextCoord = None
+        # The arc length expresses how many squares are jumped in the arc;
+        # this is used to calculate the actual movement speed
+        arcLength = 0
+        for coord in movement:
+            if coord not in eatenPieces:
+                if not arcing:
+                    # Exit the capture node with a decelerated movement
+                    self.appendNode(path, coord, False, True, 1)
+                    # Start an arc - an arc is a node that jumps over multiple
+                    # coordinates
+                    arcing = True
+                    arcLength = 0
+                else:
+                    # Continue the arc
+                    arcLength += 1
+                    nextCoord = coord
+            else:
+                if arcing and arcLength > 0:
+                    # End the current arc before adding the capture node
+                    self.appendNode(path, nextCoord, True, True, arcLength)
+                    arcing = False
+
+                event = pygame.event.Event(pygame.USEREVENT, 
+                        eventType=EVENT_PIECE_VANISH, coords=coord)
+                self.appendNode(path, coord, True, False, 1, event)
+
+        # End an unfinished arc
+        if arcing and arcLength > 0:
+            self.appendNode(path, nextCoord, True, True, arcLength)
+
+        path[-1].eventOnComplete = pygame.event.Event(pygame.USEREVENT,
+                    eventType=EVENT_PATH_END)
+
+        # Instance the moving piece
+        if pieceColor is RED:
+            self.movingPiece = (self.redPiece, EasingMotion(path))
+        elif pieceColor is WHITE:
+            self.movingPiece = (self.whitePiece, EasingMotion(path))
+        else:
+            raise RuntimeError("Graphics.py::Graphics:registerMove: invalid piece color `{}'.".format(pieceColor))
+
+        self.auxBoard = copy.deepcopy(newBoard)
+
+
+    def endPath(self):
+        self.maskedPiece = None
+        self.movingPiece = None
+        self.board = self.auxBoard
+
+    def updateAndDraw(self, hoverPosition, selectedPiece, hoverButton, gamePaused,
+            isPlayerTurn):
+        self.timeDelta = self.clock.tick(self.fps) / 1000.
+        self.background.blitAt(self.screen, (0, 0))
+        self.drawBoardPieces()
+        self.drawSelectedPiece(selectedPiece)
+        self.drawHoverPiece(hoverPosition)
+        self.updateAndDrawPossibleMoves(gamePaused)
+        self.updateAndDrawMovingPiece(gamePaused, self.timeDelta)
+        if not gamePaused: self.drawHoverButton(hoverButton)
+        self.updateAndDrawSidebarText(isPlayerTurn)
+        if gamePaused: self.drawPauseMenu(hoverButton)
 
         pygame.display.update()
-        self.clock.tick(self.fps)
+
+        return self.timeDelta
+
+        
+
+    def drawBoardPieces(self):
+        for col in range(8):
+            for row in range(8):
+                if self.board.matrix[col][row].occupant is not None:
+                    if self.maskedPiece == (col, row): continue
+                    if self.board.matrix[col][row].occupant.color is RED:
+                        self.redPiece.blitAt(self.screen, 
+                                self.mapToScrCoords((col, row)))
+
+                        if self.board.matrix[col][row].occupant.king:
+                            self.kingRedPiece.blitAt(self.screen,
+                                    self.mapToScrCoords((col, row)))
+
+                    elif self.board.matrix[col][row].occupant.color is WHITE:
+                        self.whitePiece.blitAt(self.screen, 
+                                self.mapToScrCoords((col, row)))
+
+                        if self.board.matrix[col][row].occupant.king:
+                            self.kingwhitePiece.blitAt(self.screen,
+                                    self.mapToScrCoords((col, row)))
+
+                    else: raise RuntimeError("Graphics.py::Graphics:drawBoardPieces: Invalid piece color `{}'".format(self.board.matrix[col][row].occupant.color))
+
+    def setPossibleMoves(self, selPossibleMoves):
+        for path in selPossibleMoves:
+            for c in range(len(path)):
+                if (path[c] is not None 
+                        and lookup(self.selMoveAnimations, path[c]) is None 
+                        and not self.board.location(path[c]).occupant):
+                    self.selMoveAnimations[path[c][0]][path[c][1]] = ( 
+                            AnimatedGraphic(self.selMoveMarkerPath, 1, 
+                            delayStart=(c)))
+        #print(self.selMoveAnimations)
+    
+    def clearPossibleMoves(self):
+        for col in self.selMoveAnimations:
+            for cell in col:
+                cell = None
+    
+    def updateAndDrawPossibleMoves(self, gamePaused):
+        for x in range(8):
+            for y in range(8):
+                if not (self.selMoveAnimations[x][y] is None):
+                    if not gamePaused: 
+                        self.selMoveAnimations[x][y].update()
+                    self.selMoveAnimations[x][y].blitAt(self.screen, 
+                            self.mapToScrCoords((x, y)))
+
+    def updateAndDrawMovingPiece(self, gamePaused, timeDelta):
+        if isinstance(self.movingPiece, tuple):
+            if not gamePaused:
+                self.movingPiece[1].update(timeDelta)
+            #print(self.movingPiece[1].currentPos)
+            self.movingPiece[0].blitAt(self.screen,
+                    self.movingPiece[1].currentPos)
+
+    def drawHoverPiece(self, hoverPiece):
+        if (isinstance(hoverPiece, tuple)):
+            if (self.board.location(hoverPiece).occupant 
+                    and not hoverPiece == self.maskedPiece):
+                if self.board.location(hoverPiece).occupant.color is RED:
+                    self.redPieceHover.blitAt(self.screen, 
+                         self.mapToScrCoords(hoverPiece))
+
+                elif self.board.location(hoverPiece).occupant.color is WHITE:
+                    self.whitePieceHover.blitAt(self.screen, 
+                            self.mapToScrCoords(hoverPiece))
+
+                else: raise RuntimeError("Graphics.py::Graphics:drawHoverPiece: Invalid piece color `{}'".format(self.board.location(hoverPiece).occupant.color))
+            elif lookup(self.selMoveAnimations, hoverPiece) is not None:
+                lookup(self.selMoveAnimations, hoverPiece).blitAt(self.screen,
+                        self.mapToScrCoords(hoverPiece))
+
+    def drawSelectedPiece(self, selectedPiece):
+        if (isinstance(selectedPiece, tuple)
+                and self.board.location(selectedPiece).occupant
+                and not selectedPiece == self.maskedPiece):
+            if self.board.location(selectedPiece).occupant.color is RED:
+                self.redPieceSelected.blitAt(self.screen, 
+                        self.mapToScrCoords(selectedPiece))
+
+            elif self.board.location(selectedPiece).occupant.color is WHITE:
+                self.whitePieceSelected.blitAt(self.screen, 
+                        self.mapToScrCoords(selectedPiece))
+
+            else: raise RuntimeError("Graphics.py::Graphics:drawSelectedPiece: Invalid piece color `{}'".format(self.board.location(selectedPiece).occupant.color))
+            
+
+    def drawHoverButton(self, hoverButton):
+        if hoverButton in self.UIButtonsHoverCoords:
+            self.ingameButtonHover.blitAt(self.screen, 
+                    self.UIButtonsHoverCoords[hoverButton])
+        else: raise RuntimeError("Graphics.py::Graphics:drawHoverPiece: Invalid UI button `{}'".format(hoverButton))
+
+    def updateAndDrawSidebarText(self, isPlayerTurn):
+        if isPlayerTurn:
+            #turnNumber = self.board.turnNumber
+            turnNumber = 1
+            self.textObjects["turnText"].update(TURNSTRING.format(turnNumber))
+        else:
+            self.textObjects["turnText"].update(WAITSTRING)
+        #self.textObjects["upperScore"].update(str(12 - self.board.whiteCounterAux))
+        #self.textObjects["lowerScore"].update(str(12 - self.board.redCounterAux))
+        self.textObjects["upperScore"].update(str(12 - 0))
+        self.textObjects["lowerScore"].update(str(12 - 0))
+        for (key, o) in self.textObjects.items():
+            o.blitAt(self.screen)
+
+    def drawPauseMenu(self, hoverButton):
+        self.pauseOverlay.blitAt(self.screen, (0, 0))
+        for (key, o) in self.pauseTextObjects.items():
+            o.blitAt(self.screen)
+        
+        if hoverButton in self.pauseButtonsHoverCoords:
+            self.pauseButtonHover.blitAt(self.screen, 
+                    self.pauseButtonsHoverCoords[hoverButton])
+        else: raise RuntimeError(
+                "Graphics.py::Graphics:drawPauseMenu: Invalid pause button `{}'".format(hoverButton))
+
+    def mapToScrCoords(self, coords):
+        """Maps board coordinates to screen coordinates."""
+        return (coords[0] * self.boardSpacing + self.boardUpperLeftCoords[0], 
+                coords[1] * self.boardSpacing + self.boardUpperLeftCoords[1])
 
 
-    def draw_message(self, message):
-        """
-        Draws message to the screen.
-        """
-        self.message = True
-        self.font_obj = pygame.font.Font('freesansbold.ttf', 44)
-        self.text_surface_obj = self.font_obj.render(message, True, HIGH, BLACK)
-        self.text_rect_obj = self.text_surface_obj.get_rect()
-        self.text_rect_obj.center = (self.windowSize / 2, self.windowSize / 2)
+    def appendNode(self, path, coord, accelerated, decelerated, moveLength, 
+            event=None):
+        speed = self.pieceBaseMoveSpeed * (moveLength ** 0.5)
+        path.append(PathNode(self.mapToScrCoords(coord), speed, 
+                accelerate=accelerated, decelerate=decelerated, 
+                eventOnComplete=event))
+
+
+def lookup(matrix, index):
+    """Looks up an index, defined by a tuple, in a multidimensional array."""
+    result = matrix
+    for i in index:
+        result = result[i]
+    return result
 
 
 class Graphic:
@@ -79,15 +368,16 @@ class Graphic:
     surface = None
 
     def __init__(self, path):
-        self.surface = pygame.image.load(path)
+        self.surface = pygame.image.load(path).convert_alpha()
 
     def blitAt(self, surface, coords):
         """Blits this graphic's surface over another surface."""
-        surface.blit(self.surface, coords)
+        if coords is not None: surface.blit(self.surface, coords)
 
     def update(self):
         """A stub for abstraction purposes, does nothing."""
         pass
+
 
 
 class AnimatedGraphic(Graphic):
@@ -98,15 +388,15 @@ class AnimatedGraphic(Graphic):
     frame = None
     looping = None
 
-    def __init__(self, path, frameDelay, loop=False):
+    def __init__(self, path, frameDelay, loop=False, delayStart=0):
         paths = sorted(glob.glob(path))
-        print(paths)
+        #print(paths)
         self.surfaces = list(map(pygame.image.load, paths))
         self.frameDelay = frameDelay
-        self.frameDelayCounter = frameDelay
+        self.frameDelayCounter = frameDelay + delayStart
         self.frame = 0
         self.looping = loop
-        Graphic.__init__(self, paths[1])
+        Graphic.__init__(self, paths[0])
 
     def update(self):
         """Updates the animation. Must be called every frame."""
@@ -115,9 +405,10 @@ class AnimatedGraphic(Graphic):
             if not self.frameDelayCounter > 0:
                 self.frameDelayCounter = self.frameDelay
                 self.frame += 1
-                if self.frame >= len(self.surfaces):
+                if self.looping and self.frame >= len(self.surfaces):
                     self.frame = 0
-                self.surface = self.surfaces[self.frame]
+                if self.frame < len(self.surfaces):
+                    self.surface = self.surfaces[self.frame]
 
 
 class Motion:
@@ -245,17 +536,17 @@ class EasingMotion(Motion):
         if self.decelerate and self.accelerate:
             # This function is decomposed into two quadratic curves. 1st half:
             if (self.nodeCompletion < 0.5):
-                return (self.coord2[0] * (2.0 * self.nodeCompletion ** 2) / 2.0 + 
-                        self.coord1[0] * (1.0 - ((2.0 * self.nodeCompletion) ** 2) / 2.0),
-                        self.coord2[1] * (2.0 * self.nodeCompletion ** 2) / 2.0 + 
-                        self.coord1[1] * (1.0 - ((2.0 * self.nodeCompletion) ** 2) / 2.0))
+                return (self.coord2[0] * (2.0 * (self.nodeCompletion ** 2)) + 
+                        self.coord1[0] * (1.0 - (2.0 * (self.nodeCompletion ** 2))),
+                        self.coord2[1] * (2.0 * (self.nodeCompletion ** 2)) + 
+                        self.coord1[1] * (1.0 - (2.0 * (self.nodeCompletion ** 2))))
 
             # 2nd half:
             else:
-                return (self.coord2[0] * (1.0 - (2.0 * (1.0 - self.nodeCompletion) ** 2 / 2.0))
-                      + self.coord1[0] * (2.0 * (1.0 - self.nodeCompletion) ** 2 / 2.0), 
-                        self.coord2[1] * (1.0 - (2.0 * (1.0 - self.nodeCompletion) ** 2 / 2.0))
-                      + self.coord1[1] * (2.0 * (1.0 - self.nodeCompletion) ** 2 / 2.0))
+                return (self.coord2[0] * (1.0 - (2.0 * ((1.0 - self.nodeCompletion) ** 2)))
+                      + self.coord1[0] * (2.0 * ((1.0 - self.nodeCompletion) ** 2)), 
+                        self.coord2[1] * (1.0 - (2.0 * ((1.0 - self.nodeCompletion) ** 2)))
+                      + self.coord1[1] * (2.0 * ((1.0 - self.nodeCompletion) ** 2)))
 
 
         # Case 4: linear motion (not accelerated or decelerated)
@@ -287,68 +578,73 @@ class TextElement:
 
     def getSurfaceOrigin(self, coords):
         if(self.alignment == FONT_ALIGN_LEFT):
-            return (coords[0], coords[1] - self.fontFace.get_linesize())
+            return (coords[0], coords[1] - self.fontFace.get_ascent())
         elif(self.alignment == FONT_ALIGN_RIGHT):
             return (coords[0] - self.surface.get_width(), coords[1] - self.fontFace.get_ascent())
         else:
             return (coords[0] - (self.surface.get_width() / 2), coords[1] - self.fontFace.get_ascent())
 
     def update(self, value=None, newCoords=None):
-        if newCoords is tuple: self.coords = newCoords
+        if isinstance(newCoords, tuple): self.coords = newCoords
 
 class DynamicTextElement(TextElement):
     def __init__(self, initialValue, coords, fontFace="../assets/fonts/Cantarell-Regular.otf", fontSize=36, alignment=FONT_ALIGN_LEFT, color=pygame.Color(255, 255, 255, 255)):
         TextElement.__init__(self, initialValue, coords, fontFace, fontSize, alignment, color)
 
-    def update(self, newValue, newCoords=None):
-        if newValue != self.text:
-            self.text = newValue
+    def update(self, newValue=None, newCoords=None, newColor=None):
+        if ((newValue is not None and newValue != self.text) 
+                or newColor is not None):
+            if newValue is not None: 
+                self.text = newValue
+            if newColor is not None: 
+                self.color = newColor
             self.render()
-        if newCoords is tuple: self.coords = newCoords
+        if isinstance(newCoords, tuple): self.coords = newCoords
 
 def euclideanDist(coord1, coord2):
     """Returns the euclidean distance of two coordinates - (x, y) tuples"""
     return math.sqrt((coord2[0] - coord1[0]) ** 2 + (coord2[1] - coord1[1]) ** 2)
 
 def main():
-    graphics = Graphics()
-    graphics.setupWindow()
-    text = TextElement("Hey! Listen!", (100, 100))
-    count = DynamicTextElement("0", (500, 100), fontFace="../assets/fonts/NimbusSansNarrow-Bold.otf", fontSize=50, alignment=FONT_ALIGN_CENTER)
-    graphic = Graphic("../assets/images/piece-white.png")
-    graphic2 = Graphic("../assets/images/piece-red.png")
-    animation1 = AnimatedGraphic("../assets/images/highlight-possible_spot_marker-f*", 1, loop=True)
-    animation2 = AnimatedGraphic("../assets/images/highlight-possible_spot_marker-f*", 2, loop=True)
-    motion = EasingMotion([PathNode((232, 368), 0), PathNode((300, 300), 650, pygame.event.Event(pygame.USEREVENT), accelerate=True), PathNode((368, 232), 650, None, decelerate=True)])
-    text.blitAt(graphics.screen)
-    pygame.display.update()
-    pygame.display.flip()
-    counter = 0
-    pieceDestroyed = False
-    while(True):
-        timeDelta = graphics.clock.tick(graphics.fps) / 1000.0
-        counter += 1
-        count.update(str(counter))
-        animation1.update()
-        animation2.update()
-        motion.update(timeDelta)
-
-        graphics.screen.fill((0, 0, 0))
-        text.blitAt(graphics.screen)
-        count.blitAt(graphics.screen)
-        if not pieceDestroyed: graphic.blitAt(graphics.screen, (300, 300))
-        graphic2.blitAt(graphics.screen, motion.currentPos)
-        animation1.blitAt(graphics.screen, (300, 500))
-        animation2.blitAt(graphics.screen, (400, 500))
-
-        pygame.display.update()
-        pygame.display.flip()
+    random.seed()
+    testBoard = Board()
+    graphics = Graphics(testBoard)
+    #graphics.setPossibleMoves([[(0, 3), (1, 4), (2, 3), (3, 4), (4, 3), (5, 4), (6, 3), (7, 4)]])
+    moveList = [[(0, 5), (1, 4)], [(3, 2), (2, 3)]]
+    hoverPos = (0, 5)
+    path = False
+    paused = False
+    button = 0
+    while True:
+        if (random.random() < 0.1):
+            hoverPos = (int(random.random() * 8), int(random.random() * 8))
+        timeDelta = graphics.updateAndDraw(hoverPos, (2, 5), 
+                button, paused, True)
+        if (not path and len(moveList) > 0 and random.random() < 0.04):
+            p = moveList.pop(0)
+            #print(p)
+            testBoard.movePiece(Coordinate(p[0][0], p[0][1]), Coordinate(p[1][0], p[1][1]))
+            graphics.registerMove(testBoard, p, [])
+            path = True
+        if (not paused and random.random() < 0.01):
+            paused = True
+            button = int(random.random() * 3) + 3
+        if (paused and random.random() < 0.04):
+            paused = False
+            button = int(random.random() * 3)
+        if (random.random() < 0.07):
+            button = int(random.random() * 3)
+            if paused: button += 3 
         for event in pygame.event.get():
-            if(event.type == pygame.QUIT):
+            if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            if(event.type == pygame.USEREVENT):
-                pieceDestroyed = True
-            
+            elif event.type == pygame.USEREVENT:
+                if event.eventType == EVENT_PIECE_VANISH:
+                    graphics.vanishPiece(event)
+                elif event.eventType == EVENT_PATH_END:
+                    graphics.endPath()
+                    path = False
+                    
 
 if __name__ == "__main__": main()
