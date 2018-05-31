@@ -9,38 +9,60 @@ from Constants import *
 # For testing only
 import random
 
-pygame.font.init()
 
-
-class Graphics:
-    def __init__(self, board):
-        self.caption = WINDOW_CAPTION
-
+class GraphicsBackend:
+    def __init__(self):
         self.fps = 60
         self.clock = pygame.time.Clock()
         self.timeDelta = 0
 
         self.windowWidth = 1280
         self.windowHeight = 720
+
+        pygame.init()
+        pygame.font.init()
         self.screen = pygame.display.set_mode((self.windowWidth, self.windowHeight))
-        
+        pygame.display.set_caption(WINDOW_CAPTION)
+
+
+
+class Graphics:
+    def __init__(self, graphicsBackend, board, playerName):
+        self.fps = graphicsBackend.fps
+        self.clock = graphicsBackend.clock
+        self.timeDelta = graphicsBackend.timeDelta
+        self.windowWidth = graphicsBackend.windowWidth
+        self.windowHeight = graphicsBackend.windowHeight
+        self.screen = graphicsBackend.screen
+
         self.board = copy.deepcopy(board)
         self.auxBoard = None
+        if playerName == "": playerName = PLAYER_NAME_DEFAULT
 
         # Assets
         self.background = Graphic("../assets/images/bg-game.png")
         self.selMoveMarkerPath = "../assets/images/highlight-possible_spot_marker-f*"
-        self.kingWhitePiece = Graphic("../assets/images/king_marker-white_piece.png")
-        self.kingRedPiece = Graphic("../assets/images/king_marker-red_piece.png")
+        self.kingWhitePiece = Graphic(
+                "../assets/images/king_marker-white_piece.png")
+        self.kingRedPiece = Graphic(
+                "../assets/images/king_marker-red_piece.png")
         self.redPiece = Graphic("../assets/images/piece-red.png")
         self.whitePiece = Graphic("../assets/images/piece-white.png")
         self.redPieceHover = Graphic("../assets/images/piece-red-hover.png")
-        self.whitePieceHover = Graphic("../assets/images/piece-white-hover.png")
-        self.redPieceSelected = Graphic("../assets/images/piece-red-select.png")
-        self.whitePieceSelected = Graphic("../assets/images/piece-white-select.png")
-        self.ingameButtonHover = Graphic("../assets/images/highlight-ingame_buttons-hover-f5.png")
-        self.pauseButtonHover = Graphic("../assets/images/highlight-pause_menu-button-hover.png")
+        self.whitePieceHover = Graphic(
+                "../assets/images/piece-white-hover.png")
+        self.redPieceSelected = Graphic(
+                "../assets/images/piece-red-select.png")
+        self.whitePieceSelected = Graphic(
+                "../assets/images/piece-white-select.png")
+        self.ingameButtonHover = Graphic(
+                "../assets/images/highlight-ingame_buttons-hover-f5.png")
+        self.pauseButtonHover = Graphic(
+                "../assets/images/highlight-pause_menu-button-hover.png")
         self.pauseOverlay = Graphic("../assets/images/overlay-pause.png")
+        self.endOverlay = Graphic("../assets/images/overlay-end.png")
+        self.endOverlayButtonHover = Graphic(
+                "../assets/images/highlight-end_overlay-button-hover.png")
 
         # Coordinates
         self.pauseButtonCoords = (877, 619)
@@ -57,19 +79,44 @@ class Graphics:
         self.pauseContinueButtonCoords = (499, 295)
         self.pauseRestartButtonCoords = (499, 362)
         self.pauseExitButtonCoords = (499, 429)
+        self.winLoseBaselineRelCoords = (300, 95)
+        self.endRestartBaselineRelCoords = (151, 176)
+        self.endExitBaselineRelCoords = (449, 176)
+        self.endRestartButtonRelCoords = (12, 136)
+        self.endExitButtonRelCoords = (310, 136)
 
+        self.endOverlayTextsRelCoords = {
+                "winLoseFanfare": self.winLoseBaselineRelCoords,
+                "endRestart": self.endRestartBaselineRelCoords,
+                "endExit": self.endExitBaselineRelCoords,
+                }
+
+        self.endOverlayButtonsRelCoords = {
+                BUTTON_END_HOVER_RESTART: self.endRestartButtonRelCoords,
+                BUTTON_END_HOVER_EXIT: self.endExitButtonRelCoords
+                }
+        
+        
         self.boardUpperLeftCoords = (139, 37)
-
+        self.endOverlayFinalCoords = ()
+        
         # Other values
         self.boardSpacing = 82
         self.pieceBaseMoveSpeed = 320
-
+        self.endOverlayDimensions = (600, 210)
+        
+        # Motion paths
+        self.endOverlayMotion = EasingMotion([
+                PathNode((640, -210), 1),
+                PathNode((640, 360), 700, decelerate=True)
+                ])
+        
         # UI object containers
         self.textObjects = {
                 "upperName": TextElement(OPPONENT_NAME, 
                         self.upperNameBaselineCoords, 
                         alignment=FONT_ALIGN_CENTER, fontSize=36),
-                "lowerName": TextElement(PLAYER_NAME_DEFAULT, 
+                "lowerName": TextElement(playerName, 
                         self.lowerNameBaselineCoords, 
                         alignment=FONT_ALIGN_CENTER, fontSize=36),
                 "turnText": DynamicTextElement(TURNSTRING.format(1), 
@@ -83,6 +130,21 @@ class Graphics:
                         self.lowerScoreBaselineCoords,
                         alignment=FONT_ALIGN_CENTER, fontSize=228, fontFace=
                         "../assets/fonts/NimbusSansNarrow-Bold.otf"),
+                }
+        
+        self.endGameTextObjects = {
+                "winLoseFanfare": DynamicTextElement("",
+                        self.winLoseBaselineRelCoords,
+                        alignment=FONT_ALIGN_CENTER, fontSize=75, fontFace=
+                        "../assets/fonts/OpenSans-Bold.ttf"),
+                "endRestart": TextElement(PAUSE_RESTART,
+                        self.endRestartBaselineRelCoords,
+                        alignment=FONT_ALIGN_CENTER, fontSize=26,
+                        color=pygame.Color(48, 48, 48)),
+                "endExit": TextElement(PAUSE_QUIT,
+                        self.endExitBaselineRelCoords,
+                        alignment=FONT_ALIGN_CENTER, fontSize=26,
+                        color=pygame.Color(68, 40, 40))
                 }
 
         self.pauseTextObjects = {
@@ -193,19 +255,23 @@ class Graphics:
         self.board = self.auxBoard
 
     def updateAndDraw(self, hoverPosition, selectedPiece, hoverButton, gamePaused,
-            isPlayerTurn):
-        startTime = pygame.time.get_ticks()
-        auxTime = startTime
+            isPlayerTurn, gameEnded):
         self.timeDelta = self.clock.tick(self.fps) / 1000.
         self.background.blitAt(self.screen, (0, 0))
         self.drawBoardPieces()
         self.drawSelectedPiece(selectedPiece)
-        self.drawHoverPiece(hoverPosition)
+        if not gamePaused and gameEnded is None:
+            self.drawHoverPiece(hoverPosition)
         self.updateAndDrawPossibleMoves(gamePaused)
         self.updateAndDrawMovingPiece(gamePaused, self.timeDelta)
-        if not gamePaused: self.drawHoverButton(hoverButton)
+        if not gamePaused: 
+            self.drawHoverButton(hoverButton)
         self.updateAndDrawSidebarText(isPlayerTurn)
-        if gamePaused: self.drawPauseMenu(hoverButton)
+        if gameEnded is not None: 
+            self.updateAndDrawEndOverlay(self.timeDelta, hoverButton, 
+                    gameEnded)
+        if gamePaused: 
+            self.drawPauseMenu(hoverButton)
 
         pygame.display.update()
 
@@ -305,6 +371,7 @@ class Graphics:
         if hoverButton in self.UIButtonsHoverCoords:
             self.ingameButtonHover.blitAt(self.screen, 
                     self.UIButtonsHoverCoords[hoverButton])
+        elif hoverButton in self.endOverlayButtonsRelCoords: pass
         else: raise RuntimeError("Graphics.py::Graphics:drawHoverPiece: Invalid UI button `{}'".format(hoverButton))
 
     def updateAndDrawSidebarText(self, isPlayerTurn):
@@ -332,6 +399,19 @@ class Graphics:
         else: raise RuntimeError(
                 "Graphics.py::Graphics:drawPauseMenu: Invalid pause button `{}'".format(hoverButton))
 
+    def updateAndDrawEndOverlay(self, timeDelta, hoverButton, gameEnded):
+        self.endOverlayMotion.update(timeDelta)
+        self.endGameTextObjects["winLoseFanfare"].update(gameEnded)
+        endOverlayCorner = tplsum(self.endOverlayMotion.currentPos, 
+                tplscale(self.endOverlayDimensions, -0.5))
+        self.endOverlay.blitAt(self.screen, endOverlayCorner)
+        if hoverButton in self.endOverlayButtonsRelCoords:
+            self.endOverlayButtonHover.blitAt(self.screen, tplsum(
+                    self.endOverlayButtonsRelCoords[hoverButton],
+                    endOverlayCorner))
+        for key, text in self.endGameTextObjects.items():
+            text.blitAt(self.screen, tplsum(endOverlayCorner, text.coords))
+    
     def mapToScrCoords(self, coords):
         """Maps board coordinates to screen coordinates."""
         return (coords[0] * self.boardSpacing + self.boardUpperLeftCoords[0], 
@@ -345,6 +425,14 @@ class Graphics:
                 accelerate=accelerated, decelerate=decelerated, 
                 eventOnComplete=event))
 
+
+def tplsum(t1, t2):
+    """Returns the sum of two tuples."""
+    return tuple(map(lambda x, y: x + y, t1, t2)) 
+
+def tplscale(t, mult):
+    """Returns the multiplication of a tuple by a number."""
+    return tuple(map(lambda x: x * mult, t))
 
 def lookup(matrix, index):
     """Looks up an index, defined by a tuple, in a multidimensional array."""
@@ -582,9 +670,13 @@ class DynamicTextElement(TextElement):
     def __init__(self, initialValue, coords, fontFace="../assets/fonts/Cantarell-Regular.otf", fontSize=36, alignment=FONT_ALIGN_LEFT, color=pygame.Color(255, 255, 255, 255)):
         TextElement.__init__(self, initialValue, coords, fontFace, fontSize, alignment, color)
 
-    def update(self, newValue, newCoords=None):
-        if newValue != self.text:
-            self.text = newValue
+    def update(self, newValue=None, newCoords=None, newColor=None):
+        if ((newValue is not None and newValue != self.text) 
+                or newColor is not None):
+            if newValue is not None: 
+                self.text = newValue
+            if newColor is not None: 
+                self.color = newColor
             self.render()
         if isinstance(newCoords, tuple): self.coords = newCoords
 
@@ -595,7 +687,8 @@ def euclideanDist(coord1, coord2):
 def main():
     random.seed()
     testBoard = Board()
-    graphics = Graphics(testBoard)
+    graphicsBackend = GraphicsBackend()
+    graphics = Graphics(graphicsBackend, testBoard, "")
     #graphics.setPossibleMoves([[(0, 3), (1, 4), (2, 3), (3, 4), (4, 3), (5, 4), (6, 3), (7, 4)]])
     moveList = [[(0, 5), (1, 4)], [(3, 2), (2, 3)]]
     hoverPos = (0, 5)
@@ -606,7 +699,7 @@ def main():
         if (random.random() < 0.1):
             hoverPos = (int(random.random() * 8), int(random.random() * 8))
         timeDelta = graphics.updateAndDraw(hoverPos, (2, 5), 
-                button, paused, True)
+                button, paused, True, ENDGAME_LOSE)
         if (not path and len(moveList) > 0 and random.random() < 0.04):
             p = moveList.pop(0)
             #print(p)
@@ -620,8 +713,8 @@ def main():
             paused = False
             button = int(random.random() * 3)
         if (random.random() < 0.07):
-            button = int(random.random() * 3)
-            if paused: button += 3 
+            button = int(random.random() * 2) + 6
+            if paused: button -= 3
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
