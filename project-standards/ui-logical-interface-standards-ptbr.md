@@ -17,6 +17,7 @@ Esta função recebe os seguintes parâmetros:
 - Botão sobre o qual o mouse está posicionado
 - Se o jogo está pausado ou não
 - Se é a vez do jogador ou não
+- Se o jogo acabou, e se sim, qual o resultado (passando None caso o jogo ainda não tenha acabado, ou uma das constantes `ENDGAME_WIN` ou `ENDGAME_LOSE` se o jogo acabou, indicando que o jogador ganhou ou perdeu respectivamente)
 
 Ela chama a classe de timing do pygame, atualiza os elementos necessários, desenha a tela de jogo, e retorna o valor do timeDelta, que deve ser capturado para uso na função de IA que precisa dele para timing.
 
