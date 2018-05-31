@@ -34,9 +34,9 @@ class Board:
         self.selectedPieceCoordinate = None
         # Cache of mouse click
         self.mouseClick = None
+        self.mousePos = None
 
-        self.finishMoveExec = False
-        self.nextPossibleCoords = []
+        self.finishMoveExec = True
 
         self.isPlayerRedLost = False
         self.isPlayerWhiteLost = False
@@ -470,55 +470,79 @@ class Board:
                     print("(", coord[0], coord[1], ") ")
 
     def executeMove(self):
-        self.showCoordinates()
         if self.legalMoveSet is None:
             return
 
-        print("nextPossibleCoords", self.nextPossibleCoords)
-        print("mouseClick", self.mouseClick)
-        print("selectedPieceCoordinate", self.selectedPieceCoordinate)
-        for coord in self.nextPossibleCoords:
-            print(self.mouseClick == coord)
-            if self.mouseClick == coord:
-                self.movePiece(self.selectedPieceCoordinate, coord)
-                self.selectedPieceCoordinate = [coord]
-                self.refinePartialMoves()
+        self.showCoordinates()
+
+        self.finishMoveExec = False
+
+        hasJumps = False
 
         for move in self.legalMoveSet:
-            if self.selectedPieceCoordinate == move[-1]:
-                print("self.selectedPieceCoordinate == move[-1]", self.selectedPieceCoordinate == move[-1])
-                self.finishMoveExec = True
-        return
+            for coord in move:
+                if self.location(coord).occupant:
+                    if self.location(coord).occupant.color != self.playerTurn:
+                        hasJumps = True
 
-    def refinePartialMoves(self):
-        for idx, move in enumerate(self.legalMoveSet):
-            while move[0] != self.selectedPieceCoordinate:
-                print("move[0] != self.selectedPieceCoordinate", move[0] != self.selectedPieceCoordinate)
-                if len(self.legalMoveSet) > 0:
-                    self.legalMoveSet.pop(0)
-                else:
-                    break
-
-
-    def getNextPossibleMoves(self):
-        if not self.legalMoveSet:
+        print("hasJumps", hasJumps)
+        if not hasJumps:
+            self.movePiece(self.selectedPieceCoordinate, self.mouseClick)
+            self.finishMoveExec = True
             return
 
-        nextCandidateMoves = []
+        self.movePiece(self.selectedPieceCoordinate, self.mouseClick)
+        jumpedPiece = self.filterLegalMoves()
+        self.removePiece(jumpedPiece)
 
-        if not self.location(self.selectedPieceCoordinate).occupant.king:
+        print("self.legalMoveset", self.legalMoveSet)
+        for move in self.legalMoveSet:
+            print("len(move)", len(move))
+            if len(move) == 1:
+                self.finishMoveExec = True
 
-            # Check if the next jump is a move or jump
-            for move in self.legalMoveSet:
-                if not self.location(move[1]).occupant:
-                    nextCandidateMoves.append(move[1])
-                    continue
-                if self.location(move[1]).occupant and \
-                        not self.location(move[2]).occupant:
-                    nextCandidateMoves.append(move[2])
-                    continue
+        return
 
-        self.nextPossibleCoords = nextCandidateMoves
+    def filterLegalMoves(self):
+
+        auxPartialFiltered = []
+        jumpedPieceCoord = None
+
+        print(self.legalMoveSet)
+
+        for move in self.legalMoveSet:
+            firstJump = False
+            i = 0
+            for index, coord in enumerate(move):
+                if self.location(coord).occupant:
+                    if self.location(
+                            coord).occupant.color != self.playerTurn:
+                        firstJump = True
+                        i = index
+                        break
+
+            if firstJump:
+                if move[i-1] == self.selectedPieceCoordinate:
+                    auxPartialFiltered.append(move)
+                    jumpedPieceCoord = move[i]
+                    break
+
+        filteredLegalMoves = []
+
+        for move in auxPartialFiltered:
+            i = 0
+            nextSquare = move[i]
+            while i < len(move):
+                if self.location(nextSquare).occupant:
+                    if self.location(nextSquare).occupant.color == self.playerTurn:
+                        break
+                i += 1
+                nextSquare = move[i]
+            filteredLegalMoves.append(move[i:])
+
+        self.legalMoveSet = filteredLegalMoves
+        return jumpedPieceCoord
+
 
     def getMovesEndSquare(self):
         # Save the end square of legalMovements

@@ -18,10 +18,6 @@ class GameLoop:
         self.graphics = Graphics()
         self.board = Board()
 
-        self.done = False
-
-        self.mousePos = None
-
         # Boolean screen switchers
         self.startScreen = False
         self.mainGame = True
@@ -42,8 +38,8 @@ class GameLoop:
         return
 
     def mainGameEventLoop(self):
-        self.mousePos = self.board.boardCoords(pygame.mouse.get_pos(),
-                                               self.graphics.squareSize)  # what square is the mouse in?
+        self.board.mousePos = self.board.boardCoords(pygame.mouse.get_pos(),
+                                                     self.graphics.squareSize)  # what square is the mouse in?
 
         for event in pygame.event.get():
             # ESC quits the game (just for now)... (by the way, closing the window works too because of pygame.QUIT)
@@ -54,7 +50,7 @@ class GameLoop:
             # Click event handling
             if event.type == pygame.MOUSEBUTTONDOWN and self.board.getDrawInformation() is False:
 
-                self.board.mouseClick = self.mousePos
+                self.board.mouseClick = self.board.mousePos
 
                 print("mouseClick x", self.board.mouseClick[0], " y ",
                       self.board.mouseClick[1])
@@ -65,36 +61,38 @@ class GameLoop:
                 if self.board.location(
                         self.board.mouseClick).occupant is not None \
                         and self.board.location(
-                    self.board.mouseClick).occupant.color == self.board.playerTurn:
-                    print("entered selectedPieceCoordinate")
+                    self.board.mouseClick).occupant.color == self.board.playerTurn and self.board.finishMoveExec:
+
                     self.board.selectedPieceCoordinate = self.board.mouseClick
 
-                    # Get legal moves and filter for the longest moves only
-                    if len(self.board.nextPossibleCoords) == 0:
-                        self.board.legalMoveSet = self.board.getLegalMoves(
-                            self.board.selectedPieceCoordinate)
+                    print("Piece selected!")
 
-                        # Save the end square of legal moves and possible next moves
-                        self.board.getNextPossibleMoves()
+                    # Get legal moves and filter for the longest moves only
+                    self.board.legalMoveSet = self.board.getLegalMoves(
+                        self.board.selectedPieceCoordinate)
 
                     print("self.board.legalMoveSet ",
                           self.board.legalMoveSet)
 
                 # Move piece to another position
-                elif len(self.board.nextPossibleCoords) > 0:
-                    print("self.board.executeMove()")
-                    self.board.executeMove()
+                elif self.board.legalMoveSet:
+                    validClick = False
+                    for move in self.board.legalMoveSet:
+                        for coord in move:
+                            if coord == self.board.mouseClick and not validClick \
+                                    and not self.board.location(self.board.mouseClick).occupant:
+                                validClick = True
 
-                    print("legalmoveset len", len(self.board.legalMoveSet))
-                    if self.board.finishMoveExec:
-                        self.board.nextPossibleCoords = []
-                        self.board.legalMoveSet = []
-                        self.board.selectedPieceCoordinate = None
-                        self.board.playerLegalMoves = None
-                        self.board.mouseClick = None
-                        self.board.finishMoveExec = False
-                        self.endTurn()
+                    if validClick:
+                        print("self.board.executeMove()")
+                        self.board.executeMove()
 
+                        if self.board.finishMoveExec:
+                            self.board.legalMoveSet = None
+                            self.board.selectedPieceCoordinate = None
+                            self.board.playerLegalMoves = None
+                            self.board.mouseClick = None
+                            self.endTurn()
 
     """-----------------+
     |  Screen Updaters  |
