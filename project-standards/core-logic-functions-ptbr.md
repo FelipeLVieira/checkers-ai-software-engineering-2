@@ -3,10 +3,10 @@
 ## Lógica do método getLegalMoves
 
 Método que varre o tabuleiro procurando pelas peças do turno do jogador e chamando
-o método **getLegalMovesByPiece** para juntar todas as possíveis jogadas de todas as peças
-em um só vetor.
+o método **getRawMovesByPiece**, que pega os movimentos de todas as peças sem levar
+em consideração as outras peças
 
-Em seguida, devem ser podados os movimentos que mais pulam peças, a fim de aplicar a
+Em seguida, é chamado o método **getBestMoves**, a fim de aplicar a
 "Lei da Maioria" do jogo.
 
 O vetor então com todos os possíveis melhores movimentos é retornado ao **GameLoop.py**
