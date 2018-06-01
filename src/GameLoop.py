@@ -84,6 +84,7 @@ class GameLoop:
                                 validClick = True
 
                     if validClick:
+                        print("self.board.legalMoveSet", self.board.legalMoveSet)
                         print("self.board.executeMove()")
                         self.board.executeMove()
 
