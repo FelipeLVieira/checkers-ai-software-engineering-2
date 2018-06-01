@@ -188,13 +188,6 @@ class Graphics:
         self.movingPiece = None
         self.maskedPiece = None
 
-    def setupWindow(self):
-        pygame.init()
-        pygame.display.set_caption(self.caption)
-
-
-
-
     def vanishPiece(self, event):
         self.board.removePiece(event.coords)
 
@@ -255,7 +248,7 @@ class Graphics:
         self.board = self.auxBoard
 
     def updateAndDraw(self, hoverPosition, selectedPiece, hoverButton, gamePaused,
-            isPlayerTurn, gameEnded):
+            isPlayerTurn, gameEnded, scorePlayer, scoreOpponent):
         self.timeDelta = self.clock.tick(self.fps) / 1000.
         self.background.blitAt(self.screen, (0, 0))
         self.drawBoardPieces()
@@ -266,7 +259,7 @@ class Graphics:
         self.updateAndDrawMovingPiece(gamePaused, self.timeDelta)
         if not gamePaused: 
             self.drawHoverButton(hoverButton)
-        self.updateAndDrawSidebarText(isPlayerTurn)
+        self.updateAndDrawSidebarText(isPlayerTurn, scorePlayer, scoreOpponent)
         if gameEnded is not None: 
             self.updateAndDrawEndOverlay(self.timeDelta, hoverButton, 
                     gameEnded)
@@ -374,7 +367,7 @@ class Graphics:
         elif hoverButton in self.endOverlayButtonsRelCoords: pass
         else: raise RuntimeError("Graphics.py::Graphics:drawHoverPiece: Invalid UI button `{}'".format(hoverButton))
 
-    def updateAndDrawSidebarText(self, isPlayerTurn):
+    def updateAndDrawSidebarText(self, isPlayerTurn, scorePlayer, scoreOpponent):
         if isPlayerTurn:
             #turnNumber = self.board.turnNumber
             turnNumber = 1
@@ -383,8 +376,8 @@ class Graphics:
             self.textObjects["turnText"].update(WAITSTRING)
         #self.textObjects["upperScore"].update(str(12 - self.board.whiteCounterAux))
         #self.textObjects["lowerScore"].update(str(12 - self.board.redCounterAux))
-        self.textObjects["upperScore"].update(str(12 - 0))
-        self.textObjects["lowerScore"].update(str(12 - 0))
+        self.textObjects["upperScore"].update(str(scorePlayer))
+        self.textObjects["lowerScore"].update(str(scoreOpponent))
         for (key, o) in self.textObjects.items():
             o.blitAt(self.screen)
 

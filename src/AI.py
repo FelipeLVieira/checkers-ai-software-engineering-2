@@ -217,8 +217,23 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
     returnPointer.append(legalMoveSet[chosenNode])
 
 
+minimaxHyperParameters = [
+        {"heuristicFunc": AI.heuristic, "depth"=5, stubbornnessTable=None,
+            randomOffset=0.05},
+        {"heuristicFunc": AI.heuristic, "depth"=5, stubbornnessTable=None,
+            randomOffset=0.05},
+        {"heuristicFunc": AI.heuristic, "depth"=5, stubbornnessTable=None,
+            randomOffset=0.05},
+        {"heuristicFunc": AI.heuristic, "depth"=5, stubbornnessTable=None,
+            randomOffset=0.05},
+        {"heuristicFunc": AI.heuristic, "depth"=5, stubbornnessTable=None,
+            randomOffset=0.05}
+        ]
 
-def AIPlayer(board, playerColor):
+class AIPlayer:
+    # The Board object the AI is playing in.
+    board = None
+
     # The minimum time in seconds to delay when the AI is
     # going to play.
     # This avoids it from playing too quickly on fast computers.
@@ -252,15 +267,18 @@ def AIPlayer(board, playerColor):
 
     # +------------------------------+
     
-
-    def __init__(self, color=RED, waitTime=1.0, heuristicFunc=heuristic, 
-            depth=5, stubbornnessTable=None, randomOffset=0.05):
+    def __init__(self, board, color=RED, difficulty=2, waitTime=1.0):
+        self.board = board
         self.color = color
         self.waitTime = waitTime
-        self.heuristicFunc = heuristicFunc
-        self.depth = depth
-        self.stubbornnessTable = stubbornnessTable
-        self.randomOffset = randomOffset
+        self.heuristicFunc = minimaxHyperParameters[difficulty]\
+                ["heuristicFunc"]
+        self.depth = minimaxHyperParameters[difficulty]\
+                ["depth"]
+        self.stubbornnessTable = minimaxHyperParameters[difficulty]\
+                ["stubbornnessTable"]
+        self.randomOffset = minimaxHyperParameters[difficulty]\
+                ["randomOffset"]
 
 
     def isThinking():
@@ -274,7 +292,8 @@ def AIPlayer(board, playerColor):
         self.waitTimer = self.waitTime
         self.minimaxResult = []
         self.minimaxThread = threading.Thread(
-                target=minimaxAB, args=(board, depth, color, minimaxResult),
+                target=minimaxAB, args=(self.board, self.depth, self.color, 
+                        self.minimaxResult),
                 kwargs={heuristicFunc: self.heuristicFunc,
                         stubbornnessTable: self.stubbornnessTable,
                         randomOffset: self.randomOffset})

@@ -1,23 +1,17 @@
 import pygame, sys
-from Graphics import Graphics
+from Graphics import Graphics, GraphicsBackend
 from Board import *
 from Constants import *
 from pygame.locals import *
-
-# Using 'import numpy as np' to have a better view of printed array
-
-pygame.font.init()  # Victor: Just to make it clear, we won't use system fonts in the final version.
-
-
-# TODO: Create a class to handle blitting text on the screen!
+import AI
 
 
 class GameLoop:
-    def __init__(self):
+    def __init__(self, graphicsBackend, difficultyLevel, playerName):
 
-        self.graphics = Graphics()
         self.board = Board()
-
+        self.graphics = Graphics(graphicsBackend, self.board, playerName)
+        self.aiPlayer = AI.AIPlayer(difficultyLevel, self.board, RED)
         self.done = False
 
         self.mousePos = None
@@ -31,19 +25,22 @@ class GameLoop:
         self.gameOver = False
         self.pause = False
 
-    def setup(self):
-        self.graphics.setupWindow()
-
     """--------------+
     |  Event Loops   |
     +--------------"""
 
-    def startScreenEventLoop(self):
-        return
-
     def pauseEventLoop(self):
         return
 
+
+    """-----------------------------------------------------+
+    | VitinhoCarneiro: I'd recommend rewriting this.        |
+    | I feel it'd be too much work to integrate it with the |
+    | new board.                                            |
+    | Use stubs as much as needed and then substitute it    |
+    | for actual function calls when the Board              |
+    | implementation is complete.                           |
+    +-----------------------------------------------------"""
     def mainGameEventLoop(self):
         self.mousePos = self.board.boardCoords(pygame.mouse.get_pos(),
                                                self.graphics.squareSize)  # what square is the mouse in?
@@ -102,8 +99,25 @@ class GameLoop:
         return
 
     def updateMainGame(self):
-        self.graphics.updateMainGameDisplay(self.board, self.board.selectedPieceMoves, self.board.selectedPieceCoordinate)
-        pygame.display.flip()
+        #--------------------------------------+
+        # REMOVE ALL OF THESE STUBS when their |
+        # actual functions are implemented,    |
+        # replacing them with actual values.   |
+        #--------------------------------------+
+        stub_selectedPiece = None
+        stub_hoverPosition = None
+        # Read Constants.py for the on-screen button identifiers
+        stub_hoverButton = 0
+        stub_gamePaused = False
+        stub_isPlayerTurn = True
+        stub_gameEnded = False
+        # The player and opponent's score is the number of pieces they each have.
+        stub_scorePlayer = 12
+        stub_scoreOpponent = 12
+
+        self.graphics.updateAndDraw(stub_hoverPosition, stub_selectedPiece,
+                stub_hoverButton, stub_gamePaused, stub_isPlayerTurn,
+                stub_gameEnded, stub_scorePlayer, stub_scoreOpponent)
 
     """------------------+
     |  Game Controllers  |
@@ -134,12 +148,8 @@ class GameLoop:
     +--------------"""
 
     def main(self):
-        self.setup()
 
         while True:
-            if self.startScreen:
-                self.startScreenEventLoop()
-                self.updateStartScreen()
             if self.mainGame:
                 self.mainGameEventLoop()
                 self.updateMainGame()
@@ -149,9 +159,9 @@ class GameLoop:
 
 
 def main():
-    game = GameLoop()
+    graphicsBackend = GraphicsBackend()
+    game = GameLoop(graphicsBackend, 2, "")
     game.main()
-
 
 if __name__ == "__main__":
     main()
