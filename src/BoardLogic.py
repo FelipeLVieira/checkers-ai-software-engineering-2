@@ -229,15 +229,15 @@ class Board:
         
         deltas = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
         
-        newPieceCoords = pieceCoords
         for delta in deltas:
+            newPieceCoords = pieceCoords
             deltaCoord = tplsum(pieceCoords, delta)
             # Check all possible chain positions in bounds
             currentMove = [pieceCoords]
             while bounded(deltaCoord, 0, 7):
                 deltaSquare = derefer(self.matrix, deltaCoord)
                 # Check if the delta square is occupied
-                if deltaSquare.occp:
+                if deltaSquare.occp is not None:
                     # If the piece in the delta square is the same color,
                     # the move is impossible. Break the chain.
                     if deltaSquare.occp.color is square.occp.color: break
@@ -545,4 +545,24 @@ def test_backcapture():
     assert len(result) == len(movement)
     for move in result:
         assert move in movement
+
+def test_kingedgecase1():
+    boardStart = [
+            "# # # # ",
+            " # # # #",
+            "# # #R# ",
+            " # #W# #",
+            "# # # # ",
+            " # # # #",
+            "# # # # ",
+            "W# # #W#"
+            ]
+    selectedPiece = (4, 3)
+    movement = [[(4, 3), (5, 2), (6, 1)]]
+    board = Board(boardStart)
+    result = board.getLegalMoves(selectedPiece)
+    assert len(result) == len(movement)
+    for move in result:
+        assert move in movement
+
 
