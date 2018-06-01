@@ -218,7 +218,7 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
 
 
 
-def AIPlayer(board, playerColor):
+def AIPlayer(difficultyLevel, board, playerColor):
     # The minimum time in seconds to delay when the AI is
     # going to play.
     # This avoids it from playing too quickly on fast computers.
