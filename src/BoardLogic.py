@@ -189,8 +189,9 @@ class Board:
         moveList = []
         
         deltaDict = {WHITE: [(-1, -1), (1, -1)], RED: [(-1, 1), (1, 1)]}
+        allDeltas = [(-1, -1), (1, -1), (-1, 1), (1, 1)]
         
-        for delta in deltaDict[square.occp.color]:
+        for delta in allDeltas:
             #print("BoardLogic.py::Board:theoreticalLegalMoves: Evaluating delta {}".format(delta))
             deltaCoord = tplsum(pieceCoords, delta)
             # Verify that the value is in bounds
@@ -209,8 +210,9 @@ class Board:
                     moveList.append(move)
                     #print("Evaluated capture move {} for delta {}.".format(move, delta))
             
-            else:
-                # It's a valid movement.
+            elif delta in deltaDict[square.occp.color]:
+                # Given the square is free and is in "front" of the piece,
+                # it's a valid movement.
                 moveList.append([pieceCoords, deltaCoord])
         #print("Theoretical legal moves for {}:".format(pieceCoords))
         #for move in moveList: print(move)
@@ -524,3 +526,23 @@ def test_king_capture():
     assert len(result) == len(movement)
     for move in result:
         assert move in movement
+
+def test_backcapture():
+    boardStart = [
+            "#r#r#r#r",
+            "r#r#r#r#",
+            "#r#r# #w",
+            " # # #r#",
+            "# # # # ",
+            "w#w#w# #",
+            "#w#w#w#w",
+            "w#w#w#w#"
+            ]
+    selectedPiece = (7, 2)
+    movement = [[(7, 2), (6, 3), (5, 4)]]
+    board = Board(boardStart)
+    result = board.getLegalMoves(selectedPiece)
+    assert len(result) == len(movement)
+    for move in result:
+        assert move in movement
+
