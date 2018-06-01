@@ -2,133 +2,6 @@ import pygame
 import copy
 from Constants import *
 
-def test_simple():
-    boardStart = [
-            "#r#r#r#r",
-            "r#r#r#r#",
-            "#r#r#r#r",
-            " # # # #",
-            "# # # # ",
-            "w#w#w#w#",
-            "#w#w#w#w",
-            "w#w#w#w#"
-            ]
-    selectedPiece = (2, 5)
-    movement = [[(2, 5), (1, 4)], [(2, 5), (3, 4)]]
-    board = Board(boardStart)
-    result = board.getLegalMovesByPiece(selectedPiece, 
-            lookup(board.matrix, selectedPiece).occupant.king)
-    assert len(result) == len(movement)
-    for move in result:
-        assert move in movement
-
-def test_capture_simple():
-    boardStart = [
-            "#r#r#r#r",
-            "r#r#r#r#",
-            "#r#r# #r",
-            " # #r# #",
-            "# #w# # ",
-            "w# #w#w#",
-            "#w#w#w#w",
-            "w#w#w#w#"
-            ]
-    selectedPiece = (3, 4)
-    movement = [[(3, 4), (4, 3), (5, 2)]]
-    board = Board(boardStart)
-    result = board.getLegalMovesByPiece(selectedPiece, 
-            lookup(board.matrix, selectedPiece).occupant.king)
-    assert len(result) == len(movement)
-    for move in result:
-        assert move in movement
-
-def test_capture_enforce():
-    boardStart = [
-            "#r#r#r#r",
-            "r#r#r#r#",
-            "#r#r# #r",
-            " # #r# #",
-            "# #w# # ",
-            "w# #w#w#",
-            "#w#w#w#w",
-            "w#w#w#w#"
-            ]
-    selectedPiece = (4, 5)
-    movement = []
-    board = Board(boardStart)
-    result = board.getLegalMovesByPiece(selectedPiece, 
-            lookup(board.matrix, selectedPiece).occupant.king)
-    assert len(result) == len(movement)
-    for move in result:
-        assert move in movement
-
-def test_capture_multiple():
-    boardStart = [
-            "#r#r#r# ",
-            "r#r#r#r#",
-            "#r#r# #r",
-            " # #r# #",
-            "# #w# # ",
-            "w# #w#w#",
-            "#w#w#w#w",
-            "w#w#w#w#"
-            ]
-    selectedPiece = (3, 4)
-    movement = [[(3, 4), (4, 3), (5, 2), (6, 1), (7, 0)]]
-    board = Board(boardStart)
-    result = board.getLegalMovesByPiece(selectedPiece, 
-            lookup(board.matrix, selectedPiece).occupant.king)
-    assert len(result) == len(movement)
-    for move in result:
-        assert move in movement
-
-def test_capture_multiple_enforce():
-    boardStart = [
-            "#r#r#r# ",
-            "r#r#r#r#",
-            "# #r# #r",
-            " #r#r# #",
-            "# #w# # ",
-            "w# #w#w#",
-            "#w#w#w#w",
-            "w#w#w#w#"
-            ]
-    selectedPiece = (3, 4)
-    movement = [[(3, 4), (4, 3), (5, 2), (6, 1), (7, 0)]]
-    board = Board(boardStart)
-    result = board.getLegalMovesByPiece(selectedPiece, 
-            lookup(board.matrix, selectedPiece).occupant.king)
-    assert len(result) == len(movement)
-    for move in result:
-        assert move in movement
-
-def test_capture_multiple_crosspaths():
-    boardStart = [
-            "#r# #r# ",
-            "r#r#r#r#",
-            "# #r# #r",
-            " #r#r# #",
-            "# #w# # ",
-            "w# #w#w#",
-            "#w#w#w#w",
-            "w#w#w#w#"
-            ]
-    selectedPiece = (3, 4)
-    movement = [
-            [(3, 4), (4, 3), (5, 2), (4, 1), 
-                    (3, 0), (2, 1), (1, 2), (2, 3), (3, 4)], 
-            [(3, 4), (2, 3), (1, 2), (2, 1), 
-                    (3, 0), (4, 1), (5, 2), (4, 3), (3, 4)],
-            [(3, 4), (2, 3), (1, 2), (2, 1), 
-                    (3, 0), (4, 1), (5, 2), (6, 1), (7, 0)]        
-            ]
-    board = Board(boardStart)
-    result = board.getLegalMovesByPiece(selectedPiece, 
-            lookup(board.matrix, index).occupant.king)
-    assert len(result) == len(movement)
-    for move in result:
-        assert move in movement
-
 
 def lookup(matrix, index):
     """Looks up an index, defined by a tuple, in a multidimensional array."""
@@ -137,21 +10,33 @@ def lookup(matrix, index):
         result = result[i]
     return result
 
+
 class Board:
     def __init__(self, board=None):
         # This allows us to make a copy of the board for the AI to safely
         # recurse on.
+        # Load the board matrix
         if isinstance(board, Board):
             self.matrix = copy.deepcopy(board.matrix)
-        if isinstance(board, list):
-            self.matrix = boardFromStrings(board)
-        self.matrix = self.newBoard()
+        elif isinstance(board, list):
+            self.matrix = self.boardFromStrings(board)
+        else:
+            self.matrix = self.newBoard()
 
-        self.selectedPieceMoves = None
-        self.playerLegalMoves = None
+        # Cache of list of legal moves for the board in this turn
+        # Must be set to None at the end of a turn.
+        self.legalMoveSet = None
+
+        # Indicates which player is currently playing.
+        self.playerTurn = WHITE
+
+        # Cache of selected piece
         self.selectedPieceCoordinate = None
+        # Cache of mouse click
         self.mouseClick = None
-        self.playerTurn = None
+        self.mousePos = None
+
+        self.finishMoveExec = True
 
         self.isPlayerRedLost = False
         self.isPlayerWhiteLost = False
@@ -167,110 +52,36 @@ class Board:
         self.numberOfPlays = 0
         self.numberOfPlays2 = 0
 
-    """-------------------+
-    |  Board Initializer  |
-    +-------------------"""
-
     def newBoard(self):
-
-        # Initialize squares and place them in matrix
-
-        matrix = [[None] * 8 for i in range(8)]
-
+        """Creates a matrix containing a new board."""
+        matrix = []
         for x in range(8):
+            row = []
             for y in range(8):
-                if (x % 2 != 0) and (y % 2 == 0):
-                    matrix[x][y] = Square(BLACK)
-                elif (x % 2 != 0) and (y % 2 != 0):
-                    matrix[x][y] = Square(WHITE)
-                elif (x % 2 == 0) and (y % 2 != 0):
-                    matrix[x][y] = Square(BLACK)
-                elif (x % 2 == 0) and (y % 2 == 0):
-                    matrix[x][y] = Square(WHITE)
-
-        # initialize the pieces and put them in the appropriate squares
-        for x in range(8):
-            for y in range(3):
-                if matrix[x][y].color == BLACK:
-                    matrix[x][y].occupant = Piece(RED)
-            for y in range(5, 8):
-                if matrix[x][y].color == BLACK:
-                    matrix[x][y].occupant = Piece(WHITE)
-
+                square = Square((x & 1) ^ (y & 1))
+                if y < 3 and square.black:
+                    square.occupant = Piece(RED, False)
+                elif y > 4 and square.black:
+                    square.occupant = Piece(WHITE, False)
+                row.append(square)
+            matrix.append(row)
         return matrix
-
-    def boardFromStrings(boardDescription):
-        """
-        Takes a board string description and returns a matrix containing the
-        corresponding board pieces.
-        """
-        boardMatrix = [[Square(WHITE)] * 8 for i in range(8)]
-
-        parseDict = {
-                "w": (WHITE, False),
-                "W": (WHITE, True),
-                "r": (RED,   False),
-                "R": (RED,   True)
-                }
-
-        for x in range(0, 8):
-            for y in range(0, 8):
-                if (x & 1) ^ (y & 1):
-                    boardMatrix[x][y].color = BLACK
-                    if boardDescription[y][x] in parseDict:
-                        boardMatrix[x][y].occupant = (
-                                Piece(parseDict[boardDescription[y][x]][0],
-                                        parseDict[boardDescription[y][x]][1]))
-                else:
-                    boardMatrix[x][y].color = WHITE
-
-        return boardMatrix
-
-    def boardToString(self, board):
-        """
-        Takes a board and returns a matrix of the board space colors. Used for testing new_board()
-        """
-
-        boardString = [" " * 8 for i in range(8)]
-
-        for x in range(0, 8):
-            for y in range(0, 8):
-                if board[x][y].color is BLACK:
-                    if board[x][y].occupant is None:
-                        boardString[y][x] = " "
-                        continue
-                    elif (board[x][y].occupant.color is WHITE and
-                            board[x][y].occupant.king):
-                        boardString[y][x] = "W"
-                        continue
-                    elif (board[x][y].occupant.color is RED and
-                            board[x][y].occupant.king):
-                        boardString[y][x] = "R"
-                        continue
-                    elif board[x][y].occupant.color is WHITE:
-                        boardString[y][x] = "w"
-                        continue
-                    elif board[x][y].occupant.color is RED:
-                        boardString[y][x] = "r"
-                        continue
-                else:
-                    boardString[y][x] = "#"
-                    continue
-
-        return boardString
 
     def nextCoordinate(self, direction, coordinate):
         """
         Returns the coordinates one square in a different direction to (x,y).
         """
+        direction = self.tupleToCoord(direction)
+        coordinate = self.tupleToCoord(coordinate)
+
         if direction == NORTHWEST:
-            return Coordinate(coordinate.x - 1, coordinate.y - 1)
+            return (coordinate.x - 1, coordinate.y - 1)
         elif direction == NORTHEAST:
-            return Coordinate(coordinate.x + 1, coordinate.y - 1)
+            return (coordinate.x + 1, coordinate.y - 1)
         elif direction == SOUTHWEST:
-            return Coordinate(coordinate.x - 1, coordinate.y + 1)
+            return (coordinate.x - 1, coordinate.y + 1)
         elif direction == SOUTHEAST:
-            return Coordinate(coordinate.x + 1, coordinate.y + 1)
+            return (coordinate.x + 1, coordinate.y + 1)
         else:
             return 0
 
@@ -278,76 +89,35 @@ class Board:
         """
         Returns the coordinates one square in a different direction to (x,y).
         """
+        direction = self.tupleToCoord(direction)
+        coordinate = self.tupleToCoord(coordinate)
+
         if direction == NORTHWEST:
-            return Coordinate(coordinate.x - 2, coordinate.y - 2)
+            return (coordinate.x - 2, coordinate.y - 2)
         elif direction == NORTHEAST:
-            return Coordinate(coordinate.x + 2, coordinate.y - 2)
+            return (coordinate.x + 2, coordinate.y - 2)
         elif direction == SOUTHWEST:
-            return Coordinate(coordinate.x - 2, coordinate.y + 2)
+            return (coordinate.x - 2, coordinate.y + 2)
         elif direction == SOUTHEAST:
-            return Coordinate(coordinate.x + 2, coordinate.y + 2)
+            return (coordinate.x + 2, coordinate.y + 2)
         else:
             return 0
-
-    def canJumpAdjacent(self, coordinate):
-        """
-        Returns a list of squares locations that are adjacent (on a diagonal) to (x,y).
-        """
-
-        return self.canJumpDirection(NORTHWEST, self.nextCoordinate(NORTHWEST, coordinate)) \
-            or self.canJumpDirection(NORTHEAST, self.nextCoordinate(NORTHEAST, coordinate)) \
-            or self.canJumpDirection(SOUTHWEST, self.nextCoordinate(SOUTHWEST, coordinate)) \
-            or self.canJumpDirection(SOUTHEAST, self.nextCoordinate(SOUTHEAST, coordinate))
-
-    def canMoveAdjacent(self, coordinate):
-        """
-        Returns a list of squares locations that are adjacent (on a diagonal) to (x,y).
-        """
-
-        return self.canMoveDirection(NORTHWEST, self.nextCoordinate(NORTHWEST, coordinate)) \
-            or self.canMoveDirection(NORTHEAST, self.nextCoordinate(NORTHEAST, coordinate)) \
-            or self.canMoveDirection(SOUTHWEST, self.nextCoordinate(SOUTHWEST, coordinate)) \
-            or self.canMoveDirection(SOUTHEAST, self.nextCoordinate(SOUTHEAST, coordinate))
-
-    def adjacent(self, coordinate):
-        """
-        Returns a list of squares locations that are adjacent (on a diagonal) to (x,y).
-        """
-
-        return [self.nextCoordinate(NORTHWEST, coordinate),
-                self.nextCoordinate(NORTHEAST, coordinate),
-                self.nextCoordinate(SOUTHWEST, coordinate),
-                self.nextCoordinate(SOUTHEAST, coordinate)]
 
     def location(self, coordinate):
         """
         Takes a set of coordinates as arguments and returns self.matrix[x][y]
         This can be faster than writing something like self.matrix[coords[0]][coords[1]]
         """
+
         if not coordinate:
             return
-        return self.matrix[coordinate.x][coordinate.y]
-
-    def moveContainsCoordinate(self, coordinate, move):
-        """
-        Check if the coordinate already exists in the move coordinate list
-        """
-        for m in move:
-            if m.x == coordinate.x and m.y == coordinate.y:
-                return True
-        return False
-
-    def canMoveDirection(self, direction, currentCoordinate):
-        if self.onBoard(self.nextCoordinate(direction, currentCoordinate)):
-            if self.location(self.nextCoordinate(direction, currentCoordinate)).occupant is None:
-                return True
-            else:
-                return False
+        return self.matrix[coordinate[0]][coordinate[1]]
 
     def canJumpDirection(self, direction, coordinate):
         """
             Given a coordinate, color, direction and a list of moves, checks if there's another available jump
         """
+        direction = self.tupleToCoord(direction)
 
         if not coordinate:
             return
@@ -359,241 +129,301 @@ class Board:
                 and self.onBoard(afterNextSquare) \
                 and self.location(nextSquare).occupant is not None \
                 and self.location(afterNextSquare).occupant is None \
-                and self.playerTurn is not self.location(nextSquare).occupant.color:
+                and self.playerTurn is not self.location(
+            nextSquare).occupant.color:
             return True
 
         return False
 
-    def getRegularMovesByPiece(self, pieceCoordinate, king):
-        if not pieceCoordinate:
-            return
+    """-------------------------------------------------+
+    |         MAIN MOVEMENT EVALUATION FUNCTIONS        |
+    +-------------------------------------------------"""
 
-        auxMove = []
-        moveSet = []
+    def getLegalMoves(self, coordinate):
+        """Returns the legal moves for a piece."""
+        # Calculate legal move set if it hasn't been calculated yet
+        if self.legalMoveSet is None: self.getAllLegalMoves()
 
-        if self.playerTurn is WHITE or king:
-            for direction in (NORTHWEST, NORTHEAST):
-                if self.canMoveDirection(direction, pieceCoordinate):
-                    auxMove.append(pieceCoordinate)
-                    auxMove.append(self.nextCoordinate(direction, pieceCoordinate))
-                    moveSet.append(auxMove)
-                else:
-                    if pieceCoordinate not in moveSet:
-                        moveSet.append([pieceCoordinate])
-                auxMove = []
+        # Select in the legal move set, where the first coordinate is the
+        # desired piece's coordinate
+        self.legalMoveSet = list(
+            filter(lambda m: m[0] == coordinate, self.legalMoveSet))
 
-        if self.playerTurn is RED or king:
-            for direction in (SOUTHWEST, SOUTHEAST):
-                if self.canMoveDirection(direction, pieceCoordinate):
-                    auxMove.append(pieceCoordinate)
-                    auxMove.append(self.nextCoordinate(direction, pieceCoordinate))
-                    moveSet.append(auxMove)
-                else:
-                    if pieceCoordinate not in moveSet:
-                        moveSet.append([pieceCoordinate])
-                auxMove = []
+        print("getLegalMoves self.legalMoveSet before filter:",
+              self.legalMoveSet)
+        self.legalMoveSet = self.getBestMoves()
+        print("getLegalMoves self.legalMoveSet after filter:",
+              self.legalMoveSet)
 
-        if king:
-            for move in moveSet:
-                if len(move) > 1:
-                    direction = self.getDirection(move[-2], move[-1])
-                    while self.canMoveDirection(direction, move[-1]):
-                        move.append(self.nextCoordinate(direction, move[-1]))
-        return moveSet
+        return self.legalMoveSet
 
-    def getJumpsByPiece(self, move, previous, king):
-        if not move:
-            return
+    """--------------------------------------------------------------------"""
 
-        finalMoveSet = []
-        refSquare = move[-1]
-        moveQueue = []
+    def getAllLegalMoves(self):
+        """Computes legal moves for all of the player's pieces on the
+        board."""
+        self.legalMoveSet = []
+        # The highest move rank encountered.
+        # The rank of a move is given by the number of captures it makes.
+        highestMoveRank = -1
 
-        if king and self.location(refSquare).occupant is None:
-            direction = self.getDirection(move[-2], refSquare)
-            if self.canJumpDirection(direction, refSquare):
-                copyMove = copy.deepcopy(move)
-                copyMove.append(self.nextCoordinate(direction, move[-1]))
-                copyMove.append(self.afterNextCoordinate(direction, move[-1]))
-                while self.canMoveDirection(direction, copyMove[-1]):
-                    copyMove.append(
-                        self.nextCoordinate(direction, copyMove[-1]))
-                moveQueue.append(copyMove)
-            else:
-                finalMoveSet.append(move)
-
-        for direction in (NORTHWEST, NORTHEAST, SOUTHWEST, SOUTHEAST):
-            if self.canJumpDirection(direction, move[0]):
-                copyMove = [move[0]]
-                copyMove.append(self.nextCoordinate(direction, move[0]))
-                copyMove.append(self.afterNextCoordinate(direction, move[0]))
-                if king:
-                    while self.canMoveDirection(direction, copyMove[-1]):
-                        copyMove.append(self.nextCoordinate(direction, copyMove[-1]))
-                moveQueue.append(copyMove)
-            elif move not in moveQueue:
-                moveQueue.append(move)
-
-        for move in moveQueue:
-            print("printando move em movequeue", move)
-            finalMoveSet.append(move)
-        """
-        while moveQueue:
-            auxMove = moveQueue.pop(0)
-            refSquare = auxMove[-1]
-            previous = auxMove[-3]
-
-            for direction in (NORTHWEST, NORTHEAST, SOUTHWEST, SOUTHEAST):
-                if self.canJumpDirection(direction, refSquare) and \
-                        self.afterNextCoordinate(direction, refSquare).x != previous.x \
-                        and self.afterNextCoordinate(direction, refSquare).y != previous.y:
-                    print("entrou if while")
-                    copyMove = copy.deepcopy(move)
-                    copyMove.append(self.nextCoordinate(direction, refSquare))
-                    copyMove.append(self.afterNextCoordinate(direction, refSquare))
-                    if king:
-                        while self.canMoveDirection(direction, refSquare):
-                            copyMove.append(self.nextCoordinate(direction, refSquare))
-                    if copyMove not in moveQueue:
-                        moveQueue.append(copyMove)
-                else:
-                    print("AUXMOVE", auxMove)
-                    finalMoveSet.append(auxMove)"""
-        print("FINALMOVESET", finalMoveSet)
-        return finalMoveSet
-
-    def getDirection(self, previous, refSquare):
-        aux = self.nextCoordinate(NORTHWEST, previous)
-        if aux.x == refSquare.x and aux.y == refSquare.y:
-            return NORTHWEST
-        aux = self.nextCoordinate(NORTHEAST, previous)
-        if aux.x == refSquare.x and aux.y == refSquare.y:
-            return NORTHEAST
-        aux = self.nextCoordinate(SOUTHWEST, previous)
-        if aux.x == refSquare.x and aux.y == refSquare.y:
-            return SOUTHWEST
-        aux = self.nextCoordinate(SOUTHEAST, previous)
-        if aux.x == refSquare.x and aux.y == refSquare.y:
-            return SOUTHEAST
-
-    def getDirectionByJump(self, previous, refSquare):
-        aux = self.afterNextCoordinate(NORTHWEST, previous)
-        if aux.x == refSquare.x and aux.y == refSquare.y:
-            return NORTHWEST
-        aux = self.afterNextCoordinate(NORTHEAST, previous)
-        if aux.x == refSquare.x and aux.y == refSquare.y:
-            return NORTHEAST
-        aux = self.afterNextCoordinate(SOUTHWEST, previous)
-        if aux.x == refSquare.x and aux.y == refSquare.y:
-            return SOUTHWEST
-        aux = self.afterNextCoordinate(SOUTHEAST, previous)
-        if aux.x == refSquare.x and aux.y == refSquare.y:
-            return SOUTHEAST
-
-    """-------------------------------+
-    |  Player all pieces Moves Logic  |
-    +-------------------------------"""
-
-    def getLegalMoves(self):
-
-        # Get a list of all legal moves
-        legalMoveSet = []
+        # Go through the matrix and get the theoretical legal moves for each
+        # piece.
         for x in range(8):
             for y in range(8):
-                coordinate = Coordinate(x, y)
-                if self.matrix[x][y].occupant is not None \
-                        and self.matrix[x][y].occupant.color is self.playerTurn:
-                    for move in self.getLegalMovesByPiece(coordinate, self.location(coordinate).occupant.king):
-                        if move and move not in legalMoveSet:
-                            legalMoveSet.append(move)
+                if (self.matrix[x][y].occupant is not None
+                        and self.matrix[x][
+                            y].occupant.color is self.playerTurn):
+                    # print((x, y))
+                    for move in self.theoreticalLegalMoves((x, y)):
+                        if move not in self.legalMoveSet:
+                            self.legalMoveSet.append(move)
 
-        self.selectedPieceMoves = self.getBestMoves(
-            legalMoveSet, True)
-        print("getLegalMoves - legalMoveSet ", legalMoveSet)
-        return legalMoveSet
+                            rank = self.moveRank(move)
+                            if highestMoveRank < rank: highestMoveRank = rank
 
-    """--------------------------+
-    |  Single Piece Moves Logic  |
-    +--------------------------"""
+        # Filter out moves that aren't the highest rank, to enforce the
+        # longest captures
 
-    def getLegalMovesByPiece(self, pieceCoordinate, king=False):
-        """
-        Look for all possible movements recursively and return a list of possible moves
-        """
-        auxLegalMoves = []
+        # print("BoardLogic.py::Board:getAllLegalMoves: Unfiltered legal moves:")
+        # for move in self.legalMoveSet: print(move)
 
-        # Get piece moves without jump
-        print(pieceCoordinate)
-        legalMovesSet = self.getRegularMovesByPiece(pieceCoordinate, king)
+        # print("BoardLogic.py::Board:getAllLegalMoves: Highest move rank is {}".format(highestMoveRank))
 
-        # Extend jumps
-        for move in legalMovesSet:
-            previous = move[-1]
-            auxLegalMoves += self.getJumpsByPiece(move, previous, king)
+        illegalMoves = []
+        for move in self.legalMoveSet:
+            if self.moveRank(move) < highestMoveRank:
+                # print("BoardLogic.py::Board:getAllLegalMoves: Move {} has rank {} < {}, dropping.".format(move, self.moveRank(move), highestMoveRank))
+                illegalMoves.append(move)
 
-        bestMoves = self.getBestMoves(auxLegalMoves, king)
+        for move in illegalMoves: self.legalMoveSet.remove(move)
 
-        return bestMoves
+        # For debugging only... comment this later
+        # print("BoardLogic.py::Board:getAllLegalMoves: Legal moves:")
+        # for move in self.legalMoveSet: print(move)
 
-    def getBestMoves(self, legalMoveSet, king):
+        print("return self.legalMoveSet from getAllLegalMoves",
+              self.legalMoveSet)
+        return self.legalMoveSet
 
-        if not legalMoveSet:
+    """-----------------------------------------+
+    |  AUXILIARY MOVEMENT EVALUATION FUNCTIONS  |
+    +-----------------------------------------"""
+
+    def moveRank(self, move):
+        """Calculates the rank for a move.
+        A move's rank is given by its number of captured pieces."""
+        rank = 0
+        start = derefer(self.matrix, move[0]).occupant
+        for coord in move:
+            # If there's a piece in that coordinate
+            square = derefer(self.matrix, coord).occupant
+            # print(coord, square)
+            if square and square.color is not start.color:
+                # print(square.color, start.color)
+                rank += 1
+        return rank
+
+    """--------------------------------------------------------------------"""
+
+    def theoreticalLegalMoves(self, pieceCoords):
+        """Returns the possible moves for a piece if there were no
+        higher-ranked moves possible."""
+        # Dereference the coordinates to get the square object
+        square = derefer(self.matrix, pieceCoords)
+        
+        if square.occp.king:
+            return self.theoreticalKingLegalMoves(pieceCoords)
+        moveList = []
+        
+        deltaDict = {WHITE: [(-1, -1), (1, -1)], RED: [(-1, 1), (1, 1)]}
+        allDeltas = [(-1, -1), (1, -1), (-1, 1), (1, 1)]
+        
+        for delta in allDeltas:
+            #print("BoardLogic.py::Board:theoreticalLegalMoves: Evaluating delta {}".format(delta))
+            deltaCoord = tplsum(pieceCoords, delta)
+            # Verify that the value is in bounds
+            if not bounded(deltaCoord, 0, 7): continue
+            
+            deltaSquare = derefer(self.matrix, deltaCoord)
+            # Check if the delta square is occupied
+            if deltaSquare.occp:
+                # If the piece in the delta square is the same color,
+                # the move is impossible.
+                if deltaSquare.occp.color is square.occp.color: continue
+                
+                # Otherwise, it's possibly a capture move. Deal with it.
+                for move in self.possibleCaptures(square.occp.color, 
+                        pieceCoords, delta, pieceCoords):
+                    moveList.append(move)
+                    #print("Evaluated capture move {} for delta {}.".format(move, delta))
+            
+            elif delta in deltaDict[square.occp.color]:
+                # Given the square is free and is in "front" of the piece,
+                # it's a valid movement.
+                moveList.append([pieceCoords, deltaCoord])
+        #print("Theoretical legal moves for {}:".format(pieceCoords))
+        #for move in moveList: print(move)
+        return moveList
+    
+    """--------------------------------------------------------------------"""
+    
+    def theoreticalKingLegalMoves(self, pieceCoords):
+        """Returns the possible moves for a king if there were no
+        higher-ranked moves possible."""
+        # Dereference the coordinates to get the square object
+        square = derefer(self.matrix, pieceCoords)
+        moveList = []
+        
+        deltas = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
+        
+        for delta in deltas:
+            newPieceCoords = pieceCoords
+            deltaCoord = tplsum(pieceCoords, delta)
+            # Check all possible chain positions in bounds
+            currentMove = [pieceCoords]
+            while bounded(deltaCoord, 0, 7):
+                deltaSquare = derefer(self.matrix, deltaCoord)
+                # Check if the delta square is occupied
+                if deltaSquare.occp is not None:
+                    # If the piece in the delta square is the same color,
+                    # the move is impossible. Break the chain.
+                    if deltaSquare.occp.color is square.occp.color: break
+                    
+                    # Otherwise, it's possibly a capture move. Deal with it.
+                    for move in self.possibleCaptures(square.occp.color, 
+                            newPieceCoords, delta, pieceCoords):
+                        fullMove = copy.deepcopy(currentMove)[:-1]
+                        fullMove.extend(move)
+                        moveList.append(fullMove)
+                    # A capture move ends the chain.
+                    break
+                else:
+                    # It's a valid movement.
+                    currentMove.append(deltaCoord)
+                    currentMoveCopy = copy.deepcopy(currentMove)
+                    moveList.append(currentMoveCopy)
+                newPieceCoords = deltaCoord
+                deltaCoord = tplsum(deltaCoord, delta)
+        
+        #print("Theoretical legal moves for {}:".format(pieceCoords))
+        #for move in moveList: print(move)
+        return moveList
+
+    """--------------------------------------------------------------------"""
+
+    def possibleCaptures(self, pieceColor, pieceCoords, delta, startPosition,
+                         capturedPieces=None):
+        """Recursively evaluates a capture and searches for capture chains."""
+        deltaCoord = tplsum(pieceCoords, delta)
+        landingCoord = tplsum(deltaCoord, delta)
+        # print("BoardLogic.py::Board:possibleCaptures: New call at {} ({} -> {} - > {} with capturedPieces = {})".format(pieceCoords, pieceCoords, deltaCoord, landingCoord, capturedPieces))
+
+        # Check if the delta and landing squares are in bounds
+        if not bounded(deltaCoord, 0, 7) or not bounded(landingCoord, 0, 7):
+            return []
+
+        deltaSquare = derefer(self.matrix, deltaCoord)
+        landingSquare = derefer(self.matrix, landingCoord)
+
+        # Check if there is a piece that can be captured
+        if ((not deltaSquare.occupant) or
+                (deltaSquare.occupant.color is pieceColor)): return []
+
+        # Check whether the landing square is clear
+        if landingSquare.occupant and landingCoord != startPosition:
+            # print("BoardLogic.py::Board:possibleCaptures: Landing square is not clear", landingCoord, startPosition)
+            return []
+
+        if capturedPieces is None: capturedPieces = []
+
+        # Check whether the piece hasn't already been captured before
+        if deltaCoord in capturedPieces: return []
+
+        captureList = []
+        captureList.append([pieceCoords, deltaCoord, landingCoord])
+
+        # Flag the delta square as captured
+        capturedPieces.append(deltaCoord)
+
+        deltas = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
+
+        # Recurse into every possible delta
+        for newdelta in deltas:
+            for extraMove in self.possibleCaptures(pieceColor, landingCoord,
+                                                   newdelta, startPosition,
+                                                   copy.deepcopy(
+                                                       capturedPieces)):
+                # print(extraMove)
+                baseMove = [pieceCoords, deltaCoord]
+                baseMove.extend(extraMove)
+                # print("BoardLogic.py::Board:possibleCaptures: recursing into {} ({} -> {}) got {}".format(delta, landingCoord, tplsum(landingCoord, delta), baseMove))
+                captureList.append(baseMove)
+
+        return captureList
+
+    """-------------------------------+
+    |        UTILITY FUNCTIONS        |
+    +-------------------------------"""
+
+    def getBestMoves(self):
+        if not self.legalMoveSet:
             return
-
-        auxSet = []
-
-        for move in legalMoveSet:
-            if move[0].x == self.selectedPieceCoordinate.x and \
-                    move[0].y == self.selectedPieceCoordinate.y:
-                auxSet.append(move)
 
         jumpCounter = 0
         mostJumps = 0
-        for move in auxSet:
-            for coordinate in move:
-                if self.location(coordinate).occupant:
-                    if self.location(coordinate).occupant.color is not self.playerTurn:
+
+        for move in self.legalMoveSet:
+            for coord in move:
+                if self.location(coord).occupant:
+                    if self.location(
+                            coord).occupant.color is not self.playerTurn:
                         jumpCounter += 1
             if jumpCounter > mostJumps:
                 mostJumps = jumpCounter
             jumpCounter = 0
 
-        if mostJumps == 0:
-            return auxSet
+        # No jumps, nothing to filter
+        if jumpCounter == 0:
+            return self.legalMoveSet
 
-        bestJumps = []
+        filteredBestMoves = []
         jumpCounter = 0
-        for move in legalMoveSet:
-            for coordinate in move:
-                if self.location(coordinate).occupant:
-                    if self.location(coordinate).occupant.color is not self.playerTurn:
+        for move in self.legalMoveSet:
+            for coord in move:
+                if self.location(coord).occupant:
+                    if self.location(
+                            coord).occupant.color is not self.playerTurn:
                         jumpCounter += 1
-            if mostJumps == jumpCounter:
-                bestJumps.append(move)
+            if jumpCounter is mostJumps:
+                filteredBestMoves.append(move)
             jumpCounter = 0
 
-        return bestJumps
+        return filteredBestMoves
 
     def coordToTuple(self, coordinate):
-        tup = (coordinate.x, coordinate.y)
+        if isinstance(coordinate, Coordinate):
+            tup = (coordinate.x, coordinate.y)
+        else:
+            return coordinate
         return tup
 
-    def tupToCoordinate(self, tup):
-        coord = Coordinate(tup.x, tup.y)
+    def tupleToCoord(self, tup):
+        if isinstance(tup, tuple):
+            coord = Coordinate(tup[0], tup[1])
+        else:
+            return tup
         return coord
 
-    def filterNoneOrEmptyMoves(self, moves):
+    def filterNoneOrEmptyMoves(self, movesSet):
 
-        if not moves:
+        if not movesSet:
             return []
 
-        moves = [x for x in moves if x]
+        movesSet = list(
+            list(filter(None.__ne__, movesSet)))
 
-        for move in moves:
-            if None in move or [] in move:
-                move.pop()
-
-        return moves
+        return movesSet
 
     def exists(self):
         return self is not None
@@ -610,50 +440,183 @@ class Board:
             if self.location(auxCoordinate).occupant:
                 if self.location(
                         auxCoordinate).occupant.color is not self.playerTurn:
-                    self.matrix[auxCoordinate.x][auxCoordinate.y].occupant = None
+                    self.matrix[auxCoordinate.x][
+                        auxCoordinate.y].occupant = None
             auxCoordinate = auxCopy.pop(0)
 
     def removePiece(self, coordinate):
         """
         Removes a piece from the board at position (x,y).
         """
-        self.matrix[coordinate.x][coordinate.y].occupant = None
+
+        self.matrix[coordinate[0]][coordinate[1]].occupant = None
 
     def movePiece(self, startCoordinate, endCoordinate):
         """
         Move a piece from (start_x, start_y) to (end_x, end_y).
         """
+        if not startCoordinate or not endCoordinate:
+            return
+
         if self.onBoard(startCoordinate) and self.onBoard(endCoordinate):
-            self.matrix[endCoordinate.x][endCoordinate.y].occupant = self.matrix[startCoordinate.x][
-                startCoordinate.y].occupant
+            self.matrix[endCoordinate[0]][endCoordinate[1]].occupant = \
+                self.matrix[startCoordinate[0]][
+                    startCoordinate[1]].occupant
             self.removePiece(startCoordinate)
         self.king(endCoordinate)
         self.verifyDrawCondition()
 
-    def executeMove(self):
-        print("self.selectedPieceMoves", self.selectedPieceMoves)
-        if self.selectedPieceMoves is None:
-            return False
+    def showCoordinates(self):
+        if self.legalMoveSet is not None:
+            for move in self.legalMoveSet:
+                print("\n")
+                for coord in move:
+                    print("(", coord[0], coord[1], ") ")
 
-        for move in self.selectedPieceMoves:
+    def executeMove(self):
+        if self.legalMoveSet is None:
+            return
+
+        self.showCoordinates()
+
+        self.finishMoveExec = False
+
+        hasJumps = False
+
+        for move in self.legalMoveSet:
             for coord in move:
-                if self.location(coord) == self.location(self.mouseClick):
-                    self.movePiece(self.selectedPieceCoordinate, self.mouseClick)
-                    self.removePiecesByMove(move)
-                    return True
+                if self.location(coord).occupant:
+                    if self.location(coord).occupant.color != self.playerTurn:
+                        hasJumps = True
+                        break
+            else:
+                break
+
+        # If the legalMoveSet has no pieces to capture, return as it is
+        if not hasJumps:
+            self.movePiece(self.selectedPieceCoordinate, self.mouseClick)
+            self.finishMoveExec = True
+            return
+
+        # Move the selected piece
+        self.movePiece(self.selectedPieceCoordinate, self.mouseClick)
+
+        # Updates selectedPieceCoordinate position
+        self.selectedPieceCoordinate = self.mouseClick
+
+        # Refine the legalMoveSet and gets the captured piece coordinate
+        jumpedPiece = self.filterLegalMoves()
+
+        # Remove the captured piece
+        self.removePiece(jumpedPiece)
+
+        for move in self.legalMoveSet:
+            if len(move) == 1:
+                self.finishMoveExec = True
+
+        return
+
+    def filterLegalMoves(self):
+
+        auxPartialFiltered = []
+        pieceJumpedCoord = None
+        pieceToBeRemovedCoord = None
+        for move in self.legalMoveSet:
+            i = 0
+            while i < len(move):
+                nextSquare = move[i]
+                if self.location(nextSquare).occupant:
+                    if self.location(
+                            nextSquare).occupant.color != self.playerTurn:
+                        pieceJumpedCoord = nextSquare
+
+                if self.location(nextSquare).occupant:
+                    if self.location(
+                            nextSquare).occupant.color == self.playerTurn and pieceJumpedCoord:
+                        if self.location(nextSquare) == self.location(
+                                self.mouseClick):
+                            pieceToBeRemovedCoord = pieceJumpedCoord
+                            auxPartialFiltered.append(move)
+                            pieceJumpedCoord = None
+                            break
+                i += 1
+
+        filteredLegalMoves = []
+
+        for move in auxPartialFiltered:
+            i = 0
+            nextSquare = move[i]
+            while i < len(move):
+                if self.location(nextSquare).occupant:
+                    if self.location(
+                            nextSquare).occupant.color == self.playerTurn:
+                        break
+                i += 1
+                nextSquare = move[i]
+            filteredLegalMoves.append(move[i:])
+
+        self.legalMoveSet = filteredLegalMoves
+        return pieceToBeRemovedCoord
+
+    def validClick(self):
+        firstJump = False
+        secondJump = False
+        validSquares = []
+        for move in self.legalMoveSet:
+            firstJump = False
+            secondJump = False
+            i = 0
+            while i < len(move) and not secondJump:
+                print(i)
+                nextSquare = move[i]
+                if self.location(nextSquare).occupant:
+                    if self.location(
+                            nextSquare).occupant.color != self.playerTurn:
+                        firstJump = True
+                        i += 1
+                        continue
+                if firstJump and not secondJump and not self.location(nextSquare).occupant:
+                    validSquares.append(nextSquare)
+                    i += 1
+                    continue
+                if firstJump and not secondJump and self.location(nextSquare).occupant:
+                    secondJump = True
+                i += 1
+            if not firstJump:
+                for move in self.legalMoveSet:
+                    for coord in move:
+                        validSquares.append(coord)
+
+        print("out loop")
+
+        if self.mouseClick in validSquares:
+            return True
         return False
+
+    def getMovesEndSquare(self):
+        # Save the end square of legalMovements
+        if not self.legalMoveSet:
+            return
+
+        if len(self.legalMoveSet) > 0:
+            self.legalMovesEndSquare = []
+            for move in self.legalMoveSet:
+                self.legalMovesEndSquare.append(
+                    move[-1])
 
     def verifyWinCondition(self):
         self.isPlayerRedLost = True
         self.isPlayerWhiteLost = True
         for x in range(8):
             for y in range(8):
-                if self.matrix[x][y].occupant is not None and self.matrix[x][y].occupant.color is RED:
-                   self.isPlayerRedLost = False
-                elif self.matrix[x][y].occupant is not None and self.matrix[x][y].occupant.color is WHITE:
-                   self.isPlayerWhiteLost = False
+                if self.matrix[x][y].occupant is not None and self.matrix[x][
+                    y].occupant.color is RED:
+                    self.isPlayerRedLost = False
+                elif self.matrix[x][y].occupant is not None and self.matrix[x][
+                    y].occupant.color is WHITE:
+                    self.isPlayerWhiteLost = False
                 if self.isPlayerRedLost is False and self.isPlayerWhiteLost is False:
-                    break;
+                    break
 
     def getPlayerWhiteLostInformation(self):
         return self.isPlayerWhiteLost
@@ -668,24 +631,29 @@ class Board:
         self.kingRedCounter = 0
         for x in range(8):
             for y in range(8):
-                if self.matrix[x][y].occupant is not None and self.matrix[x][y].occupant.king \
+                if self.matrix[x][y].occupant is not None and self.matrix[x][
+                    y].occupant.king \
                         and self.matrix[x][y].occupant.color is WHITE:
                     if self.kingWhiteCounterAux == 0:
                         self.kingWhiteCounterAux = 1
                     self.kingWhiteCounter = self.kingWhiteCounter + 1
-                elif self.matrix[x][y].occupant is not None and self.matrix[x][y].occupant.king \
+                elif self.matrix[x][y].occupant is not None and self.matrix[x][
+                    y].occupant.king \
                         and self.matrix[x][y].occupant.color is RED:
                     if self.kingRedCounterAux == 0:
                         self.kingRedCounterAux = 1
                     self.kingRedCounter = self.kingRedCounter + 1
-                elif self.matrix[x][y].occupant is not None and self.matrix[x][y].occupant.color is WHITE:
+                elif self.matrix[x][y].occupant is not None and self.matrix[x][
+                    y].occupant.color is WHITE:
                     self.whiteCounter = self.whiteCounter + 1
-                elif self.matrix[x][y].occupant is not None and self.matrix[x][y].occupant.color is RED:
+                elif self.matrix[x][y].occupant is not None and self.matrix[x][
+                    y].occupant.color is RED:
                     self.redCounter = self.redCounter + 1
 
         'Draw conditions'
 
-        if (self.kingWhiteCounterAux != self.kingWhiteCounter or self.kingRedCounterAux != self.kingRedCounter) and \
+        if (
+                self.kingWhiteCounterAux != self.kingWhiteCounter or self.kingRedCounterAux != self.kingRedCounter) and \
                 self.whiteCounterAux == self.whiteCounter and self.redCounterAux == self.redCounter:
             self.numberOfPlays = self.numberOfPlays + 1
         else:
@@ -697,18 +665,22 @@ class Board:
                 (self.kingRedCounter == 2 or self.kingRedCounter == 1) and
                 self.whiteCounterAux == 0 and self.redCounterAux == 0):
             self.numberOfPlays2 = self.numberOfPlays2 + 1
-        elif (self.kingWhiteCounterAux == self.kingWhiteCounter and self.kingWhiteCounter == 2 and
+        elif (
+                self.kingWhiteCounterAux == self.kingWhiteCounter and self.kingWhiteCounter == 2 and
                 self.kingRedCounterAux == self.kingRedCounter and self.kingRedCounter == 1 and
                 self.redCounterAux == self.redCounter and self.redCounter == 1 and self.whiteCounterAux == 0) or \
-            (self.kingRedCounterAux == self.kingRedCounter and self.kingRedCounterAux == 2 and
-                self.kingWhiteCounterAux == self.kingWhiteCounter and self.kingWhiteCounter == 1 and
-                self.whiteCounterAux == self.whiteCounter and self.whiteCounter == 1 and self.redCounterAux == 0) or \
-            (self.kingWhiteCounterAux == self.kingWhiteCounter and self.kingWhiteCounter == 1 and
-                self.kingRedCounterAux == self.kingRedCounter and self.kingRedCounter == 1 and
-                self.redCounterAux == self.redCounter and self.redCounter == 1 and self.whiteCounterAux == 0) or \
-            (self.kingRedCounterAux == self.kingRedCounter and self.kingRedCounterAux == 1 and
-                self.kingWhiteCounterAux == self.kingWhiteCounter and self.kingWhiteCounter == 1 and
-                self.whiteCounterAux == self.whiteCounter and self.whiteCounter == 1 and self.redCounterAux == 0):
+                (
+                        self.kingRedCounterAux == self.kingRedCounter and self.kingRedCounterAux == 2 and
+                        self.kingWhiteCounterAux == self.kingWhiteCounter and self.kingWhiteCounter == 1 and
+                        self.whiteCounterAux == self.whiteCounter and self.whiteCounter == 1 and self.redCounterAux == 0) or \
+                (
+                        self.kingWhiteCounterAux == self.kingWhiteCounter and self.kingWhiteCounter == 1 and
+                        self.kingRedCounterAux == self.kingRedCounter and self.kingRedCounter == 1 and
+                        self.redCounterAux == self.redCounter and self.redCounter == 1 and self.whiteCounterAux == 0) or \
+                (
+                        self.kingRedCounterAux == self.kingRedCounter and self.kingRedCounterAux == 1 and
+                        self.kingWhiteCounterAux == self.kingWhiteCounter and self.kingWhiteCounter == 1 and
+                        self.whiteCounterAux == self.whiteCounter and self.whiteCounter == 1 and self.redCounterAux == 0):
             self.numberOfPlays2 = self.numberOfPlays2 + 1
         else:
             self.numberOfPlays2 = 0
@@ -730,8 +702,9 @@ class Board:
         Is passed a coordinate tuple (x,y), and returns true or
         false depending on if that square on the board is an end square.
         """
+        coordinate = self.tupleToCoord(coordinate)
 
-        if coordinate.x == 0 or coordinate.x == 7:
+        if coordinate[0] == 0 or coordinate[0] == 7:
             return True
         else:
             return False
@@ -742,7 +715,8 @@ class Board:
         If it does, then on_board() return True. Otherwise it returns false.
         """
 
-        if coordinate.x < 0 or coordinate.y < 0 or coordinate.x > 7 or coordinate.y > 7:
+        if coordinate[0] < 0 or coordinate[1] < 0 or coordinate[0] > 7 or \
+                coordinate[1] > 7:
             return False
         else:
             return True
@@ -753,8 +727,12 @@ class Board:
         If it meets the criteria, then king() kings the piece in that square and kings it.
         """
         if self.location(coordinate).occupant is not None:
-            if (self.location(coordinate).occupant.color == WHITE and coordinate.y == 0) or (
-                    self.location(coordinate).occupant.color == RED and coordinate.y == 7):
+            if (self.location(
+                    coordinate).occupant.color == WHITE and coordinate[
+                    1] == 0) or (
+                    self.location(
+                        coordinate).occupant.color == RED and coordinate[
+                        1] == 7):
                 self.location(coordinate).occupant.king = True
 
     def drawBoardSquares(self, graphics):
@@ -763,34 +741,39 @@ class Board:
             """
         for x in range(8):
             for y in range(8):
-                pygame.draw.rect(graphics.screen, self.matrix[x][y].color,
-                                 (x * graphics.squareSize, y * graphics.squareSize, graphics.squareSize,
+                pygame.draw.rect(graphics.screen,
+                                 self.matrix[x][y].occupant.color,
+                                 (x * graphics.squareSize,
+                                  y * graphics.squareSize, graphics.squareSize,
                                   graphics.squareSize), )
 
     def drawBoardPieces(self, screen, redPiece, whitePiece):
         for x in range(8):
             for y in range(8):
-                if self.matrix[x][y].occupant is not None and self.matrix[x][y].color is BLACK and self.matrix[x][
+                if self.matrix[x][y].occupant is not None and self.matrix[x][
                     y].occupant.color is RED:
                     screen.blit(redPiece, (x * 90, y * 90))
 
-                if self.matrix[x][y].occupant is not None and self.matrix[x][y].color is BLACK and self.matrix[x][
+                if self.matrix[x][y].occupant is not None and self.matrix[x][
                     y].occupant.color is WHITE:
                     screen.blit(whitePiece, (x * 90, y * 90))
 
     def drawBoardKings(self, screen, kingPiece):
         for x in range(8):
             for y in range(8):
-                if self.matrix[x][y].occupant is not None and self.matrix[x][y].occupant.king:
+                if self.matrix[x][y].occupant is not None and self.matrix[x][
+                    y].occupant.king:
                     screen.blit(kingPiece, (x * 90, y * 90))
 
     def highlightLegalMoves(self, screen, goldPiece):
-        if self.selectedPieceCoordinate is not None and self.selectedPieceMoves is not None:
+        if self.selectedPieceCoordinate is not None and self.legalMoveSet is not None:
 
-            for movePath in self.selectedPieceMoves:
+            for movePath in self.legalMoveSet:
                 for coordinate in movePath:
-                    if coordinate is not None and not self.location(coordinate).occupant:
-                        screen.blit(goldPiece, (coordinate.x * 90, coordinate.y * 90))
+                    if coordinate is not None and not self.location(
+                            coordinate).occupant:
+                        screen.blit(goldPiece,
+                                    (coordinate[0] * 90, coordinate[1] * 90))
 
     def pixelCoords(self, coordinate, squareSize, pieceSize):
         """
@@ -798,28 +781,127 @@ class Board:
             and returns the pixel coordinates of the center of the square at that location.
         """
         return (
-            coordinate.x * squareSize + pieceSize, coordinate.y * squareSize + pieceSize)
+            coordinate[0] * squareSize + pieceSize,
+            coordinate[1] * squareSize + pieceSize)
 
     def boardCoords(self, pixelCoordinate, squareSize):
         """
            Does the reverse of pixel_coords(). Takes in a tuple of of pixel coordinates and returns what square they are in.
         """
-        return Coordinate(int(pixelCoordinate[0] / squareSize), int(pixelCoordinate[1] / squareSize))
+        return (int(pixelCoordinate[0] / squareSize),
+                int(pixelCoordinate[1] / squareSize))
 
     def pixelToSquarePosition(self, pixelCoordinate, squareSize):
         """
             Does the reverse of pixel_coords(). Takes in a tuple of of pixel coordinates and returns what square they are in.
         """
-        return Coordinate(pixelCoordinate.x / squareSize, pixelCoordinate.y / squareSize)
+        return (pixelCoordinate[0] / squareSize,
+                pixelCoordinate[1] / squareSize)
 
     def piecePositionToPixel(self, boardPiece):
         return True
 
+    """---------------------------------------------+
+    |               TESTING FUNCTIONS               |
+    +---------------------------------------------"""
 
-class Coordinate:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
+    def boardFromStrings(self, boardDescription):
+        """
+        Takes a board string description and returns a matrix containing the
+        corresponding board pieces. Used for unit tests.
+        """
+        boardMatrix = []
+        for x in range(8):
+            col = []
+            for y in range(8):
+                col.append(Square(False))
+            boardMatrix.append(col)
+
+        parseDict = {
+            "w": (WHITE, False),
+            "W": (WHITE, True),
+            "r": (RED, False),
+            "R": (RED, True)
+        }
+
+        for x in range(8):
+            for y in range(8):
+                if (x & 1) ^ (y & 1):
+                    boardMatrix[x][y].black = True
+                    if boardDescription[y][x] in parseDict.keys():
+                        boardMatrix[x][y].occupant = (
+                            Piece(parseDict[boardDescription[y][x]][0],
+                                  parseDict[boardDescription[y][x]][1]))
+
+        return boardMatrix
+
+    """--------------------------------------------------------------------"""
+
+    def boardToStrings(self):
+        """
+        Takes a board and returns a matrix of the board space colors.
+        Used for unit tests.
+        """
+
+        boardString = []
+
+        for y in range(0, 8):
+            row = []
+            for x in range(0, 8):
+                if self.matrix[x][y].black:
+                    if self.matrix[x][y].occupant is None:
+                        row.append(" ")
+                    elif (self.matrix[x][y].occupant.color is WHITE and
+                          self.matrix[x][y].occupant.king):
+                        row.append("W")
+                    elif (self.matrix[x][y].occupant.color is RED and
+                          self.matrix[x][y].occupant.king):
+                        row.append("R")
+                    elif self.matrix[x][y].occupant.color is WHITE:
+                        row.append("w")
+                    elif self.matrix[x][y].occupant.color is RED:
+                        row.append("r")
+                else:
+                    row.append("#")
+            boardString.append(''.join(row))
+
+        return boardString
+
+
+"""----------------------------------------------------+
+|      AUXILIARY STRUCTURE MANIPULATION FUNCTIONS      |
++----------------------------------------------------"""
+
+
+def bounded(tpl, minm, maxm):
+    """Checks if the values in a tuple are within given bounds."""
+    bound = list(map(lambda val: val >= minm and val <= maxm, tpl))
+    return bound[0] and bound[1]
+
+
+def tplsum(t1, t2):
+    """Returns the sum of two tuples."""
+    return tuple(map(lambda x, y: x + y, t1, t2))
+
+
+def derefer(matrix, coords):
+    """Dereferences into a matrix using a tuple or list as coordinates."""
+    ref = matrix
+    for c in coords:
+        ref = ref[c]
+    return ref
+
+
+"""-----------------------------------+
+|      AUXILIARY DATA STRUCTURES      |
++-----------------------------------"""
+
+
+class Square:
+
+    def __init__(self, black, occupant=None):
+        self.black = bool(black)
+        self.occupant = occupant
 
 
 class Piece:
@@ -834,14 +916,190 @@ class Piece:
         return RED
 
 
-class Square:
-    def __init__(self, color, occupant=None):
-        self.color = color  # color is either BLACK or WHITE
-        self.occupant = occupant  # occupant is a Square object
-
-
-class Direction:
-    def __init__(self, x, y, direction):
+class Coordinate:
+    def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.direction = direction
+
+
+"""------------------+
+|     UNIT TESTS     |
++------------------"""
+
+
+def test_simple():
+    boardStart = [
+        "#r#r#r#r",
+        "r#r#r#r#",
+        "#r#r#r#r",
+        " # # # #",
+        "# # # # ",
+        "w#w#w#w#",
+        "#w#w#w#w",
+        "w#w#w#w#"
+    ]
+    selectedPiece = (2, 5)
+    movement = [[(2, 5), (1, 4)], [(2, 5), (3, 4)]]
+    board = Board(boardStart)
+    result = board.getLegalMoves(selectedPiece)
+    assert len(result) == len(movement)
+    for move in result:
+        assert move in movement
+
+
+def test_capture_simple():
+    boardStart = [
+        "#r#r#r#r",
+        "r#r#r#r#",
+        "#r#r# #r",
+        " # #r# #",
+        "# #w# # ",
+        "w# #w#w#",
+        "#w#w#w#w",
+        "w#w#w#w#"
+    ]
+    selectedPiece = (3, 4)
+    movement = [[(3, 4), (4, 3), (5, 2)]]
+    board = Board(boardStart)
+    result = board.getLegalMoves(selectedPiece)
+    assert len(result) == len(movement)
+    for move in result:
+        assert move in movement
+
+
+def test_capture_enforce():
+    boardStart = [
+        "#r#r#r#r",
+        "r#r#r#r#",
+        "#r#r# #r",
+        " # #r# #",
+        "# #w# # ",
+        "w# #w#w#",
+        "#w#w#w#w",
+        "w#w#w#w#"
+    ]
+    selectedPiece = (4, 5)
+    movement = []
+    board = Board(boardStart)
+    result = board.getLegalMoves(selectedPiece)
+    assert len(result) == len(movement)
+    for move in result:
+        assert move in movement
+
+
+def test_capture_multiple():
+    boardStart = [
+        "#r#r#r# ",
+        "r#r#r#r#",
+        "#r#r# #r",
+        " # #r# #",
+        "# #w# # ",
+        "w# #w#w#",
+        "#w#w#w#w",
+        "w#w#w#w#"
+    ]
+    selectedPiece = (3, 4)
+    movement = [[(3, 4), (4, 3), (5, 2), (6, 1), (7, 0)]]
+    board = Board(boardStart)
+    result = board.getLegalMoves(selectedPiece)
+    assert len(result) == len(movement)
+    for move in result:
+        assert move in movement
+
+
+def test_capture_multiple_enforce():
+    boardStart = [
+        "#r#r#r# ",
+        "r#r#r#r#",
+        "# #r# #r",
+        " #r#r# #",
+        "# #w# # ",
+        "w# #w#w#",
+        "#w#w#w#w",
+        "w#w#w#w#"
+    ]
+    selectedPiece = (3, 4)
+    movement = [[(3, 4), (4, 3), (5, 2), (6, 1), (7, 0)]]
+    board = Board(boardStart)
+    result = board.getLegalMoves(selectedPiece)
+    assert len(result) == len(movement)
+    for move in result:
+        assert move in movement
+
+
+def test_capture_multiple_crosspaths():
+    boardStart = [
+        "#r# #r# ",
+        "r#r#r#r#",
+        "# #r# #r",
+        " #r#r# #",
+        "# #w# # ",
+        "w# #w#w#",
+        "#w#w#w#w",
+        "w#w#w#w#"
+    ]
+    selectedPiece = (3, 4)
+    movement = [
+        [(3, 4), (4, 3), (5, 2), (4, 1),
+         (3, 0), (2, 1), (1, 2), (2, 3), (3, 4)],
+        [(3, 4), (2, 3), (1, 2), (2, 1),
+         (3, 0), (4, 1), (5, 2), (4, 3), (3, 4)],
+        [(3, 4), (2, 3), (1, 2), (2, 1),
+         (3, 0), (4, 1), (5, 2), (6, 1), (7, 0)]
+    ]
+    board = Board(boardStart)
+    result = board.getLegalMoves(selectedPiece)
+    assert len(result) == len(movement)
+    for move in result:
+        assert move in movement
+
+
+def test_king_move():
+    boardStart = [
+        "# # # #r",
+        " # # # #",
+        "# # # # ",
+        " # # # #",
+        "# #W# # ",
+        " # # # #",
+        "#w# # # ",
+        " # # # #"
+    ]
+    selectedPiece = (3, 4)
+    movement = [
+        [(3, 4), (2, 5)],
+        [(3, 4), (4, 5)],
+        [(3, 4), (4, 5), (5, 6)],
+        [(3, 4), (4, 5), (5, 6), (6, 7)],
+        [(3, 4), (2, 3)],
+        [(3, 4), (2, 3), (1, 2)],
+        [(3, 4), (2, 3), (1, 2), (0, 1)],
+        [(3, 4), (4, 3)],
+        [(3, 4), (4, 3), (5, 2)],
+        [(3, 4), (4, 3), (5, 2), (6, 1)]
+    ]
+    board = Board(boardStart)
+    result = board.getLegalMoves(selectedPiece)
+    assert len(result) == len(movement)
+    for move in result:
+        assert move in movement
+
+
+def test_king_capture():
+    boardStart = [
+        "#R#R#R# ",
+        " # # # #",
+        "# # #R# ",
+        " # # # #",
+        "# #W#W# ",
+        " # # # #",
+        "# # # # ",
+        " # #W#W#"
+    ]
+    selectedPiece = (3, 4)
+    movement = [[(3, 4), (4, 3), (5, 2), (6, 1)]]
+    board = Board(boardStart)
+    result = board.getLegalMoves(selectedPiece)
+    assert len(result) == len(movement)
+    for move in result:
+        assert move in movement
