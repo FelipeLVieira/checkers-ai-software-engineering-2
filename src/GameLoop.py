@@ -3,6 +3,7 @@ import pygame
 from Graphics import Graphics
 from Board import *
 from Constants import *
+import AI
 
 # Using 'import numpy as np' to have a better view of printed array
 
@@ -17,6 +18,7 @@ class GameLoop:
 
         self.graphics = Graphics()
         self.board = Board()
+        self.ai = AI.AIPlayer(self.board)
 
         # Boolean screen switchers
         self.startScreen = False
@@ -38,55 +40,62 @@ class GameLoop:
         return
 
     def mainGameEventLoop(self):
-        self.board.mousePos = self.board.boardCoords(pygame.mouse.get_pos(),
+        # Remove the True below afterwards...
+        if True or self.board.playerTurn = WHITE:
+            self.board.mousePos = self.board.boardCoords(pygame.mouse.get_pos(),
                                                      self.graphics.squareSize)  # what square is the mouse in?
 
-        for event in pygame.event.get():
-            # ESC quits the game (just for now)... (by the way, closing the window works too because of pygame.QUIT)
-            if (event.type == pygame.QUIT) or (
-                    event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
-                self.terminateGame()
+            for event in pygame.event.get():
+                # ESC quits the game (just for now)... (by the way, closing the window works too because of pygame.QUIT)
+                if (event.type == pygame.QUIT) or (
+                        event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+                    self.terminateGame()
 
-            # Click event handling
-            if event.type == pygame.MOUSEBUTTONDOWN and self.board.getDrawInformation() is False:
+                # Click event handling
+                if event.type == pygame.MOUSEBUTTONDOWN and self.board.getDrawInformation() is False:
 
-                self.board.mouseClick = self.board.mousePos
+                    self.board.mouseClick = self.board.mousePos
 
-                print("mouseClick x", self.board.mouseClick[0], " y ",
-                      self.board.mouseClick[1])
+                    print("mouseClick x", self.board.mouseClick[0], " y ",
+                            self.board.mouseClick[1])
 
-                print("Player color", self.board.playerTurn)
+                    print("Player color", self.board.playerTurn)
 
-                # Select piece and get legal moves
-                if self.board.location(
-                        self.board.mouseClick).occupant is not None \
-                        and self.board.location(
-                    self.board.mouseClick).occupant.color == self.board.playerTurn and self.board.finishMoveExec:
+                    # Select piece and get legal moves
+                    if self.board.location(
+                            self.board.mouseClick).occupant is not None \
+                            and self.board.location(
+                        self.board.mouseClick).occupant.color == self.board.playerTurn and self.board.finishMoveExec:
 
-                    self.board.selectedPieceCoordinate = self.board.mouseClick
+                        self.board.selectedPieceCoordinate = self.board.mouseClick
 
-                    print("Piece selected!")
+                        print("Piece selected!")
 
-                    # Get legal moves and filter for the longest moves only
-                    self.board.legalMoveSet = self.board.getLegalMoves(
-                        self.board.selectedPieceCoordinate)
+                        # Get legal moves and filter for the longest moves only
+                        self.board.legalMoveSet = self.board.getLegalMoves(
+                                self.board.selectedPieceCoordinate)
 
-                    print("self.board.legalMoveSet ",
-                          self.board.legalMoveSet)
+                        print("self.board.legalMoveSet ",
+                                self.board.legalMoveSet)
 
                 # Move piece to another position
-                elif self.board.legalMoveSet and self.board.validClick():
+                    elif self.board.legalMoveSet and self.board.validClick():
 
-                    print("self.board.legalMoveSet", self.board.legalMoveSet)
-                    print("self.board.executeMove()")
-                    self.board.executeMove()
-
-                    if self.board.finishMoveExec:
-                        self.board.legalMoveSet = None
-                        self.board.selectedPieceCoordinate = None
-                        self.board.playerLegalMoves = None
-                        self.board.mouseClick = None
-                        self.endTurn()
+                        print("self.board.legalMoveSet", self.board.legalMoveSet)
+                        print("self.board.executeMove()")
+                        self.board.executeMove()
+                        
+                        """--------------------------------------------+
+                        | VitinhoCarneiro: The below code should be in |
+                        | Board... avoid altering Board parameters     |
+                        | outside of Board...                          |
+                        """--------------------------------------------+
+                        if self.board.finishMoveExec:
+                            self.board.legalMoveSet = None
+                            self.board.selectedPieceCoordinate = None
+                            self.board.playerLegalMoves = None
+                            self.board.mouseClick = None
+                            self.endTurn()
 
     """-----------------+
     |  Screen Updaters  |
