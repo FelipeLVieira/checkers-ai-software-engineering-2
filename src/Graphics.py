@@ -63,6 +63,7 @@ class Graphics:
         self.endOverlay = Graphic("../assets/images/overlay-end.png")
         self.endOverlayButtonHover = Graphic(
                 "../assets/images/highlight-end_overlay-button-hover.png")
+        self.pieceWithLegalMovesMarkerPath = "../assets/images/highlight-piece_with_legal_moves-f*"
 
         # Coordinates
         self.pauseButtonCoords = (877, 619)
@@ -185,6 +186,12 @@ class Graphics:
             for j in range(8):
                 self.selMoveAnimations[-1].append(None)
         
+        self.piecesWithLegalMovesAnimations = []
+        for i in range(8):
+            self.piecesWithLegalMovesAnimations.append([])
+            for j in range(8):
+                self.piecesWithLegalMovesAnimations[-1].append(None)
+
         self.movingPiece = None
         self.maskedPiece = None
 
@@ -263,6 +270,7 @@ class Graphics:
         if not gamePaused and gameEnded is None:
             self.drawHoverPiece(hoverPosition)
         self.updateAndDrawPossibleMoves(gamePaused)
+        self.updateAndDrawPiecesWithLegalMovesAnim(gamePaused)
         self.updateAndDrawMovingPiece(gamePaused, self.timeDelta)
         if not gamePaused: 
             self.drawHoverButton(hoverButton)
@@ -326,6 +334,24 @@ class Graphics:
                         self.selMoveAnimations[x][y].update()
                     self.selMoveAnimations[x][y].blitAt(self.screen, 
                             self.mapToScrCoords((x, y)))
+
+    def showPiecesWithLegalMoves(self, pieces):
+        for p in pieces:
+            self.piecesWithLegalMovesAnimations[p[0]][p[1]] = AnimatedGraphic(
+                    self.pieceWithLegalMovesMarkerPath, 1)
+
+    def updateAndDrawPiecesWithLegalMovesAnim(self, gamePaused):
+        for x in range(8):
+            for y in range(8):
+                p = self.piecesWithLegalMovesAnimations[x][y]
+                if p is not None:
+                    if p.stopped:
+                        self.piecesWithLegalMovesAnimations[x][y] = None
+                        continue
+                    if not gamePaused: 
+                        self.piecesWithLegalMovesAnimations[x][y].update()
+                    self.piecesWithLegalMovesAnimations[x][y].blitAt(
+                            self.screen, self.mapToScrCoords((x, y)))
 
     def updateAndDrawMovingPiece(self, gamePaused, timeDelta):
         if isinstance(self.movingPiece, tuple):
@@ -466,6 +492,7 @@ class AnimatedGraphic(Graphic):
     frameDelayCounter = None
     frame = None
     looping = None
+    stopped = None
 
     def __init__(self, path, frameDelay, loop=False, delayStart=0):
         paths = sorted(glob.glob(path))
@@ -475,6 +502,7 @@ class AnimatedGraphic(Graphic):
         self.frameDelayCounter = frameDelay + delayStart
         self.frame = 0
         self.looping = loop
+        self.stopped = False
         Graphic.__init__(self, paths[0])
 
     def update(self):
@@ -488,6 +516,8 @@ class AnimatedGraphic(Graphic):
                     self.frame = 0
                 if self.frame < len(self.surfaces):
                     self.surface = self.surfaces[self.frame]
+        else:
+            self.stopped = True
 
 
 class Motion:
@@ -698,6 +728,9 @@ def main():
     while True:
         if (random.random() < 0.1):
             hoverPos = (int(random.random() * 8), int(random.random() * 8))
+        if (random.random() < 0.1):
+            y = int(random.random() * 3) + 5
+            graphics.showPiecesWithLegalMoves([(int(random.random() * 4) * 2 + ((y + 1) & 1), y)])
         timeDelta = graphics.updateAndDraw(hoverPos, (2, 5), 
                 button, paused, True, ENDGAME_LOSE)
         if (not path and len(moveList) > 0 and random.random() < 0.04):
