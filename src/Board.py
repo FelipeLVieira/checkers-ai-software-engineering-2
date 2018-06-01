@@ -231,68 +231,68 @@ class Board:
         higher-ranked moves possible."""
         # Dereference the coordinates to get the square object
         square = derefer(self.matrix, pieceCoords)
-
-        if square.occupant.king:
+        
+        if square.occp.king:
             return self.theoreticalKingLegalMoves(pieceCoords)
         moveList = []
-
+        
         deltaDict = {WHITE: [(-1, -1), (1, -1)], RED: [(-1, 1), (1, 1)]}
-
-        for delta in deltaDict[square.occupant.color]:
-            # print("BoardLogic.py::Board:theoreticalLegalMoves: Evaluating delta {}".format(delta))
+        allDeltas = [(-1, -1), (1, -1), (-1, 1), (1, 1)]
+        
+        for delta in allDeltas:
+            #print("BoardLogic.py::Board:theoreticalLegalMoves: Evaluating delta {}".format(delta))
             deltaCoord = tplsum(pieceCoords, delta)
             # Verify that the value is in bounds
             if not bounded(deltaCoord, 0, 7): continue
-
+            
             deltaSquare = derefer(self.matrix, deltaCoord)
             # Check if the delta square is occupied
-            if deltaSquare.occupant:
+            if deltaSquare.occp:
                 # If the piece in the delta square is the same color,
                 # the move is impossible.
-                if deltaSquare.occupant.color is square.occupant.color: continue
-
+                if deltaSquare.occp.color is square.occp.color: continue
+                
                 # Otherwise, it's possibly a capture move. Deal with it.
-                for move in self.possibleCaptures(square.occupant.color,
-                                                  pieceCoords, delta,
-                                                  pieceCoords):
+                for move in self.possibleCaptures(square.occp.color, 
+                        pieceCoords, delta, pieceCoords):
                     moveList.append(move)
-                    # print("Evaluated capture move {} for delta {}.".format(move, delta))
-
-            else:
-                # It's a valid movement.
+                    #print("Evaluated capture move {} for delta {}.".format(move, delta))
+            
+            elif delta in deltaDict[square.occp.color]:
+                # Given the square is free and is in "front" of the piece,
+                # it's a valid movement.
                 moveList.append([pieceCoords, deltaCoord])
-        # print("Theoretical legal moves for {}:".format(pieceCoords))
-        # for move in moveList: print(move)
+        #print("Theoretical legal moves for {}:".format(pieceCoords))
+        #for move in moveList: print(move)
         return moveList
-
+    
     """--------------------------------------------------------------------"""
-
+    
     def theoreticalKingLegalMoves(self, pieceCoords):
         """Returns the possible moves for a king if there were no
         higher-ranked moves possible."""
         # Dereference the coordinates to get the square object
         square = derefer(self.matrix, pieceCoords)
         moveList = []
-
+        
         deltas = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
-
-        newPieceCoords = pieceCoords
+        
         for delta in deltas:
+            newPieceCoords = pieceCoords
             deltaCoord = tplsum(pieceCoords, delta)
             # Check all possible chain positions in bounds
             currentMove = [pieceCoords]
             while bounded(deltaCoord, 0, 7):
                 deltaSquare = derefer(self.matrix, deltaCoord)
                 # Check if the delta square is occupied
-                if deltaSquare.occupant:
+                if deltaSquare.occp is not None:
                     # If the piece in the delta square is the same color,
                     # the move is impossible. Break the chain.
-                    if deltaSquare.occupant.color is square.occupant.color: break
-
+                    if deltaSquare.occp.color is square.occp.color: break
+                    
                     # Otherwise, it's possibly a capture move. Deal with it.
-                    for move in self.possibleCaptures(square.occupant.color,
-                                                      newPieceCoords, delta,
-                                                      pieceCoords):
+                    for move in self.possibleCaptures(square.occp.color, 
+                            newPieceCoords, delta, pieceCoords):
                         fullMove = copy.deepcopy(currentMove)[:-1]
                         fullMove.extend(move)
                         moveList.append(fullMove)
@@ -305,9 +305,9 @@ class Board:
                     moveList.append(currentMoveCopy)
                 newPieceCoords = deltaCoord
                 deltaCoord = tplsum(deltaCoord, delta)
-
-        # print("Theoretical legal moves for {}:".format(pieceCoords))
-        # for move in moveList: print(move)
+        
+        #print("Theoretical legal moves for {}:".format(pieceCoords))
+        #for move in moveList: print(move)
         return moveList
 
     """--------------------------------------------------------------------"""
