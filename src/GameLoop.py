@@ -1,9 +1,7 @@
 import pygame, sys
-from Graphics import Graphics, GraphicsBackend
+from Graphics import Graphics
 from Board import *
 from Constants import *
-from AI import AIPlayer
-
 from pygame.locals import *
 
 # Using 'import numpy as np' to have a better view of printed array
@@ -15,10 +13,11 @@ pygame.font.init()  # Victor: Just to make it clear, we won't use system fonts i
 
 
 class GameLoop:
-    def __init__(self, graphicsBackend, difficultyLevel, playerName):
+    def __init__(self):
+
+        self.graphics = Graphics()
         self.board = Board()
-        self.graphics = Graphics(graphicsBackend, self.board, playerName)
-        self.aiPlayer = AIPlayer(difficultyLevel["easy"], self.board, RED)
+
         self.done = False
 
         self.mousePos = None
@@ -78,8 +77,8 @@ class GameLoop:
 
                 # Move piece to another position
                 elif self.board.location(self.board.mouseClick).occupant is None and \
-                                self.board.location(self.board.mouseClick) \
-                                is not self.board.location(self.board.selectedPieceCoordinate):
+                        self.board.location(self.board.mouseClick) \
+                        is not self.board.location(self.board.selectedPieceCoordinate):
 
                     print("execute move")
                     executed = self.board.executeMove()
@@ -103,8 +102,7 @@ class GameLoop:
         return
 
     def updateMainGame(self):
-        self.graphics.updateMainGameDisplay(self.board, self.board.selectedPieceMoves,
-                                            self.board.selectedPieceCoordinate, self.board.playerTurn)
+        self.graphics.updateMainGameDisplay(self.board, self.board.selectedPieceMoves, self.board.selectedPieceCoordinate)
         pygame.display.flip()
 
     """------------------+
@@ -151,10 +149,7 @@ class GameLoop:
 
 
 def main():
-    graphicsBackend = GraphicsBackend()
-    difficultyLevel = {"superEasy": 0, "easy": 1, "medium": 2, "hard": 3, "superHard": 4}
-    playerName = 'Unknown'
-    game = GameLoop(graphicsBackend, difficultyLevel, playerName)
+    game = GameLoop()
     game.main()
 
 

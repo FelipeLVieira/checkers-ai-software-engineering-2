@@ -18,9 +18,7 @@ class GraphicsBackend:
 
         self.windowWidth = 1280
         self.windowHeight = 720
-        self.boardSize = 655
-        self.squareSize = int(round(self.boardSize / 8))
-        self.pieceSize = int(round(self.squareSize / 2))
+
         pygame.init()
         pygame.font.init()
         self.screen = pygame.display.set_mode((self.windowWidth, self.windowHeight))
@@ -36,9 +34,6 @@ class Graphics:
         self.windowWidth = graphicsBackend.windowWidth
         self.windowHeight = graphicsBackend.windowHeight
         self.screen = graphicsBackend.screen
-        self.boardSize = graphicsBackend.boardSize
-        self.squareSize = graphicsBackend.squareSize
-        self.pieceSize = graphicsBackend.pieceSize
 
         self.board = copy.deepcopy(board)
         self.auxBoard = None
@@ -195,25 +190,9 @@ class Graphics:
 
     def setupWindow(self):
         pygame.init()
-        pygame.display.set_caption(WINDOW_CAPTION)
+        pygame.display.set_caption(self.caption)
 
-    def updateMainGameDisplay(self, board, legalMovements, selectedPiece, playerTurn):
-        """
-        This updates the current display.
-        """
-        self.background.blitAt(self.screen, (0, 0))
 
-        board.drawBoardPieces(self.screen, self.redPiece, self.whitePiece)
-        board.highlightLegalMoves(legalMovements, selectedPiece, self.screen, self.redPieceHover, self.whitePieceHover, playerTurn)
-        board.drawBoardKings(self.screen, self.kingWhitePiece, self.kingRedPiece)
-
-        """
-        TODO verificar o que self.message faz!
-        if self.message:
-            self.screen.blit(self.text_surface_obj, self.text_rect_obj)
-        """
-        pygame.display.update()
-        self.clock.tick(self.fps)
 
 
     def vanishPiece(self, event):
