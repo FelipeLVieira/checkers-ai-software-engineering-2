@@ -218,16 +218,16 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
 
 
 minimaxHyperParameters = [
-        {"heuristicFunc": AI.heuristic, "depth"=5, stubbornnessTable=None,
-            randomOffset=0.05},
-        {"heuristicFunc": AI.heuristic, "depth"=5, stubbornnessTable=None,
-            randomOffset=0.05},
-        {"heuristicFunc": AI.heuristic, "depth"=5, stubbornnessTable=None,
-            randomOffset=0.05},
-        {"heuristicFunc": AI.heuristic, "depth"=5, stubbornnessTable=None,
-            randomOffset=0.05},
-        {"heuristicFunc": AI.heuristic, "depth"=5, stubbornnessTable=None,
-            randomOffset=0.05}
+        {"heuristicFunc": heuristic, "depth": 5, "stubbornnessTable": None,
+            "randomOffset": 0.05},
+        {"heuristicFunc": heuristic, "depth": 5, "stubbornnessTable": None,
+            "randomOffset": 0.05},
+        {"heuristicFunc": heuristic, "depth": 5, "stubbornnessTable": None,
+            "randomOffset": 0.05},
+        {"heuristicFunc": heuristic, "depth": 5, "stubbornnessTable": None,
+            "randomOffset": 0.05},
+        {"heuristicFunc": heuristic, "depth": 5, "stubbornnessTable": None,
+            "randomOffset": 0.05}
         ]
 
 class AIPlayer:
@@ -281,12 +281,12 @@ class AIPlayer:
                 ["randomOffset"]
 
 
-    def isThinking():
-        return (self.minimaxThread is threading.thread and
+    def isThinking(self):
+        return (self.minimaxThread is threading.Thread and
                 self.minimaxThread.is_alive())
 
 
-    def play(board):
+    def play(self):
         if self.isThinking():
             raise RuntimeError("AI.py::AIPlayer:play(): An attempt to call the AI function was made while it is already running.")
         self.waitTimer = self.waitTime
@@ -294,16 +294,16 @@ class AIPlayer:
         self.minimaxThread = threading.Thread(
                 target=minimaxAB, args=(self.board, self.depth, self.color, 
                         self.minimaxResult),
-                kwargs={heuristicFunc: self.heuristicFunc,
-                        stubbornnessTable: self.stubbornnessTable,
-                        randomOffset: self.randomOffset})
+                kwargs={"heuristicFunc": self.heuristicFunc,
+                        "stubbornnessTable": self.stubbornnessTable,
+                        "randomOffset": self.randomOffset})
         self.minimaxThread.start()
     
 
-    def updateAndCheckCompletion(timeDelta):
+    def updateAndCheckCompletion(self, timeDelta):
         self.waitTimer -= timeDelta
         if not (self.waitTimer > 0 or self.isThinking()):
-            return minimaxResult
+            return self.minimaxResult
         return False
 
 

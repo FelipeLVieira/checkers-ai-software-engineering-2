@@ -232,7 +232,7 @@ class Board:
         # Dereference the coordinates to get the square object
         square = derefer(self.matrix, pieceCoords)
         
-        if square.occp.king:
+        if square.occupant.king:
             return self.theoreticalKingLegalMoves(pieceCoords)
         moveList = []
         
@@ -247,18 +247,18 @@ class Board:
             
             deltaSquare = derefer(self.matrix, deltaCoord)
             # Check if the delta square is occupied
-            if deltaSquare.occp:
+            if deltaSquare.occupant:
                 # If the piece in the delta square is the same color,
                 # the move is impossible.
-                if deltaSquare.occp.color is square.occp.color: continue
+                if deltaSquare.occupant.color is square.occupant.color: continue
                 
                 # Otherwise, it's possibly a capture move. Deal with it.
-                for move in self.possibleCaptures(square.occp.color, 
+                for move in self.possibleCaptures(square.occupant.color, 
                         pieceCoords, delta, pieceCoords):
                     moveList.append(move)
                     #print("Evaluated capture move {} for delta {}.".format(move, delta))
             
-            elif delta in deltaDict[square.occp.color]:
+            elif delta in deltaDict[square.occupant.color]:
                 # Given the square is free and is in "front" of the piece,
                 # it's a valid movement.
                 moveList.append([pieceCoords, deltaCoord])
@@ -285,13 +285,13 @@ class Board:
             while bounded(deltaCoord, 0, 7):
                 deltaSquare = derefer(self.matrix, deltaCoord)
                 # Check if the delta square is occupied
-                if deltaSquare.occp is not None:
+                if deltaSquare.occupant is not None:
                     # If the piece in the delta square is the same color,
                     # the move is impossible. Break the chain.
-                    if deltaSquare.occp.color is square.occp.color: break
+                    if deltaSquare.occupant.color is square.occupant.color: break
                     
                     # Otherwise, it's possibly a capture move. Deal with it.
-                    for move in self.possibleCaptures(square.occp.color, 
+                    for move in self.possibleCaptures(square.occupant.color, 
                             newPieceCoords, delta, pieceCoords):
                         fullMove = copy.deepcopy(currentMove)[:-1]
                         fullMove.extend(move)

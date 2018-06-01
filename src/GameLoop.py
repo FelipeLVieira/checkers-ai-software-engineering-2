@@ -3,7 +3,7 @@ import pygame
 from Graphics import Graphics
 from Board import *
 from Constants import *
-import AI
+from AI import AIPlayer
 
 # Using 'import numpy as np' to have a better view of printed array
 
@@ -18,7 +18,7 @@ class GameLoop:
 
         self.graphics = Graphics()
         self.board = Board()
-        self.ai = AI.AIPlayer(self.board)
+        self.ai = AIPlayer(self.board)
 
         # Boolean screen switchers
         self.startScreen = False
@@ -41,7 +41,8 @@ class GameLoop:
 
     def mainGameEventLoop(self):
         # Remove the True below afterwards...
-        if True or self.board.playerTurn = WHITE:
+        #if self.board.playerTurn == WHITE:
+        if True:
             self.board.mousePos = self.board.boardCoords(pygame.mouse.get_pos(),
                                                      self.graphics.squareSize)  # what square is the mouse in?
 
@@ -89,13 +90,18 @@ class GameLoop:
                         | VitinhoCarneiro: The below code should be in |
                         | Board... avoid altering Board parameters     |
                         | outside of Board...                          |
-                        """--------------------------------------------+
+                        +--------------------------------------------"""
                         if self.board.finishMoveExec:
                             self.board.legalMoveSet = None
                             self.board.selectedPieceCoordinate = None
                             self.board.playerLegalMoves = None
                             self.board.mouseClick = None
                             self.endTurn()
+        else:
+            aiResult = self.ai.updateAndCheckCompletion(1/30.)
+            if aiResult is not False:
+                self.board.executeMove(aiResult)
+                self.endTurn()
 
     """-----------------+
     |  Screen Updaters  |
@@ -128,6 +134,7 @@ class GameLoop:
 
         if self.board.playerTurn is WHITE:
             self.board.playerTurn = RED
+            #self.ai.play()
         else:
             self.board.playerTurn = WHITE
 
