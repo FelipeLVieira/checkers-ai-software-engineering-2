@@ -261,8 +261,8 @@ class Graphics:
         self.movingPiece = None
         self.board = self.auxBoard
 
-    def updateAndDraw(self, hoverPosition, selectedPiece, hoverButton, gamePaused,
-            isPlayerTurn, gameEnded):
+    def updateAndDraw(self, hoverPosition, selectedPiece, hoverButton, 
+            gamePaused, turnNumber, isPlayerTurn, gameEnded):
         self.timeDelta = self.clock.tick(self.fps) / 1000.
         self.background.blitAt(self.screen, (0, 0))
         self.drawBoardPieces()
@@ -274,7 +274,7 @@ class Graphics:
         self.updateAndDrawMovingPiece(gamePaused, self.timeDelta)
         if not gamePaused: 
             self.drawHoverButton(hoverButton)
-        self.updateAndDrawSidebarText(isPlayerTurn)
+        self.updateAndDrawSidebarText(isPlayerTurn, turnNumber)
         if gameEnded is not None: 
             self.updateAndDrawEndOverlay(self.timeDelta, hoverButton, 
                     gameEnded)
@@ -400,10 +400,8 @@ class Graphics:
         elif hoverButton in self.endOverlayButtonsRelCoords: pass
         else: raise RuntimeError("Graphics.py::Graphics:drawHoverPiece: Invalid UI button `{}'".format(hoverButton))
 
-    def updateAndDrawSidebarText(self, isPlayerTurn):
+    def updateAndDrawSidebarText(self, isPlayerTurn, turnNumber):
         if isPlayerTurn:
-            #turnNumber = self.board.turnNumber
-            turnNumber = 1
             self.textObjects["turnText"].update(TURNSTRING.format(turnNumber))
         else:
             self.textObjects["turnText"].update(WAITSTRING)

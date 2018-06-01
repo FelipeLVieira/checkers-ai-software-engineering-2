@@ -20,7 +20,10 @@ Durante a vez do jogador, o game loop deverá:
 - Se estiver sobre um botão, determinar qual é o botão
 
 #### - Capturar cliques do mouse
-- Se o usuário clicar sobre uma peça, obter os possíveis movimentos dela para serem exibidos na tela
+- Se o usuário clicar sobre uma peça, obter os possíveis movimentos dela para serem exibidos na tela.
+
+> Se não houverem possíveis movimentos para aquela peça, obter da Board a lista de quais peças têm possíveis movimentos e passar para a classe de Gráficos executando a função correspondente (`showPiecesWithLegalMoves`).
+
 - Se o usuário clicar sobre um possível movimento: 
 
 > 1. Executar o movimento
