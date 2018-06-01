@@ -75,25 +75,18 @@ class GameLoop:
                           self.board.legalMoveSet)
 
                 # Move piece to another position
-                elif self.board.legalMoveSet:
-                    validClick = False
-                    for move in self.board.legalMoveSet:
-                        for coord in move:
-                            if coord == self.board.mouseClick and not validClick \
-                                    and not self.board.location(self.board.mouseClick).occupant:
-                                validClick = True
+                elif self.board.legalMoveSet and self.board.validClick():
 
-                    if validClick:
-                        print("self.board.legalMoveSet", self.board.legalMoveSet)
-                        print("self.board.executeMove()")
-                        self.board.executeMove()
+                    print("self.board.legalMoveSet", self.board.legalMoveSet)
+                    print("self.board.executeMove()")
+                    self.board.executeMove()
 
-                        if self.board.finishMoveExec:
-                            self.board.legalMoveSet = None
-                            self.board.selectedPieceCoordinate = None
-                            self.board.playerLegalMoves = None
-                            self.board.mouseClick = None
-                            self.endTurn()
+                    if self.board.finishMoveExec:
+                        self.board.legalMoveSet = None
+                        self.board.selectedPieceCoordinate = None
+                        self.board.playerLegalMoves = None
+                        self.board.mouseClick = None
+                        self.endTurn()
 
     """-----------------+
     |  Screen Updaters  |

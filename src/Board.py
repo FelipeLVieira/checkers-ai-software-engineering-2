@@ -477,8 +477,6 @@ class Board:
         if self.legalMoveSet is None:
             return
 
-        print("executeMove() self.legalMoveSet", self.legalMoveSet)
-
         self.showCoordinates()
 
         self.finishMoveExec = False
@@ -494,23 +492,25 @@ class Board:
             else:
                 break
 
-        print("hasJumps", hasJumps)
+        # If the legalMoveSet has no pieces to capture, return as it is
         if not hasJumps:
             self.movePiece(self.selectedPieceCoordinate, self.mouseClick)
             self.finishMoveExec = True
             return
 
-        print("self.selectedPieceCoordinate", self.selectedPieceCoordinate)
-        print("self.mouseClick", self.mouseClick)
+        # Move the selected piece
         self.movePiece(self.selectedPieceCoordinate, self.mouseClick)
+
+        # Updates selectedPieceCoordinate position
         self.selectedPieceCoordinate = self.mouseClick
+
+        # Refine the legalMoveSet and gets the captured piece coordinate
         jumpedPiece = self.filterLegalMoves()
-        print("jumpedPiece", jumpedPiece)
+
+        # Remove the captured piece
         self.removePiece(jumpedPiece)
 
-        print("self.legalMoveset", self.legalMoveSet)
         for move in self.legalMoveSet:
-            print("len(move)", len(move))
             if len(move) == 1:
                 self.finishMoveExec = True
 
@@ -521,18 +521,13 @@ class Board:
         auxPartialFiltered = []
         pieceJumpedCoord = None
         pieceToBeRemovedCoord = None
-        print(self.legalMoveSet)
         for move in self.legalMoveSet:
             i = 0
             while i < len(move):
                 nextSquare = move[i]
-                print("while nextSquare and self.selectedPieceCoordinate",
-                      nextSquare, self.selectedPieceCoordinate)
-                print("self.location(nextSquare).occupant", self.location(nextSquare).occupant)
                 if self.location(nextSquare).occupant:
                     if self.location(
                             nextSquare).occupant.color != self.playerTurn:
-                        print("nexSquare inside first if", nextSquare)
                         pieceJumpedCoord = nextSquare
 
                 if self.location(nextSquare).occupant:
@@ -542,10 +537,6 @@ class Board:
                                 self.mouseClick):
                             pieceToBeRemovedCoord = pieceJumpedCoord
                             auxPartialFiltered.append(move)
-                            print("pieceToBeRemovedCoord",
-                                  pieceToBeRemovedCoord)
-                            print("pieceJumpedCoord",
-                                  pieceJumpedCoord)
                             pieceJumpedCoord = None
                             break
                 i += 1
@@ -566,6 +557,41 @@ class Board:
 
         self.legalMoveSet = filteredLegalMoves
         return pieceToBeRemovedCoord
+
+    def validClick(self):
+        firstJump = False
+        secondJump = False
+        validSquares = []
+        for move in self.legalMoveSet:
+            firstJump = False
+            secondJump = False
+            i = 0
+            while i < len(move) and not secondJump:
+                print(i)
+                nextSquare = move[i]
+                if self.location(nextSquare).occupant:
+                    if self.location(
+                            nextSquare).occupant.color != self.playerTurn:
+                        firstJump = True
+                        i += 1
+                        continue
+                if firstJump and not secondJump and not self.location(nextSquare).occupant:
+                    validSquares.append(nextSquare)
+                    i += 1
+                    continue
+                if firstJump and not secondJump and self.location(nextSquare).occupant:
+                    secondJump = True
+                i += 1
+            if not firstJump:
+                for move in self.legalMoveSet:
+                    for coord in move:
+                        validSquares.append(coord)
+
+        print("out loop")
+
+        if self.mouseClick in validSquares:
+            return True
+        return False
 
     def getMovesEndSquare(self):
         # Save the end square of legalMovements
