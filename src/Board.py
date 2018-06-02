@@ -473,12 +473,21 @@ class Board:
                 for coord in move:
                     print("(", coord[0], coord[1], ") ")
 
-    def executeMove(self):
+    def executeMove(self, seletedMove=None):
         if self.legalMoveSet is None:
             return
 
-        self.showCoordinates()
+        # Execute a complete move based on a move parameter
+        if seletedMove:
+            for coord in seletedMove:
+                if self.location(coord).occupant:
+                    if self.location(coord).occupant.color != self.playerTurn:
+                        self.removePiece(coord)
+            self.movePiece(seletedMove[0],
+                           seletedMove[-1])
+            return
 
+        # Logic for handle player multiple jumps
         self.finishMoveExec = False
 
         hasJumps = False
@@ -558,7 +567,7 @@ class Board:
         self.legalMoveSet = filteredLegalMoves
         return pieceToBeRemovedCoord
 
-    def validClick(self):
+    def validTargetCoordinate(self):
         firstJump = False
         secondJump = False
         validSquares = []
@@ -798,7 +807,10 @@ class Board:
         return (pixelCoordinate[0] / squareSize,
                 pixelCoordinate[1] / squareSize)
 
-    def piecePositionToPixel(self, boardPiece):
+    def clearCachedVariables(self):
+        self.legalMoveSet = None
+        self.mouseClick = None
+        self.selectedPieceCoordinate = None
         return True
 
     """---------------------------------------------+

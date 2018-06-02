@@ -80,22 +80,12 @@ class GameLoop:
                                 self.board.legalMoveSet)
 
                 # Move piece to another position
-                    elif self.board.legalMoveSet and self.board.validClick():
+                    elif self.board.legalMoveSet and self.board.validTargetCoordinate():
 
-                        print("self.board.legalMoveSet", self.board.legalMoveSet)
-                        print("self.board.executeMove()")
                         self.board.executeMove()
-                        
-                        """--------------------------------------------+
-                        | VitinhoCarneiro: The below code should be in |
-                        | Board... avoid altering Board parameters     |
-                        | outside of Board...                          |
-                        +--------------------------------------------"""
+
                         if self.board.finishMoveExec:
-                            self.board.legalMoveSet = None
-                            self.board.selectedPieceCoordinate = None
-                            self.board.playerLegalMoves = None
-                            self.board.mouseClick = None
+                            self.board.clearCachedVariables()
                             self.endTurn()
         else:
             aiResult = self.ai.updateAndCheckCompletion(1/30.)
