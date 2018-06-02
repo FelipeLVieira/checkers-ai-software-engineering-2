@@ -254,8 +254,8 @@ class Board:
 
                 # Otherwise, it's possibly a capture move. Deal with it.
                 for move in self.possibleCaptures(square.occupant.color,
-                                                  pieceCoords, delta,
-                                                  pieceCoords):
+                                              pieceCoords, delta,
+                                              pieceCoords):
                     moveList.append(move)
                     # print("Evaluated capture move {} for delta {}.".format(move, delta))
 
@@ -269,14 +269,19 @@ class Board:
 
     """--------------------------------------------------------------------"""
 
-    def theoreticalKingLegalMoves(self, pieceCoords):
+    def theoreticalKingLegalMoves(self, pieceCoords, alreadyEaten=False, delta=None, startColor=None):
         """Returns the possible moves for a king if there were no
         higher-ranked moves possible."""
         # Dereference the coordinates to get the square object
         square = derefer(self.matrix, pieceCoords)
+        if startColor is None:
+            startColor = square.occupant.color
         moveList = []
-
-        deltas = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
+        
+        if delta:
+            deltas = [delta]
+        else:
+            deltas = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
 
         for delta in deltas:
             newPieceCoords = pieceCoords
@@ -289,15 +294,26 @@ class Board:
                 if deltaSquare.occupant is not None:
                     # If the piece in the delta square is the same color,
                     # the move is impossible. Break the chain.
-                    if deltaSquare.occupant.color is square.occupant.color: break
+                    if deltaSquare.occupant.color is startColor: break
 
                     # Otherwise, it's possibly a capture move. Deal with it.
-                    for move in self.possibleCaptures(square.occupant.color,
-                                                      newPieceCoords, delta,
-                                                      pieceCoords):
-                        fullMove = copy.deepcopy(currentMove)[:-1]
-                        fullMove.extend(move)
-                        moveList.append(fullMove)
+                    if not alreadyEaten:
+                        for move in self.possibleCaptures(startColor,
+                                                          newPieceCoords, delta,
+                                                          pieceCoords):
+                            fullMove = copy.deepcopy(currentMove)[:-1]
+                            fullMove.extend(move)
+                            moveList.append(fullMove)
+                            extraJumps = self.theoreticalKingLegalMoves(
+                                    fullMove[-1], alreadyEaten=True, 
+                                    delta=delta, startColor=startColor)
+                            print("Board::theoreticalKingLegalMoves:extraJumps:")
+                            for extraJump in extraJumps:
+                                print(extraJump)
+                                extendedMove = copy.deepcopy(fullMove)[:-1]
+                                extendedMove.extend(extraJump)
+                                moveList.append(extendedMove)
+                            
                     # A capture move ends the chain.
                     break
                 else:
@@ -307,7 +323,7 @@ class Board:
                     moveList.append(currentMoveCopy)
                 newPieceCoords = deltaCoord
                 deltaCoord = tplsum(deltaCoord, delta)
-
+                
         # print("Theoretical legal moves for {}:".format(pieceCoords))
         # for move in moveList: print(move)
         return moveList
