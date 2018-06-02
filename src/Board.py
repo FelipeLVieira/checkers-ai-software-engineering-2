@@ -231,52 +231,53 @@ class Board:
         higher-ranked moves possible."""
         # Dereference the coordinates to get the square object
         square = derefer(self.matrix, pieceCoords)
-        
+
         if square.occupant.king:
             return self.theoreticalKingLegalMoves(pieceCoords)
         moveList = []
-        
+
         deltaDict = {WHITE: [(-1, -1), (1, -1)], RED: [(-1, 1), (1, 1)]}
         allDeltas = [(-1, -1), (1, -1), (-1, 1), (1, 1)]
-        
+
         for delta in allDeltas:
-            #print("BoardLogic.py::Board:theoreticalLegalMoves: Evaluating delta {}".format(delta))
+            # print("BoardLogic.py::Board:theoreticalLegalMoves: Evaluating delta {}".format(delta))
             deltaCoord = tplsum(pieceCoords, delta)
             # Verify that the value is in bounds
             if not bounded(deltaCoord, 0, 7): continue
-            
+
             deltaSquare = derefer(self.matrix, deltaCoord)
             # Check if the delta square is occupied
             if deltaSquare.occupant:
                 # If the piece in the delta square is the same color,
                 # the move is impossible.
                 if deltaSquare.occupant.color is square.occupant.color: continue
-                
+
                 # Otherwise, it's possibly a capture move. Deal with it.
-                for move in self.possibleCaptures(square.occupant.color, 
-                        pieceCoords, delta, pieceCoords):
+                for move in self.possibleCaptures(square.occupant.color,
+                                                  pieceCoords, delta,
+                                                  pieceCoords):
                     moveList.append(move)
-                    #print("Evaluated capture move {} for delta {}.".format(move, delta))
-            
+                    # print("Evaluated capture move {} for delta {}.".format(move, delta))
+
             elif delta in deltaDict[square.occupant.color]:
                 # Given the square is free and is in "front" of the piece,
                 # it's a valid movement.
                 moveList.append([pieceCoords, deltaCoord])
-        #print("Theoretical legal moves for {}:".format(pieceCoords))
-        #for move in moveList: print(move)
+        # print("Theoretical legal moves for {}:".format(pieceCoords))
+        # for move in moveList: print(move)
         return moveList
-    
+
     """--------------------------------------------------------------------"""
-    
+
     def theoreticalKingLegalMoves(self, pieceCoords):
         """Returns the possible moves for a king if there were no
         higher-ranked moves possible."""
         # Dereference the coordinates to get the square object
         square = derefer(self.matrix, pieceCoords)
         moveList = []
-        
+
         deltas = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
-        
+
         for delta in deltas:
             newPieceCoords = pieceCoords
             deltaCoord = tplsum(pieceCoords, delta)
@@ -289,10 +290,11 @@ class Board:
                     # If the piece in the delta square is the same color,
                     # the move is impossible. Break the chain.
                     if deltaSquare.occupant.color is square.occupant.color: break
-                    
+
                     # Otherwise, it's possibly a capture move. Deal with it.
-                    for move in self.possibleCaptures(square.occupant.color, 
-                            newPieceCoords, delta, pieceCoords):
+                    for move in self.possibleCaptures(square.occupant.color,
+                                                      newPieceCoords, delta,
+                                                      pieceCoords):
                         fullMove = copy.deepcopy(currentMove)[:-1]
                         fullMove.extend(move)
                         moveList.append(fullMove)
@@ -305,9 +307,9 @@ class Board:
                     moveList.append(currentMoveCopy)
                 newPieceCoords = deltaCoord
                 deltaCoord = tplsum(deltaCoord, delta)
-        
-        #print("Theoretical legal moves for {}:".format(pieceCoords))
-        #for move in moveList: print(move)
+
+        # print("Theoretical legal moves for {}:".format(pieceCoords))
+        # for move in moveList: print(move)
         return moveList
 
     """--------------------------------------------------------------------"""
@@ -466,6 +468,33 @@ class Board:
         self.king(endCoordinate)
         self.verifyDrawCondition()
 
+    def getPiecesWithLegalMoves(self):
+        piecesWithLegalMoves = []
+        for move in self.legalMoveSet:
+            if move[0] not in piecesWithLegalMoves:
+                piecesWithLegalMoves.append(move[0])
+        return piecesWithLegalMoves
+
+    def getCountPlayerPieces(self):
+        playerPieces = 0
+        for x in range(8):
+            for y in range(8):
+                if self.matrix[x][y].occupant is not None \
+                        and self.matrix[x][
+                    y].occupant.color is self.playerTurn:
+                    playerPieces += 1
+        return playerPieces
+
+    def getCountEnemyPieces(self):
+        enemyPieces = 0
+        for x in range(8):
+            for y in range(8):
+                if self.matrix[x][y].occupant is not None \
+                        and self.matrix[x][
+                    y].occupant.color is not self.playerTurn:
+                    enemyPieces += 1
+        return enemyPieces
+
     def showCoordinates(self):
         if self.legalMoveSet is not None:
             for move in self.legalMoveSet:
@@ -568,35 +597,26 @@ class Board:
         return pieceToBeRemovedCoord
 
     def validTargetCoordinate(self):
-        firstJump = False
-        secondJump = False
         validSquares = []
+        jumpCount = 0
         for move in self.legalMoveSet:
-            firstJump = False
-            secondJump = False
             i = 0
-            while i < len(move) and not secondJump:
+            while i < len(move):
                 print(i)
                 nextSquare = move[i]
                 if self.location(nextSquare).occupant:
                     if self.location(
                             nextSquare).occupant.color != self.playerTurn:
-                        firstJump = True
+                        jumpCount += 1
                         i += 1
                         continue
-                if firstJump and not secondJump and not self.location(nextSquare).occupant:
+                if jumpCount == 1 and not self.location(nextSquare).occupant:
                     validSquares.append(nextSquare)
-                    i += 1
-                    continue
-                if firstJump and not secondJump and self.location(nextSquare).occupant:
-                    secondJump = True
                 i += 1
-            if not firstJump:
-                for move in self.legalMoveSet:
-                    for coord in move:
-                        validSquares.append(coord)
-
-        print("out loop")
+        if jumpCount == 0:
+            for move in self.legalMoveSet:
+                for coord in move:
+                    validSquares.append(coord)
 
         if self.mouseClick in validSquares:
             return True
