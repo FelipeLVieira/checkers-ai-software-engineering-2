@@ -41,8 +41,7 @@ class GameLoop:
 
     def mainGameEventLoop(self):
         # Remove the True below afterwards...
-        #if self.board.playerTurn == WHITE:
-        if True:
+        if self.board.playerTurn == WHITE:
             self.board.mousePos = self.board.boardCoords(pygame.mouse.get_pos(),
                                                      self.graphics.squareSize)  # what square is the mouse in?
 
@@ -91,6 +90,7 @@ class GameLoop:
             aiResult = self.ai.updateAndCheckCompletion(1/30.)
             if aiResult is not False:
                 self.board.executeMove(aiResult)
+                self.board.clearCachedVariables()
                 self.endTurn()
 
     """-----------------+
@@ -124,7 +124,7 @@ class GameLoop:
 
         if self.board.playerTurn is WHITE:
             self.board.playerTurn = RED
-            #self.ai.play()
+            self.ai.play()
         else:
             self.board.playerTurn = WHITE
 

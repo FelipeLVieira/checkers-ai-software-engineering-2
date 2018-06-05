@@ -4,6 +4,7 @@ from Constants import *
 import random
 import threading
 import copy
+import cProfile, pstats, io
 
 class mockBoard:
     def __init__(self, moveDivision):
@@ -93,27 +94,31 @@ def heuristic(board, playerColor):
        indicated by playerColor is doing."""
     myPieces = 0
     opponentPieces = 0
+    myKings = 0
+    opponentKings = 0
 
     for col in range(8):
         for row in range(8):
-            if board.matrix[col][row].occupant is Board.Piece:
+            if board.matrix[col][row].occupant is not None:
                 if board.matrix[col][row].occupant.color == playerColor:
                     if board.matrix[col][row].occupant.king:
-                        myPieces += 2
-                    else:
-                        myPieces += 1
+                        myKings += 1
+                    myPieces += 1
                 else: 
                     if board.matrix[col][row].occupant.king:
-                        opponentPieces += 2
-                    else:
-                        opponentPieces += 1
+                        opponentKings += 1
+                    opponentPieces += 1
 
-    return ((myPieces - opponentPieces) * 
-            (1 + (24 - (myPieces + opponentPieces) / 2)))
+    if myPieces == 0: return -100000000000.
+    elif opponentPieces == 0: return 100000000000.
+
+    return ((myPieces - opponentPieces) *
+            (6 * myKings - 7 * opponentKings))
 
 def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
         alpha=float("-inf"), beta=float("+inf"), parentCall=True,
-        stubbornnessTable=None, randomOffset=0.05, heuristicFunc=heuristic, rng=rng):
+        stubbornnessTable=None, randomOffset=0.05, heuristicFunc=heuristic, 
+        rng=rng, prof=None):
     """Implements the minimax algorithm.
        The below variables are tuning knobs:
        - depth controls how far into the future the algorithm looks.
@@ -124,12 +129,25 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
        - heuristicFun is a pointer to the heuristic function. It takes a Board
        object and the AI's color, and returns a value expressing the state of
        the game; a higher value means the AI is in a better position."""
+    # Profiling code
+    if parentCall:
+        prof = cProfile.Profile()
+        prof.enable()
+       
     # Get a list of all legal moves
-    legalMoveSet = board.getLegalMoves()
+    legalMoveSet = board.getAllLegalMoves()
 
     # If we're at the limit of our tree, use the heuristic to guess
     if depth == 0 or len(legalMoveSet) == 0:
         return heuristicFunc(board, AIColor)
+    
+    # Blind the AI randomly
+    if (not parentCall
+            and (isinstance(stubbornnessTable, list)
+                    or isinstance(stubbornnessTable, tuple))):
+        if rng.rand() < stubbornnessTable[depth]:
+            return heuristicFunc(board, AIColor)
+            
 
     nodeIndex = -1
     chosenNode = None
@@ -137,33 +155,38 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
     # Case 1: maximizing step
     if maximizing:
         bestValue = float("-inf")
+        # Debug
+        #values = []
         for move in legalMoveSet:
             nodeIndex += 1
 
             # This makes the AI randomly "not see" a move based on its
             # stubbornness. But only if it has seen at least one move on the
             # parent call.
-            if (not (parentCall and not bestValue > float("-inf"))
-                    and (stubbornnessTable is list
-                        or stubbornnessTable is tuple)
-                    and depth < len(stubbornnessTable)):
-                if rng.rand() < stubbornnessTable[depth]: continue
             
             # Simulate move in an imaginary board
-            childBoard = copy.deepcopy(board)
-            childBoard.executeMove(move)
+            childBoard = Board.Board(board, minified=True)
+            childBoard.executeMove(move, blind=True)
+            childBoard.playerTurn = contextColor(AIColor, not maximizing)
+            #print("AI.py::minimaxAB: d{}, recursing into {}".format(depth, move))
+            #for l in board.boardToStrings():
+            #    print(l)
+            #print()
 
             # Recurse to the minimizing step.
             # randomOffset is used here to give the AI some unpredictability.
             # (and make it randomly choose between equally-valued moves)
+            #print("AI.py::minimaxAB: d{}, recursing into {}".format(depth, move))
             childValue = (minimaxAB(childBoard, depth - 1, AIColor, None, 
                             maximizing=False, alpha=alpha, beta=beta, 
                             parentCall=False, 
                             stubbornnessTable=stubbornnessTable, 
                             randomOffset=randomOffset,
-                            heuristicFunc=heuristicFunc)
+                            heuristicFunc=heuristicFunc, prof=prof)
                     + rng.rand() * randomOffset)
+            #print("AI.py::minimaxAB: d{}, got {} from {}".format(depth, childValue, move))
 
+            #values.append(childValue)
             if childValue > bestValue:
                 bestValue = childValue
                 chosenNode = nodeIndex
@@ -171,40 +194,44 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
             alpha = max(alpha, bestValue)
 
             # Prune the tree
-            if beta <= alpha: break
+            #if beta + 0.49 <= alpha: 
+                #print("AI.py::minimaxAB: (d{}) beta={}, alpha={}, pruning".format(depth, beta, alpha))
+                #break
+        #print("AI.py::minimaxAB: (d{}) values={}, maximizing={}".format(depth, values, maximizing))
         if not parentCall: return bestValue
+        print("AI.py::minimaxAB: (parent) Best value is {}".format(bestValue))
 
 
     # Case 2: minimizing step
     else:
         worstValue = float("+inf")
+        # Debug
+        #values = []
         for move in legalMoveSet:
             nodeIndex += 1
 
             # This makes the AI randomly "not see" a move based on its
             # stubbornness. But on the parent call, it only skips if it has
             # already seen at least one move.
-            if (not (parentCall and not worstValue < float("+inf"))
-                    and (stubbornnessTable is list
-                        or stubbornnessTable is tuple)
-                    and depth < len(stubbornnessTable)):
-                if rng.rand() < stubbornnessTable[depth]: continue
 
             # Execute move in our imaginary board
-            childBoard = copy.deepcopy(board)
-            childBoard.executeMove(move)
+            childBoard = Board.Board(board, minified=True)
+            childBoard.executeMove(move, blind=True)
+            childBoard.playerTurn = contextColor(AIColor, not maximizing)
 
             # Recurse to the maximizing step.
             # randomOffset is used here to give the AI some unpredictability.
             # (and make it randomly choose between equally-valued moves)
+            #print("AI.py::minimaxAB: d{}, recursing into {}".format(depth, move))
             childValue = (minimaxAB(childBoard, depth - 1, AIColor, None,
-                            maximizing=False, alpha=alpha, beta=beta, 
+                                    maximizing=True, alpha=alpha, beta=beta, 
                             parentCall=False, 
                             stubbornnessTable=stubbornnessTable, 
                             randomOffset=randomOffset,
-                            heuristicFunc=heuristicFunc)
+                            heuristicFunc=heuristicFunc, prof=prof)
                     + rng.rand() * randomOffset)
 
+            #values.append(childValue)
             if childValue < worstValue:
                 worstValue = childValue
                 chosenNode = nodeIndex
@@ -212,9 +239,19 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
             beta = min(beta, worstValue)
 
             # Prune the tree
-            if beta <= alpha: break
+            #if beta + 0.49 <= alpha: 
+                #print("AI.py::minimaxAB: (d{}) beta={}, alpha={}, pruning".format(depth, beta, alpha))
+                #break
+        #print("AI.py::minimaxAB: (d{}) values={}, maximizing={}".format(depth, values, maximizing))
         if not parentCall: return worstValue
+    print("AI.py::minimaxAB: appending result {}".format(legalMoveSet[chosenNode]))
     returnPointer.append(legalMoveSet[chosenNode])
+    prof.disable()
+    stream = io.StringIO()
+    sortby = 'cumulative'
+    ps = pstats.Stats(prof, stream=stream).sort_stats(sortby)
+    ps.print_stats()
+    print(stream.getvalue())
 
 
 minimaxHyperParameters = [
@@ -222,7 +259,8 @@ minimaxHyperParameters = [
             "randomOffset": 0.05},
         {"heuristicFunc": heuristic, "depth": 5, "stubbornnessTable": None,
             "randomOffset": 0.05},
-        {"heuristicFunc": heuristic, "depth": 5, "stubbornnessTable": None,
+        {"heuristicFunc": heuristic, "depth": 5, 
+            "stubbornnessTable": None,
             "randomOffset": 0.05},
         {"heuristicFunc": heuristic, "depth": 5, "stubbornnessTable": None,
             "randomOffset": 0.05},
@@ -271,6 +309,7 @@ class AIPlayer:
         self.board = board
         self.color = color
         self.waitTime = waitTime
+        self.waitTimer = 0.
         self.heuristicFunc = minimaxHyperParameters[difficulty]\
                 ["heuristicFunc"]
         self.depth = minimaxHyperParameters[difficulty]\
@@ -279,10 +318,12 @@ class AIPlayer:
                 ["stubbornnessTable"]
         self.randomOffset = minimaxHyperParameters[difficulty]\
                 ["randomOffset"]
+        self.minimaxThread = None
+        self.minimaxResult = []
 
 
     def isThinking(self):
-        return (self.minimaxThread is threading.Thread and
+        return (self.minimaxThread is not None and
                 self.minimaxThread.is_alive())
 
 
@@ -303,7 +344,8 @@ class AIPlayer:
     def updateAndCheckCompletion(self, timeDelta):
         self.waitTimer -= timeDelta
         if not (self.waitTimer > 0 or self.isThinking()):
-            return self.minimaxResult
+            print("AI.py::AIPlayer.updateAndCheckCompletion: waitTimer={}, minimaxThread={}, isAlive={}, minimaxResult={}, returning".format(self.waitTimer, self.minimaxThread, self.minimaxThread.is_alive(), self.minimaxResult))
+            return self.minimaxResult[0]
         return False
 
 

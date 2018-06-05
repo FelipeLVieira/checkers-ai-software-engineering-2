@@ -12,12 +12,20 @@ def lookup(matrix, index):
 
 
 class Board:
-    def __init__(self, board=None):
+    def __init__(self, board=None, minified=False):
         # This allows us to make a copy of the board for the AI to safely
         # recurse on.
         # Load the board matrix
         if isinstance(board, Board):
-            self.matrix = copy.deepcopy(board.matrix)
+            self.matrix = []
+            for col in board.matrix:
+                self.matrix.append([])
+                for e in col:
+                    if e.occupant is None:
+                        self.matrix[-1].append(Square(e.black, None))
+                    else:
+                        self.matrix[-1].append(Square(e.black, Piece(
+                                e.occupant.color, e.occupant.king)))
         elif isinstance(board, list):
             self.matrix = self.boardFromStrings(board)
         else:
@@ -29,28 +37,29 @@ class Board:
 
         # Indicates which player is currently playing.
         self.playerTurn = WHITE
-
-        # Cache of selected piece
-        self.selectedPieceCoordinate = None
-        # Cache of mouse click
-        self.mouseClick = None
-        self.mousePos = None
-
-        self.finishMoveExec = True
-
-        self.isPlayerRedLost = False
-        self.isPlayerWhiteLost = False
-        self.isDraw = False
-        self.kingRedCounterAux = 0
-        self.kingRedCounter = 0
-        self.redCounterAux = 12
-        self.redCounter = 0
-        self.kingWhiteCounterAux = 0
-        self.kingWhiteCounter = 0
-        self.whiteCounterAux = 12
-        self.whiteCounter = 0
-        self.numberOfPlays = 0
-        self.numberOfPlays2 = 0
+        
+        if not minified:
+            # Cache of selected piece
+            self.selectedPieceCoordinate = None
+            # Cache of mouse click
+            self.mouseClick = None
+            self.mousePos = None
+            
+            self.finishMoveExec = True
+            
+            self.isPlayerRedLost = False
+            self.isPlayerWhiteLost = False
+            self.isDraw = False
+            self.kingRedCounterAux = 0
+            self.kingRedCounter = 0
+            self.redCounterAux = 12
+            self.redCounter = 0
+            self.kingWhiteCounterAux = 0
+            self.kingWhiteCounter = 0
+            self.whiteCounterAux = 12
+            self.whiteCounter = 0
+            self.numberOfPlays = 0
+            self.numberOfPlays2 = 0
 
     def newBoard(self):
         """Creates a matrix containing a new board."""
@@ -202,8 +211,8 @@ class Board:
         # print("BoardLogic.py::Board:getAllLegalMoves: Legal moves:")
         # for move in self.legalMoveSet: print(move)
 
-        print("return self.legalMoveSet from getAllLegalMoves",
-              self.legalMoveSet)
+        #print("return self.legalMoveSet from getAllLegalMoves",
+        #      self.legalMoveSet)
         return self.legalMoveSet
 
     """-----------------------------------------+
@@ -214,12 +223,12 @@ class Board:
         """Calculates the rank for a move.
         A move's rank is given by its number of captured pieces."""
         rank = 0
-        start = derefer(self.matrix, move[0]).occupant
+        startcolor = derefer(self.matrix, move[0]).occupant.color
         for coord in move:
-            # If there's a piece in that coordinate
             square = derefer(self.matrix, coord).occupant
             # print(coord, square)
-            if square and square.color is not start.color:
+            # If there's a piece in that coordinate
+            if square and square.color is not startcolor:
                 # print(square.color, start.color)
                 rank += 1
         return rank
@@ -307,9 +316,9 @@ class Board:
                             extraJumps = self.theoreticalKingLegalMoves(
                                     fullMove[-1], alreadyEaten=True, 
                                     delta=delta, startColor=startColor)
-                            print("Board::theoreticalKingLegalMoves:extraJumps:")
+                            #print("Board::theoreticalKingLegalMoves:extraJumps:")
                             for extraJump in extraJumps:
-                                print(extraJump)
+                                #print(extraJump)
                                 extendedMove = copy.deepcopy(fullMove)[:-1]
                                 extendedMove.extend(extraJump)
                                 moveList.append(extendedMove)
@@ -469,7 +478,7 @@ class Board:
 
         self.matrix[coordinate[0]][coordinate[1]].occupant = None
 
-    def movePiece(self, startCoordinate, endCoordinate):
+    def movePiece(self, startCoordinate, endCoordinate, blind=False):
         """
         Move a piece from (start_x, start_y) to (end_x, end_y).
         """
@@ -482,7 +491,7 @@ class Board:
                     startCoordinate[1]].occupant
             self.removePiece(startCoordinate)
         self.king(endCoordinate)
-        self.verifyDrawCondition()
+        if not blind: self.verifyDrawCondition()
 
     def getPiecesWithLegalMoves(self):
         piecesWithLegalMoves = []
@@ -518,9 +527,10 @@ class Board:
                 for coord in move:
                     print("(", coord[0], coord[1], ") ")
 
-    def executeMove(self, seletedMove=None):
-        if self.legalMoveSet is None:
-            return
+    def executeMove(self, seletedMove=None, blind=False):
+        #if self.legalMoveSet is None:
+            #raise RuntimeError("Board.py::Board:executeMove: executeMove called without having computed legal moves.")
+            #return
 
         # Execute a complete move based on a move parameter
         if seletedMove:
@@ -529,7 +539,7 @@ class Board:
                     if self.location(coord).occupant.color != self.playerTurn:
                         self.removePiece(coord)
             self.movePiece(seletedMove[0],
-                           seletedMove[-1])
+                           seletedMove[-1], blind)
             return
 
         # Logic for handle player multiple jumps
@@ -729,7 +739,7 @@ class Board:
             self.numberOfPlays2 = self.numberOfPlays2 + 1
         else:
             self.numberOfPlays2 = 0
-        print(str(self.numberOfPlays) + ', ' + str(self.numberOfPlays2))
+        #print(str(self.numberOfPlays) + ', ' + str(self.numberOfPlays2))
         self.kingWhiteCounterAux = self.kingWhiteCounter
         self.kingRedCounterAux = self.kingRedCounter
         self.whiteCounterAux = self.whiteCounter
@@ -923,21 +933,19 @@ class Board:
 
 def bounded(tpl, minm, maxm):
     """Checks if the values in a tuple are within given bounds."""
-    bound = list(map(lambda val: val >= minm and val <= maxm, tpl))
-    return bound[0] and bound[1]
+    if(tpl[0] < minm or tpl[0] > maxm): return False
+    if(tpl[1] < minm or tpl[1] > maxm): return False
+    return True
 
 
 def tplsum(t1, t2):
     """Returns the sum of two tuples."""
-    return tuple(map(lambda x, y: x + y, t1, t2))
+    return (t1[0] + t2[0], t1[1] + t2[1])
 
 
 def derefer(matrix, coords):
     """Dereferences into a matrix using a tuple or list as coordinates."""
-    ref = matrix
-    for c in coords:
-        ref = ref[c]
-    return ref
+    return matrix[coords[0]][coords[1]]
 
 
 """-----------------------------------+
