@@ -527,37 +527,37 @@ class Board:
                 for coord in move:
                     print("(", coord[0], coord[1], ") ")
 
-    def executeMove(self, seletedMove=None, blind=False):
+    def executeMove(self, selectedMove=None, blind=False):
         #if self.legalMoveSet is None:
             #raise RuntimeError("Board.py::Board:executeMove: executeMove called without having computed legal moves.")
             #return
 
         # Execute a complete move based on a move parameter
-        if seletedMove:
-            for coord in seletedMove:
+        if selectedMove:
+            for coord in selectedMove:
                 if self.location(coord).occupant:
                     if self.location(coord).occupant.color != self.playerTurn:
                         self.removePiece(coord)
-            self.movePiece(seletedMove[0],
-                           seletedMove[-1], blind)
+            self.movePiece(selectedMove[0],
+                           selectedMove[-1], blind)
             return
 
         # Logic for handle player multiple jumps
         self.finishMoveExec = False
 
-        hasJumps = False
+        jumpCount = False
 
         for move in self.legalMoveSet:
             for coord in move:
                 if self.location(coord).occupant:
                     if self.location(coord).occupant.color != self.playerTurn:
-                        hasJumps = True
+                        jumpCount += 1
                         break
             else:
                 break
 
         # If the legalMoveSet has no pieces to capture, return as it is
-        if not hasJumps:
+        if jumpCount == 0:
             self.movePiece(self.selectedPieceCoordinate, self.mouseClick)
             self.finishMoveExec = True
             return
@@ -569,10 +569,11 @@ class Board:
         self.selectedPieceCoordinate = self.mouseClick
 
         # Refine the legalMoveSet and gets the captured piece coordinate
-        jumpedPiece = self.filterLegalMoves()
+        jumpedPieces = self.filterLegalMoves()
 
-        # Remove the captured piece
-        self.removePiece(jumpedPiece)
+        # Remove the captured piece(s)
+        for piece in jumpedPieces:
+            self.removePiece(piece)
 
         for move in self.legalMoveSet:
             if len(move) == 1:
@@ -584,7 +585,7 @@ class Board:
 
         auxPartialFiltered = []
         pieceJumpedCoord = None
-        pieceToBeRemovedCoord = None
+        pieceToBeRemovedCoord = []
         for move in self.legalMoveSet:
             i = 0
             while i < len(move):
@@ -592,14 +593,13 @@ class Board:
                 if self.location(nextSquare).occupant:
                     if self.location(
                             nextSquare).occupant.color != self.playerTurn:
-                        pieceJumpedCoord = nextSquare
+                        pieceToBeRemovedCoord.append(nextSquare)
 
                 if self.location(nextSquare).occupant:
                     if self.location(
-                            nextSquare).occupant.color == self.playerTurn and pieceJumpedCoord:
+                            nextSquare).occupant.color == self.playerTurn:
                         if self.location(nextSquare) == self.location(
                                 self.mouseClick):
-                            pieceToBeRemovedCoord = pieceJumpedCoord
                             auxPartialFiltered.append(move)
                             pieceJumpedCoord = None
                             break
@@ -632,18 +632,17 @@ class Board:
                 nextSquare = move[i]
                 if self.location(nextSquare).occupant:
                     if self.location(
-                            nextSquare).occupant.color != self.playerTurn:
+                            nextSquare).occupant.color != self.playerTurn and jumpCount == 0:
                         jumpCount += 1
                         i += 1
                         continue
-                if jumpCount == 1 and not self.location(nextSquare).occupant:
+                if jumpCount == 1 and self.location(nextSquare).occupant is None:
                     validSquares.append(nextSquare)
                 i += 1
         if jumpCount == 0:
             for move in self.legalMoveSet:
                 for coord in move:
                     validSquares.append(coord)
-
         if self.mouseClick in validSquares:
             return True
         return False

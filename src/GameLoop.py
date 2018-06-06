@@ -44,7 +44,6 @@ class GameLoop:
         if self.board.playerTurn == WHITE:
             self.board.mousePos = self.board.boardCoords(pygame.mouse.get_pos(),
                                                      self.graphics.squareSize)  # what square is the mouse in?
-
             for event in pygame.event.get():
                 # ESC quits the game (just for now)... (by the way, closing the window works too because of pygame.QUIT)
                 if (event.type == pygame.QUIT) or (
@@ -125,6 +124,7 @@ class GameLoop:
         if self.board.playerTurn is WHITE:
             self.board.playerTurn = RED
             self.ai.play()
+            
         else:
             self.board.playerTurn = WHITE
 
