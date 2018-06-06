@@ -12,7 +12,7 @@ def lookup(matrix, index):
 
 
 class Board:
-    def __init__(self, board=None, minified=False):
+    def __init__(self, board=None):
         # This allows us to make a copy of the board for the AI to safely
         # recurse on.
         # Load the board matrix
@@ -38,28 +38,28 @@ class Board:
         # Indicates which player is currently playing.
         self.playerTurn = WHITE
         
-        if not minified:
-            # Cache of selected piece
-            self.selectedPieceCoordinate = None
-            # Cache of mouse click
-            self.mouseClick = None
-            self.mousePos = None
-            
-            self.finishMoveExec = True
-            
-            self.isPlayerRedLost = False
-            self.isPlayerWhiteLost = False
-            self.isDraw = False
-            self.kingRedCounterAux = 0
-            self.kingRedCounter = 0
-            self.redCounterAux = 12
-            self.redCounter = 0
-            self.kingWhiteCounterAux = 0
-            self.kingWhiteCounter = 0
-            self.whiteCounterAux = 12
-            self.whiteCounter = 0
-            self.numberOfPlays = 0
-            self.numberOfPlays2 = 0
+
+        # Cache of selected piece
+        self.selectedPieceCoordinate = None
+        # Cache of mouse click
+        self.mouseClick = None
+        self.mousePos = None
+
+        self.finishMoveExec = True
+
+        self.isPlayerRedLost = False
+        self.isPlayerWhiteLost = False
+        self.isDraw = False
+        self.kingRedCounterAux = 0
+        self.kingRedCounter = 0
+        self.redCounterAux = 12
+        self.redCounter = 0
+        self.kingWhiteCounterAux = 0
+        self.kingWhiteCounter = 0
+        self.whiteCounterAux = 12
+        self.whiteCounter = 0
+        self.numberOfPlays = 0
+        self.numberOfPlays2 = 0
 
     def newBoard(self):
         """Creates a matrix containing a new board."""
@@ -788,46 +788,6 @@ class Board:
                         coordinate).occupant.color == RED and coordinate[
                         1] == 7):
                 self.location(coordinate).occupant.king = True
-
-    def drawBoardSquares(self, graphics):
-        """
-            Takes a board object and draws all of its squares to the display
-            """
-        for x in range(8):
-            for y in range(8):
-                pygame.draw.rect(graphics.screen,
-                                 self.matrix[x][y].occupant.color,
-                                 (x * graphics.squareSize,
-                                  y * graphics.squareSize, graphics.squareSize,
-                                  graphics.squareSize), )
-
-    def drawBoardPieces(self, screen, redPiece, whitePiece):
-        for x in range(8):
-            for y in range(8):
-                if self.matrix[x][y].occupant is not None and self.matrix[x][
-                    y].occupant.color is RED:
-                    screen.blit(redPiece, (x * 90, y * 90))
-
-                if self.matrix[x][y].occupant is not None and self.matrix[x][
-                    y].occupant.color is WHITE:
-                    screen.blit(whitePiece, (x * 90, y * 90))
-
-    def drawBoardKings(self, screen, kingPiece):
-        for x in range(8):
-            for y in range(8):
-                if self.matrix[x][y].occupant is not None and self.matrix[x][
-                    y].occupant.king:
-                    screen.blit(kingPiece, (x * 90, y * 90))
-
-    def highlightLegalMoves(self, screen, goldPiece):
-        if self.selectedPieceCoordinate is not None and self.legalMoveSet is not None:
-
-            for movePath in self.legalMoveSet:
-                for coordinate in movePath:
-                    if coordinate is not None and not self.location(
-                            coordinate).occupant:
-                        screen.blit(goldPiece,
-                                    (coordinate[0] * 90, coordinate[1] * 90))
 
     def pixelCoords(self, coordinate, squareSize, pieceSize):
         """

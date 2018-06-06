@@ -165,7 +165,7 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
             # parent call.
             
             # Simulate move in an imaginary board
-            childBoard = Board.Board(board, minified=True)
+            childBoard = Board.Board(board)
             childBoard.executeMove(move, blind=True)
             childBoard.playerTurn = contextColor(AIColor, not maximizing)
             #print("AI.py::minimaxAB: d{}, recursing into {}".format(depth, move))
@@ -215,7 +215,7 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
             # already seen at least one move.
 
             # Execute move in our imaginary board
-            childBoard = Board.Board(board, minified=True)
+            childBoard = Board.Board(board)
             childBoard.executeMove(move, blind=True)
             childBoard.playerTurn = contextColor(AIColor, not maximizing)
 
