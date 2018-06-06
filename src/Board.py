@@ -119,7 +119,11 @@ class Board:
 
         if not coordinate:
             return
-        return self.matrix[coordinate[0]][coordinate[1]]
+        try:
+            if(coordinate.x  and coordinate.y is not None):
+                return self.matrix[coordinate.x][coordinate.y]
+        except:
+            return self.matrix[coordinate[0]][coordinate[1]]
 
     def canJumpDirection(self, direction, coordinate):
         """
@@ -155,7 +159,7 @@ class Board:
         # Select in the legal move set, where the first coordinate is the
         # desired piece's coordinate
         self.legalMoveSet = list(
-            filter(lambda m: m[0] == coordinate, self.legalMoveSet))
+            filter(lambda m: m[0][0] == coordinate.x and m[0][1] == coordinate.y, self.legalMoveSet))
 
         print("getLegalMoves self.legalMoveSet before filter:",
               self.legalMoveSet)
@@ -800,12 +804,12 @@ class Board:
             coordinate[0] * squareSize + pieceSize,
             coordinate[1] * squareSize + pieceSize)
 
-    def boardCoords(self, pixelCoordinate, squareSize):
+    def boardCoords(self, pixelCoordinate, squareSize, margin):
         """
            Does the reverse of pixel_coords(). Takes in a tuple of of pixel coordinates and returns what square they are in.
         """
-        return (int(pixelCoordinate[0] / squareSize),
-                int(pixelCoordinate[1] / squareSize))
+        return (int((pixelCoordinate[0] - margin[0]) / squareSize),
+                int((pixelCoordinate[1] - margin[1]) / squareSize))
 
     def pixelToSquarePosition(self, pixelCoordinate, squareSize):
         """
