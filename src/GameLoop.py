@@ -115,8 +115,10 @@ class GameLoop:
         stub_scorePlayer = 12
         stub_scoreOpponent = 12
 
+        stub_turnNumber = 1
+
         self.graphics.updateAndDraw(stub_hoverPosition, stub_selectedPiece,
-                stub_hoverButton, stub_gamePaused, stub_isPlayerTurn,
+                stub_hoverButton, stub_gamePaused, stub_turnNumber, stub_isPlayerTurn,
                 stub_gameEnded, stub_scorePlayer, stub_scoreOpponent)
 
     """------------------+

@@ -262,7 +262,7 @@ class Graphics:
         self.board = self.auxBoard
 
     def updateAndDraw(self, hoverPosition, selectedPiece, hoverButton, 
-            gamePaused, turnNumber, isPlayerTurn, gameEnded):
+            gamePaused, turnNumber, isPlayerTurn, gameEnded, stub_playerScore, stub_opponentScore):
         self.timeDelta = self.clock.tick(self.fps) / 1000.
         self.background.blitAt(self.screen, (0, 0))
         self.drawBoardPieces()
@@ -275,7 +275,7 @@ class Graphics:
         if not gamePaused: 
             self.drawHoverButton(hoverButton)
         self.updateAndDrawSidebarText(isPlayerTurn, turnNumber)
-        if gameEnded is not None: 
+        if gameEnded:
             self.updateAndDrawEndOverlay(self.timeDelta, hoverButton, 
                     gameEnded)
         if gamePaused: 
