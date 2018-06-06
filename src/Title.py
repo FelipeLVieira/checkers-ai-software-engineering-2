@@ -2,6 +2,7 @@ import pygame
 import sys
 import Graphics
 import TitleGraphics
+import GameLoop
 
 class Title:
     def __init__(self):
@@ -59,7 +60,7 @@ class Title:
             # The game begins here
             # TODO: Change this to jump to the game loop,
             # passing the relevant parameters.
-            pass
+            gameLoop = GameLoop.main()
         elif area.startswith("diffButton"):
             self.selectedDifficultyButton = int(area[-1:]) - 1
         elif area == "playerNameBox":
