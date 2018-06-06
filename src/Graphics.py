@@ -730,11 +730,13 @@ def main():
             y = int(random.random() * 3) + 5
             graphics.showPiecesWithLegalMoves([(int(random.random() * 4) * 2 + ((y + 1) & 1), y)])
         timeDelta = graphics.updateAndDraw(hoverPos, (2, 5), 
-                button, paused, True, ENDGAME_LOSE)
+                button, paused, 1, True, ENDGAME_LOSE)
+        #hoverPosition, selectedPiece, hoverButton,
+        #    gamePaused, turnNumber, isPlayerTurn, gameEnded
         if (not path and len(moveList) > 0 and random.random() < 0.04):
             p = moveList.pop(0)
             #print(p)
-            testBoard.movePiece(Coordinate(p[0][0], p[0][1]), Coordinate(p[1][0], p[1][1]))
+            testBoard.movePiece(p[0], p[1])
             graphics.registerMove(testBoard, p, [])
             path = True
         if (not paused and random.random() < 0.01):
