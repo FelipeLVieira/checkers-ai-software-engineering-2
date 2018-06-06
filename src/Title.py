@@ -60,7 +60,8 @@ class Title:
             # The game begins here
             # TODO: Change this to jump to the game loop,
             # passing the relevant parameters.
-            gameLoop = GameLoop.main()
+            gameLoop = GameLoop.GameLoop(self.graphicsBackend,
+                    self.selectedDifficultyButton, self.playerName).main()
         elif area.startswith("diffButton"):
             self.selectedDifficultyButton = int(area[-1:]) - 1
         elif area == "playerNameBox":

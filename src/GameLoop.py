@@ -11,7 +11,7 @@ class GameLoop:
 
         self.board = Board()
         self.graphics = Graphics(graphicsBackend, self.board, playerName)
-        self.aiPlayer = AI.AIPlayer(difficultyLevel, self.board, RED)
+        self.aiPlayer = AI.AIPlayer(self.board, RED, difficultyLevel)
         self.done = False
 
         self.mousePos = None
@@ -43,7 +43,7 @@ class GameLoop:
     +-----------------------------------------------------"""
     def mainGameEventLoop(self):
         self.mousePos = self.board.boardCoords(pygame.mouse.get_pos(),
-                                               self.graphics.squareSize)  # what square is the mouse in?
+                                               self.graphics.boardSpacing)  # what square is the mouse in?
 
         for event in pygame.event.get():
             # ESC quits the game (just for now)... (by the way, closing the window works too because of pygame.QUIT)
