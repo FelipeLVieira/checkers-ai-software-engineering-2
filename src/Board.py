@@ -561,10 +561,8 @@ class Board:
             self.movePiece(selectedMove[0],
                            selectedMove[-1], blind)
             # For AI.
-            if captures > 0:
-                self.captureCache[self.playerTurn].append(captures)
-            if kingCaptures > 0:
-                self.kingCaptureCache[self.playerTurn].append(kingCaptures)
+            self.captureCache[self.playerTurn].append(captures)
+            self.kingCaptureCache[self.playerTurn].append(kingCaptures)
             return
 
         # Logic for handle player multiple jumps
