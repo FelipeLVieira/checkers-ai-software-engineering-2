@@ -60,6 +60,16 @@ class Board:
         self.numberOfPlays = 0
         self.numberOfPlays2 = 0
 
+        # Movement stat caches for AI heuristic
+        self.captureCache = {RED: [], WHITE: []}
+        self.kingCache = {RED: 0, WHITE: 0}
+        self.kingCaptureCache = {RED: [], WHITE: []}
+
+    def clearMovementStats(self):
+        self.captureCache = {RED: [], WHITE: []}
+        self.kingCache = {RED: 0, WHITE: 0}
+        self.kingCaptureCache = {RED: [], WHITE: []}
+
     def newBoard(self):
         """Creates a matrix containing a new board."""
         matrix = []
@@ -319,8 +329,9 @@ class Board:
                             fullMove.extend(move)
                             moveList.append(fullMove)
                             extraJumps = self.theoreticalKingLegalMoves(
-                                fullMove[-1], alreadyEaten=True,
-                                delta=delta, startColor=startColor)
+                                    fullMove[-1], alreadyEaten=True,
+                                    delta=tplsub(fullMove[-1], fullMove[-2]),
+                                    startColor=startColor)
                             # print("Board::theoreticalKingLegalMoves:extraJumps:")
                             for extraJump in extraJumps:
                                 # print(extraJump)
@@ -542,9 +553,17 @@ class Board:
             for coord in selectedMove:
                 if self.location(coord).occupant:
                     if self.location(coord).occupant.color != self.playerTurn:
+                        # Track captured piece count for AI's heuristic
+                        captures += 1
+                        if self.location(coord).occupant.king:
+                            kingCaptures += 1
+                        
                         self.removePiece(coord)
             self.movePiece(selectedMove[0],
                            selectedMove[-1], blind)
+            # For AI.
+            self.captureCache[self.playerTurn].append(captures)
+            self.kingCaptureCache[self.playerTurn].append(kingCaptures)
             return
 
         # Logic for handle player multiple jumps
@@ -794,6 +813,8 @@ class Board:
                         coordinate).occupant.color == RED and coordinate[
                         1] == 7):
                 self.location(coordinate).occupant.king = True
+                # For AI's heuristic.
+                self.kingCache[self.location(coordinate).occupant.color] += 1
 
     def pixelCoords(self, coordinate, squareSize, pieceSize):
         """
