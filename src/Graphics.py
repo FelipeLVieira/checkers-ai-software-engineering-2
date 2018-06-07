@@ -86,6 +86,34 @@ class Graphics:
         self.endRestartButtonRelCoords = (12, 136)
         self.endExitButtonRelCoords = (310, 136)
 
+        # Screen regions
+        self.regions = {
+                REGION_BOARD: pygame.Rect(self.boardUpperLeftCoords, (656, 656)),
+                BUTTON_INGAME_HOVER_PAUSE: pygame.Rect(
+                        self.pauseButtonCoords, (82, 82)),
+                BUTTON_INGAME_HOVER_EXIT: pygame.Rect(
+                        self.exitButtonCoords, (82, 82))
+                }
+
+        self.pauseRegions = {
+                BUTTON_PAUSE_HOVER_CONTINUE: pygame.Rect(
+                        self.pauseContinueButtonCoords, (279, 54)),
+                BUTTON_PAUSE_HOVER_RESTART: pygame.Rect(
+                        self.pauseRestartButtonCoords, (279, 54)),
+                BUTTON_PAUSE_HOVER_EXIT: pygame.Rect(
+                        self.pauseExitButtonCoords, (279, 54)),
+
+        self.gameOverRegions = {
+                BUTTON_END_HOVER_RESTART: pygame.Rect(
+                        tplsum(self.endRestartButtonRelCoords, (640, 360)),
+                        (278, 58)
+                BUTTON_END_HOVER_EXIT: pygame.Rect(
+                        tplsum(self.endExitButtonRelCoords, (640, 360)),
+                        (278, 58)
+                BUTTON_INGAME_HOVER_EXIT: pygame.Rect(
+                        self.exitButtonCoords, (82, 82))
+                }
+
         self.endOverlayTextsRelCoords = {
                 "winLoseFanfare": self.winLoseBaselineRelCoords,
                 "endRestart": self.endRestartBaselineRelCoords,

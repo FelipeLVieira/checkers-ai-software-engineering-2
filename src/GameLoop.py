@@ -59,8 +59,10 @@ class GameLoop:
                 if clickedRegion == BUTTON_END_HOVER_RESTART:
                     self.restartGame()
                     
-                elif clickedRegion == BUTTON_END_HOVER_EXIT:
+                elif clickedRegion == BUTTON_END_HOVER_EXIT or \
+                        clickedRegion == BUTTON_INGAME_HOVER_EXIT:
                     self.exitedGame = True
+                    
                     
     
     def pauseEventLoop(self):
@@ -176,11 +178,21 @@ class GameLoop:
         (e.g. BUTTON_INGAME_HOVER_PAUSE)
         Remember to never check region identifiers for non-visible regions!
         (e.g. pause buttons, when game is not paused...)"""
-        raise NotImplementedError()
+        raise NotImplementedError() 
 
     def handleClick(self, pos):
         """Determines the region where the mouse was clicked and returns it."""
-        raise NotImplementedError()
+        regions = {
+            "playerTurn": self.graphics.regions,
+            "AITurn": self.graphics.regions,
+            "pause": self.graphics.pauseRegions,
+            "anim": self.graphics.regions,
+            "gameOver": self.graphics.gameOverRegions
+            }
+        for key, region in regions[self.state].items():
+            if region.collidepoint(pos):
+                return key
+
 
     def handleBoardClick(self, pos):
         """Given the mouse was clicked within the board, determine the
