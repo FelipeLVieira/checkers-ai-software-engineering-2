@@ -325,7 +325,9 @@ class Board:
                             moveList.append(fullMove)
                             extraJumps = self.theoreticalKingLegalMoves(
                                     fullMove[-1], alreadyEaten=True, 
-                                    delta=delta, startColor=startColor)
+                                    delta=tplsub(fullMove[-1], fullMove[-2]),
+                                    startColor=startColor)
+
                             #print("Board::theoreticalKingLegalMoves:extraJumps:")
                             for extraJump in extraJumps:
                                 #print(extraJump)
@@ -814,6 +816,55 @@ class Board:
                 # For AI's heuristic.
                 self.kingCache[self.location(coordinate).occupant.color] += 1
 
+    """<PLEASE REMOVE THESE FUNCTIONS AFTERWARDS.
+    THEY ARE EXPERIMENTAL FUNCTIONS THAT NEED TO BE KEPT DURING AI
+    TESTING AND REFINEMENT, FOR THIS BRANCH DOES NOT HAVE PROPER GRAPHICS
+    SUPPORT AND THE INTEGRATION BRANCH IS STILL NOT PLAYABLE.>"""
+    def drawBoardSquares(self, graphics):
+        """
+            Takes a board object and draws all of its squares to the display
+            """
+        for x in range(8):
+            for y in range(8):
+                pygame.draw.rect(graphics.screen,
+                                 self.matrix[x][y].occupant.color,
+                                 (x * graphics.squareSize,
+                                  y * graphics.squareSize, graphics.squareSize,
+                                  graphics.squareSize), )
+
+    def drawBoardPieces(self, screen, redPiece, whitePiece):
+        for x in range(8):
+            for y in range(8):
+                if self.matrix[x][y].occupant is not None and self.matrix[x][
+                    y].occupant.color is RED:
+                    screen.blit(redPiece, (x * 90, y * 90))
+
+                if self.matrix[x][y].occupant is not None and self.matrix[x][
+                    y].occupant.color is WHITE:
+                    screen.blit(whitePiece, (x * 90, y * 90))
+
+    def drawBoardKings(self, screen, kingPiece):
+        for x in range(8):
+            for y in range(8):
+                if self.matrix[x][y].occupant is not None and self.matrix[x][
+                    y].occupant.king:
+                    screen.blit(kingPiece, (x * 90, y * 90))
+
+    def highlightLegalMoves(self, screen, goldPiece):
+        if self.selectedPieceCoordinate is not None and self.legalMoveSet is not None:
+
+            for movePath in self.legalMoveSet:
+                for coordinate in movePath:
+                    if coordinate is not None and not self.location(
+                            coordinate).occupant:
+                        screen.blit(goldPiece,
+                                    (coordinate[0] * 90, coordinate[1] * 90))
+    """</PLEASE REMOVE THESE FUNCTIONS AFTERWARDS.
+    THEY ARE EXPERIMENTAL FUNCTIONS THAT NEED TO BE KEPT DURING AI
+    TESTING AND REFINEMENT, FOR THIS BRANCH DOES NOT HAVE PROPER GRAPHICS
+    SUPPORT AND THE INTEGRATION BRANCH IS STILL NOT PLAYABLE.>"""
+
+
     def pixelCoords(self, coordinate, squareSize, pieceSize):
         """
             Takes in a tuple of board coordinates (x,y)
@@ -925,6 +976,10 @@ def bounded(tpl, minm, maxm):
 def tplsum(t1, t2):
     """Returns the sum of two tuples."""
     return (t1[0] + t2[0], t1[1] + t2[1])
+
+def tplsub(t1, t2):
+    """Returns the difference of two tuples."""
+    return (t1[0] - t2[0], t1[1] - t2[1])
 
 
 def derefer(matrix, coords):

@@ -279,7 +279,7 @@ minimaxHyperParameters = [
             "randomOffset": 0.05},
         {"heuristicFunc": heuristic, "depth": 5, "stubbornnessTable": None,
             "randomOffset": 0.05},
-        {"heuristicFunc": heuristic, "depth": 3,
+        {"heuristicFunc": heuristic, "depth": 4,
             "stubbornnessTable": None,
             "randomOffset": 0.05},
         {"heuristicFunc": heuristic, "depth": 5, "stubbornnessTable": None,
