@@ -86,6 +86,22 @@ class Graphics:
         self.endRestartButtonRelCoords = (12, 136)
         self.endExitButtonRelCoords = (310, 136)
 
+
+        self.endOverlayTextsRelCoords = {
+                "winLoseFanfare": self.winLoseBaselineRelCoords,
+                "endRestart": self.endRestartBaselineRelCoords,
+                "endExit": self.endExitBaselineRelCoords,
+                }
+
+        self.endOverlayButtonsRelCoords = {
+                BUTTON_END_HOVER_RESTART: self.endRestartButtonRelCoords,
+                BUTTON_END_HOVER_EXIT: self.endExitButtonRelCoords
+                }
+        
+        
+        self.boardUpperLeftCoords = (139, 37)
+        self.endOverlayFinalCoords = ()
+        
         # Screen regions
         self.regions = {
                 REGION_BOARD: pygame.Rect(self.boardUpperLeftCoords, (656, 656)),
@@ -114,21 +130,6 @@ class Graphics:
                         self.exitButtonCoords, (82, 82))
                 }
 
-        self.endOverlayTextsRelCoords = {
-                "winLoseFanfare": self.winLoseBaselineRelCoords,
-                "endRestart": self.endRestartBaselineRelCoords,
-                "endExit": self.endExitBaselineRelCoords,
-                }
-
-        self.endOverlayButtonsRelCoords = {
-                BUTTON_END_HOVER_RESTART: self.endRestartButtonRelCoords,
-                BUTTON_END_HOVER_EXIT: self.endExitButtonRelCoords
-                }
-        
-        
-        self.boardUpperLeftCoords = (139, 37)
-        self.endOverlayFinalCoords = ()
-        
         # Other values
         self.boardSpacing = 82
         self.pieceBaseMoveSpeed = 320
