@@ -18,7 +18,7 @@ class GameLoop:
 
         self.graphics = Graphics()
         self.board = Board()
-        self.ai = AIPlayer(self.board)
+        self.ai = AIPlayer(self.board, difficulty=4)
 
         # Boolean screen switchers
         self.startScreen = False

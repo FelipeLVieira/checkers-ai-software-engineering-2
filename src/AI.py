@@ -125,19 +125,19 @@ def heuristic(board, playerColor, endGame):
             0.6 * ((2 * board.kingCache[opponentColor]) ** 2))
     for e in board.captureCache[playerColor]:
         heur += 2.4 * (e ** 2) * attenuation
-        attenuation *= 0.75
+        attenuation *= 0.66
     attenuation = 1.0
     for e in board.captureCache[opponentColor]:
         heur -= 1.6 * (e ** 2) * attenuation
-        attenuation *= 0.75
+        attenuation *= 0.66
     attenuation = 1.0
     for e in board.kingCaptureCache[opponentColor]:
         heur -= 2.4 * ((2 * e) ** 2) * attenuation
-        attenuation *= 0.75
+        attenuation *= 0.66
     attenuation = 1.0
     for e in board.captureCache[opponentColor]:
         heur -= 1.6 * ((2 * e) ** 2) * attenuation
-        attenuation *= 0.75
+        attenuation *= 0.66
 
     return heur
 
@@ -330,7 +330,7 @@ minimaxHyperParameters = [
             "randomOffset": 0.01, "treeCutFactor": 2.4},
         {"heuristicFunc": heuristic, "depth": 6, 
             "stubbornnessTable": [0, 0.5, 0, 0, 0, 0, 0],
-            "randomOffset": 0.01, "treeCutFactor": 3.2}
+            "randomOffset": 0.01, "treeCutFactor": 2.7}
         ]
 
 """minimaxHyperParameters = [
