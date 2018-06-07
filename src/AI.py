@@ -88,10 +88,12 @@ def contextColor(color, maximizing):
     raise RuntimeError("Graphics.py::contextColor(): invalid color `{}'."
             .format(color))
 
-def heuristic(board, playerColor):
+def heuristic(board, playerColor, endGame):
     """Outputs a number that describes the state of the game.
        In other words, a number that correlates with how well the player
        indicated by playerColor is doing."""
+
+    """Piece count will not be used for heuristic anymore.
     myPieces = 0
     opponentPieces = 0
     myKings = 0
@@ -108,12 +110,25 @@ def heuristic(board, playerColor):
                     if board.matrix[col][row].occupant.king:
                         opponentKings += 1
                     opponentPieces += 1
+    """
 
-    if myPieces == 0: return -100000000000.
-    elif opponentPieces == 0: return 100000000000.
+    if endGame:
+        if board.playerTurn == playerColor:
+            return -100000000000.
+        else: 
+            return 100000000000.
 
-    return ((myPieces - opponentPieces) *
-            (6 * myKings - 7 * opponentKings))
+    opponentColor = contextColor(playerColor, False)
+
+    return (sum(map(lambda x: x ** 2, board.captureCache[playerColor])) -
+            sum(map(lambda x: x ** 2, board.captureCache[opponentColor])) +
+            board.kingCache[playerColor] * 5 -
+            board.kingCache[opponentColor] * 5 +
+            sum(map(lambda x: (2 * x) ** 2, board.kingCaptureCache[
+                playerColor])) -
+            sum(map(lambda x: (2 * x) ** 2, board.kingCaptureCache[
+                opponentColor])))
+
 
 def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
         alpha=float("-inf"), beta=float("+inf"), parentCall=True,
@@ -133,20 +148,25 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
     if parentCall:
         prof = cProfile.Profile()
         prof.enable()
+        
+        board = copy.deepcopy(board)
+        board.clearMovementStats()
        
     # Get a list of all legal moves
     legalMoveSet = board.getAllLegalMoves()
 
     # If we're at the limit of our tree, use the heuristic to guess
-    if depth == 0 or len(legalMoveSet) == 0:
-        return heuristicFunc(board, AIColor)
+    if depth == 0:
+        return heuristicFunc(board, AIColor, False)
+    elif len(legalMoveSet) == 0:
+        return heuristicFunc(board, AIColor, True)
     
     # Blind the AI randomly
     if (not parentCall
             and (isinstance(stubbornnessTable, list)
                     or isinstance(stubbornnessTable, tuple))):
         if rng.rand() < stubbornnessTable[depth]:
-            return heuristicFunc(board, AIColor)
+            return heuristicFunc(board, AIColor, False)
             
 
     nodeIndex = -1

@@ -61,6 +61,16 @@ class Board:
         self.numberOfPlays = 0
         self.numberOfPlays2 = 0
 
+        # Movement stat caches for AI heuristic
+        self.captureCache = {RED: [], WHITE: []}
+        self.kingCache = {RED: 0, WHITE: 0}
+        self.kingCaptureCache = {RED: [], WHITE: []}
+
+    def clearMovementStats(self):
+        self.captureCache = {RED: [], WHITE: []}
+        self.kingCache = {RED: 0, WHITE: 0}
+        self.kingCaptureCache = {RED: [], WHITE: []}
+
     def newBoard(self):
         """Creates a matrix containing a new board."""
         matrix = []
@@ -532,14 +542,27 @@ class Board:
             #raise RuntimeError("Board.py::Board:executeMove: executeMove called without having computed legal moves.")
             #return
 
+        captures = 0
+        kingCaptures = 0
         # Execute a complete move based on a move parameter
         if selectedMove:
             for coord in selectedMove:
                 if self.location(coord).occupant:
                     if self.location(coord).occupant.color != self.playerTurn:
+                        # Track captured piece count for AI's heuristic
+                        captures += 1
+                        if self.location(coord).occupant.king:
+                            kingCaptures += 1
+                        
                         self.removePiece(coord)
+            
             self.movePiece(selectedMove[0],
                            selectedMove[-1], blind)
+            # For AI.
+            if captures > 0:
+                self.captureCache[self.playerTurn].append(captures)
+            if kingCaptures > 0:
+                self.kingCaptureCache[self.playerTurn].append(kingCaptures)
             return
 
         # Logic for handle player multiple jumps
@@ -788,6 +811,8 @@ class Board:
                         coordinate).occupant.color == RED and coordinate[
                         1] == 7):
                 self.location(coordinate).occupant.king = True
+                # For AI's heuristic.
+                self.kingCache[self.location(coordinate).occupant.color] += 1
 
     def pixelCoords(self, coordinate, squareSize, pieceSize):
         """
