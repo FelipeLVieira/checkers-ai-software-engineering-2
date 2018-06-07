@@ -262,7 +262,8 @@ class Graphics:
         self.board = self.auxBoard
 
     def updateAndDraw(self, hoverPosition, selectedPiece, hoverButton, 
-            gamePaused, turnNumber, isPlayerTurn, gameEnded, stub_playerScore, stub_opponentScore):
+            gamePaused, turnNumber, isPlayerTurn, gameEnded, playerScore, 
+            opponentScore):
         self.timeDelta = self.clock.tick(self.fps) / 1000.
         self.background.blitAt(self.screen, (0, 0))
         self.drawBoardPieces()
@@ -274,7 +275,8 @@ class Graphics:
         self.updateAndDrawMovingPiece(gamePaused, self.timeDelta)
         if not gamePaused: 
             self.drawHoverButton(hoverButton)
-        self.updateAndDrawSidebarText(isPlayerTurn, turnNumber)
+        self.updateAndDrawSidebarText(isPlayerTurn, turnNumber, playerScore, 
+                opponentScore)
         if gameEnded:
             self.updateAndDrawEndOverlay(self.timeDelta, hoverButton, 
                     gameEnded)
@@ -400,15 +402,15 @@ class Graphics:
         elif hoverButton in self.endOverlayButtonsRelCoords: pass
         else: raise RuntimeError("Graphics.py::Graphics:drawHoverPiece: Invalid UI button `{}'".format(hoverButton))
 
-    def updateAndDrawSidebarText(self, isPlayerTurn, turnNumber):
+    def updateAndDrawSidebarText(self, isPlayerTurn, turnNumber, playerScore, opponentScore):
         if isPlayerTurn:
             self.textObjects["turnText"].update(TURNSTRING.format(turnNumber))
         else:
             self.textObjects["turnText"].update(WAITSTRING)
         #self.textObjects["upperScore"].update(str(12 - self.board.whiteCounterAux))
         #self.textObjects["lowerScore"].update(str(12 - self.board.redCounterAux))
-        self.textObjects["upperScore"].update(str(12 - 0))
-        self.textObjects["lowerScore"].update(str(12 - 0))
+        self.textObjects["upperScore"].update(str(playerScore))
+        self.textObjects["lowerScore"].update(str(opponentScore))
         for (key, o) in self.textObjects.items():
             o.blitAt(self.screen)
 
@@ -761,3 +763,4 @@ def main():
                     
 
 if __name__ == "__main__": main()
+
