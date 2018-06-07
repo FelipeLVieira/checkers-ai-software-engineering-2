@@ -16,22 +16,67 @@ class GameLoop:
 
         self.mousePos = None
 
+        self.hoverPiece = None
+        self.hoverButton = 0
+
         # Player's turn switcher
         self.board.playerTurn = WHITE
 
         # Boolean screen switchers
-        self.startScreen = False
         self.mainGame = True
         self.gameOver = False
         self.pause = False
+        self.exitedGame = False
 
     """--------------+
     |  Event Loops   |
     +--------------"""
 
-    def pauseEventLoop(self):
-        return
+    def gameOverEventLoop(self):
+        raise NotImplementedError()
 
+    def pauseEventLoop(self):
+        raise NotImplementedError()
+
+    def playerTurnEventLoop(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.terminateGame()
+            elif event.type == pygame.MOUSEMOTION:
+                self.updateMousePos(event.pos)
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                clickedRegion = self.handleClick(event.pos)
+                if clickedRegion == REGION_BOARD:
+                    self.handleBoardClick(event.pos)
+                elif clickedRegion == BUTTON_INGAME_HOVER_PAUSE:
+                    self.mainGame = False
+                    self.pause = True
+                elif clickedRegion == BUTTON_INGAME_HOVER_EXIT:
+                    self.exitedGame = True
+
+    """--------------------------+
+    |  Event handling functions  |
+    +--------------------------"""
+
+    def updateMousePos(self, pos):
+        """Determines where the mouse is hovering above and updates
+        self.hoverPiece and self.hoverButton.
+        Note that self.hoverPiece is a tuple within the board, whereas
+        self.hoverButton is a region identifier within Constants.py.
+        (e.g. BUTTON_INGAME_HOVER_PAUSE)
+        Remember to never check region identifiers for non-visible regions!
+        (e.g. pause buttons, when game is not paused...)"""
+        raise NotImplementedError()
+
+    def handleClick(self, pos):
+        """Determines the region where the mouse was clicked and returns it."""
+        raise NotImplementedError()
+
+    def handleBoardClick(self, pos):
+        """Given the mouse was clicked within the board, determine the
+        coordinates of where it was clicked and act accordingly, by grabbing
+        a new set of legal moves or performing a move."""
+        raise NotImplementedError()
 
     """-----------------------------------------------------+
     | VitinhoCarneiro: I'd recommend rewriting this.        |
@@ -41,6 +86,7 @@ class GameLoop:
     | for actual function calls when the Board              |
     | implementation is complete.                           |
     +-----------------------------------------------------"""
+    """
     def mainGameEventLoop(self):
         self.mousePos = self.board.boardCoords(pygame.mouse.get_pos(),
                                                self.graphics.boardSpacing, self.graphics.boardUpperLeftCoords)  # what square is the mouse in?
@@ -89,6 +135,7 @@ class GameLoop:
                         self.board.mouseClick = None
                         #self.board.selectedPieceMoves = None
                         self.endTurn()
+    """
 
     """-----------------+
     |  Screen Updaters  |
@@ -160,7 +207,7 @@ class GameLoop:
             if self.mainGame:
                 self.mainGameEventLoop()
                 self.updateMainGame()
-            if self.pause:
+            elif self.pause:
                 self.pauseEventLoop()
                 self.updatePause()
 
