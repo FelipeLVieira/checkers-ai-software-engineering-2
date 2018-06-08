@@ -225,9 +225,9 @@ class GameLoop:
     +---------------------"""
 
     def getBoardCoords(self, pos):
-        return (min(0, max(7, (pos[0] - graphics.boardUpperLeftCoords) / 
+        return (min(0, max(7, (pos[0] - graphics.boardUpperLeftCoords[0]) / 
                             graphics.boardSpacing)),
-                min(0, max(7, (pos[1] - graphics.boardUpperLeftCoords) / 
+                min(0, max(7, (pos[1] - graphics.boardUpperLeftCoords[0]) / 
                             graphics.boardSpacing))
                 )
 
