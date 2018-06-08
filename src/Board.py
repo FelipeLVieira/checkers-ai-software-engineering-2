@@ -34,6 +34,7 @@ class Board:
         # Cache of list of legal moves for the board in this turn
         # Must be set to None at the end of a turn.
         self.legalMoveSet = None
+        self.fullLegalMoveSet = None
 
         # Indicates which player is currently playing.
         self.playerTurn = WHITE
@@ -126,11 +127,12 @@ class Board:
         Takes a set of coordinates as arguments and returns self.matrix[x][y]
         This can be faster than writing something like self.matrix[coords[0]][coords[1]]
         """
+        print("location coordinate", coordinate)
 
         if not coordinate:
             return
         try:
-            if(coordinate.x  and coordinate.y is not None):
+            if coordinate.x and coordinate.y is not None:
                 return self.matrix[coordinate.x][coordinate.y]
         except:
             return self.matrix[coordinate[0]][coordinate[1]]
@@ -164,18 +166,22 @@ class Board:
     def getLegalMoves(self, coordinate):
         """Returns the legal moves for a piece."""
         # Calculate legal move set if it hasn't been calculated yet
-        if self.legalMoveSet is None: self.getAllLegalMoves()
+        if self.fullLegalMoveSet is None: self.getAllLegalMoves()
 
         # Select in the legal move set, where the first coordinate is the
         # desired piece's coordinate
         self.legalMoveSet = list(
-            filter(lambda m: m[0][0] == coordinate.x and m[0][1] == coordinate.y, self.legalMoveSet))
+            filter(
+                lambda m: m[0] == coordinate,
+                self.fullLegalMoveSet))
 
+        """
         print("getLegalMoves self.legalMoveSet before filter:",
               self.legalMoveSet)
         self.legalMoveSet = self.getBestMoves()
         print("getLegalMoves self.legalMoveSet after filter:",
-              self.legalMoveSet)
+               self.legalMoveSet)
+        """
 
         return self.legalMoveSet
 
@@ -184,7 +190,7 @@ class Board:
     def getAllLegalMoves(self):
         """Computes legal moves for all of the player's pieces on the
         board."""
-        self.legalMoveSet = []
+        self.fullLegalMoveSet = []
         # The highest move rank encountered.
         # The rank of a move is given by the number of captures it makes.
         highestMoveRank = -1
@@ -198,8 +204,8 @@ class Board:
                             y].occupant.color is self.playerTurn):
                     # print((x, y))
                     for move in self.theoreticalLegalMoves((x, y)):
-                        if move not in self.legalMoveSet:
-                            self.legalMoveSet.append(move)
+                        if move not in self.fullLegalMoveSet:
+                            self.fullLegalMoveSet.append(move)
 
                             rank = self.moveRank(move)
                             if highestMoveRank < rank: highestMoveRank = rank
@@ -213,12 +219,12 @@ class Board:
         # print("BoardLogic.py::Board:getAllLegalMoves: Highest move rank is {}".format(highestMoveRank))
 
         illegalMoves = []
-        for move in self.legalMoveSet:
+        for move in self.fullLegalMoveSet:
             if self.moveRank(move) < highestMoveRank:
                 # print("BoardLogic.py::Board:getAllLegalMoves: Move {} has rank {} < {}, dropping.".format(move, self.moveRank(move), highestMoveRank))
                 illegalMoves.append(move)
 
-        for move in illegalMoves: self.legalMoveSet.remove(move)
+        for move in illegalMoves: self.fullLegalMoveSet.remove(move)
 
         # For debugging only... comment this later
         # print("BoardLogic.py::Board:getAllLegalMoves: Legal moves:")
@@ -226,7 +232,7 @@ class Board:
 
         # print("return self.legalMoveSet from getAllLegalMoves",
         #      self.legalMoveSet)
-        return self.legalMoveSet
+        return self.fullLegalMoveSet
 
     """-----------------------------------------+
     |  AUXILIARY MOVEMENT EVALUATION FUNCTIONS  |
@@ -329,9 +335,9 @@ class Board:
                             fullMove.extend(move)
                             moveList.append(fullMove)
                             extraJumps = self.theoreticalKingLegalMoves(
-                                    fullMove[-1], alreadyEaten=True,
-                                    delta=tplsub(fullMove[-1], fullMove[-2]),
-                                    startColor=startColor)
+                                fullMove[-1], alreadyEaten=True,
+                                delta=tplsub(fullMove[-1], fullMove[-2]),
+                                startColor=startColor)
                             # print("Board::theoreticalKingLegalMoves:extraJumps:")
                             for extraJump in extraJumps:
                                 # print(extraJump)
@@ -410,7 +416,7 @@ class Board:
     +-------------------------------"""
 
     def getBestMoves(self):
-        if not self.legalMoveSet:
+        if self.legalMoveSet is None:
             return
 
         jumpCounter = 0
@@ -550,6 +556,8 @@ class Board:
 
         # Execute a complete move based on a move parameter
         if selectedMove:
+            captures = 0
+            kingCaptures = 0
             for coord in selectedMove:
                 if self.location(coord).occupant:
                     if self.location(coord).occupant.color != self.playerTurn:
@@ -557,7 +565,7 @@ class Board:
                         captures += 1
                         if self.location(coord).occupant.king:
                             kingCaptures += 1
-                        
+
                         self.removePiece(coord)
             self.movePiece(selectedMove[0],
                            selectedMove[-1], blind)
@@ -569,7 +577,7 @@ class Board:
         # Logic for handle player multiple jumps
         self.finishMoveExec = False
 
-        jumpCount = False
+        jumpCount = self.getLegalMoveSetJumps
 
         for move in self.legalMoveSet:
             for coord in move:
@@ -599,11 +607,7 @@ class Board:
         for piece in jumpedPieces:
             self.removePiece(piece)
 
-        for move in self.legalMoveSet:
-            if len(move) == 1:
-                self.finishMoveExec = True
-
-        return
+        return self.getLegalMoveSetJumps() == 0
 
     def filterLegalMoves(self):
 
@@ -646,6 +650,17 @@ class Board:
         self.legalMoveSet = filteredLegalMoves
         return pieceToBeRemovedCoord
 
+    def getLegalMoveSetJumps(self):
+        jumpCount = 0
+        for move in self.legalMoveSet:
+            for coord in move:
+                if self.location(coord).occupant:
+                    if self.location(coord).occupant.color != self.playerTurn:
+                        jumpCount += 1
+                        break
+            else:
+                break
+        return jumpCount
     def validTargetCoordinate(self):
         validSquares = []
         jumpCount = 0
@@ -825,12 +840,12 @@ class Board:
             coordinate[0] * squareSize + pieceSize,
             coordinate[1] * squareSize + pieceSize)
 
-    def boardCoords(self, pixelCoordinate, squareSize, margin):
+    def boardCoords(self, coords, boardSpacing, boardUpperLeftCoords):
         """
            Does the reverse of pixel_coords(). Takes in a tuple of of pixel coordinates and returns what square they are in.
         """
-        return (int((pixelCoordinate[0] - margin[0]) / squareSize),
-                int((pixelCoordinate[1] - margin[1]) / squareSize))
+        return (int((coords[0] * boardSpacing + boardUpperLeftCoords[0])),
+                int((coords[1] * boardSpacing + boardUpperLeftCoords[1])))
 
     def pixelToSquarePosition(self, pixelCoordinate, squareSize):
         """
@@ -840,7 +855,8 @@ class Board:
                 pixelCoordinate[1] / squareSize)
 
     def clearCachedVariables(self):
-        self.legalMoveSet = None
+        self.legalMoveSet = []
+        self.fullLegalMoveSet = []
         self.mouseClick = None
         self.selectedPieceCoordinate = None
         return True

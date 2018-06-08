@@ -354,9 +354,9 @@ class Graphics:
         #print(self.selMoveAnimations)
     
     def clearPossibleMoves(self):
-        for col in self.selMoveAnimations:
-            for cell in col:
-                cell = None
+        for col in range(8):
+            for row in range(8):
+                self.selMoveAnimations[col][row] = None
     
     def updateAndDrawPossibleMoves(self, gamePaused):
         for x in range(8):

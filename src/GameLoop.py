@@ -34,89 +34,85 @@ class GameLoop:
         # Game state variables
         self.exitedGame = False
         self.states = {
-                "playerTurn": self.playerTurnEventLoop,
-                "AITurn": self.AITurnEventLoop,
-                "pause": self.pauseEventLoop,
-                "gameOver": self.gameOverEventLoop,
-                "anim": self.waitForAnimationEventLoop
-                }
+            "playerTurn": self.playerTurnEventLoop,
+            "AITurn": self.AITurnEventLoop,
+            "pause": self.pauseEventLoop,
+            "gameOver": self.gameOverEventLoop,
+            "anim": self.waitForAnimationEventLoop
+        }
         self.state = "playerTurn"
         self.stateBeforePause = None
         self.stateAfterAnimation = None
 
-
     """--------------+
     |  Event Loops   |
     +--------------"""
-    
+
     def gameOverEventLoop(self):
         """State "gameOver": runs when the game has ended."""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.terminateGame()
-                
+
             elif event.type == pygame.MOUSEMOTION:
                 self.updateMousePos(event.pos)
-                
+
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 clickedRegion = self.handleClick(event.pos)
-                
+
                 if clickedRegion == BUTTON_END_HOVER_RESTART:
                     self.restartGame()
-                    
+
                 elif clickedRegion == BUTTON_END_HOVER_EXIT or \
                         clickedRegion == BUTTON_INGAME_HOVER_EXIT:
                     self.exitedGame = True
-                    
-                    
-    
+
     def pauseEventLoop(self):
         """State "pause": runs while the game is paused."""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.terminateGame()
-                
+
             elif event.type == pygame.MOUSEMOTION:
                 self.updateMousePos(event.pos)
-                
+
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 clickedRegion = self.handleClick(event.pos)
-                
+
                 if clickedRegion == BUTTON_PAUSE_HOVER_CONTINUE:
                     self.state = self.stateBeforePause
                     self.hoverButton = 0
-                    
+
                 elif clickedRegion == BUTTON_PAUSE_HOVER_RESTART:
                     self.restartGame()
-                    
+
                 elif clickedRegion == BUTTON_PAUSE_HOVER_EXIT:
                     self.exitedGame = True
-        
-    
+
     def playerTurnEventLoop(self):
         """State "playerTurn": runs whenever the game is running and it's the
         (human) player's turn."""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.terminateGame()
-                
+
             elif event.type == pygame.MOUSEMOTION:
                 self.updateMousePos(event.pos)
-                
+
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 clickedRegion = self.handleClick(event.pos)
-                
+
                 if clickedRegion == REGION_BOARD:
                     self.handleBoardClick(event.pos)
-                    
+
                 elif clickedRegion == BUTTON_INGAME_HOVER_PAUSE:
                     self.stateBeforePause = "playerTurn"
                     self.state = "pause"
                     self.hoverButton = 0
-                    
+
                 elif clickedRegion == BUTTON_INGAME_HOVER_EXIT:
                     self.exitedGame = True
-    
+
     def AITurnEventLoop(self):
         """State "AITurn": runs whenever the game is running, while the AI is
         playing."""
@@ -129,55 +125,54 @@ class GameLoop:
             self.state = "anim"
             self.stateAfterAnimation = "playerTurn"
             return
-            
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.terminateGame()
-                
+
             elif event.type == pygame.MOUSEMOTION:
                 self.updateMousePos(event.pos)
-                
+
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 clickedRegion = self.handleClick(event.pos)
-                
+
                 if clickedRegion == BUTTON_INGAME_HOVER_PAUSE:
                     self.stateBeforePause = "AITurn"
                     self.state = "pause"
                     self.hoverButton = 0
-                    
+
                 elif clickedRegion == BUTTON_INGAME_HOVER_EXIT:
                     self.exitedGame = True
-    
+
     def waitForAnimationEventLoop(self):
         """State "anim": begins running when a movement is registered and runs
         until its screen animation finishes."""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.terminateGame()
-                
+
             elif event.type == pygame.MOUSEMOTION:
                 self.updateMousePos(event.pos)
-                
+
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 clickedRegion = self.handleClick(event.pos)
-                
+
                 if clickedRegion == BUTTON_INGAME_HOVER_PAUSE:
                     self.stateBeforePause = "anim"
                     self.state = "pause"
                     self.hoverButton = 0
-                
+
                 elif clickedRegion == BUTTON_INGAME_HOVER_EXIT:
                     self.exitedGame = True
-            
+
             # Trap animation-triggered events
             elif event.type == EVENT_PIECE_VANISH:
                 self.graphics.vanishPiece(event)
-            
+
             elif event.type == EVENT_PATH_END:
                 self.graphics.endPath()
                 # Set next game state
                 self.state = self.stateAfterAnimation
-            
 
     """--------------------------+ 
     |  Event handling functions  |
@@ -211,7 +206,7 @@ class GameLoop:
             "pause": self.graphics.pauseRegions,
             "anim": self.graphics.regions,
             "gameOver": self.graphics.gameOverRegions
-            }
+        }
         for key, region in regions[self.state].items():
             if region.collidepoint(pos):
                 return key
@@ -232,19 +227,40 @@ class GameLoop:
         switch to the "anim" state to wait for the animation to complete, and
         set stateAfterAnimation to the correct state before proceeding.
         ("playerTurn" if the movement is incomplete, "AITurn otherwise")"""
-        raise NotImplementedError()
+
+        boardCoords = self.getBoardCoords(pos)
+        square = derefer(self.board.matrix, boardCoords)
+
+        if square.occupant and square.occupant.color is self.board.playerTurn:
+            self.board.selectedPieceCoordinate = boardCoords
+            self.board.legalMoveSet = self.board.getLegalMoves(boardCoords)
+            if not self.board.legalMoveSet:
+                self.graphics.showPiecesWithLegalMoves(
+                        self.board.getPiecesWithLegalMoves())
+            else:
+                self.graphics.clearPossibleMoves()
+                self.graphics.setPossibleMoves(self.board.legalMoveSet)
+        else:
+            for move in self.board.legalMoveSet:
+                if boardCoords in move:
+                    finishedMoveExec = self.board.executeMove()
+                    if finishedMoveExec:
+                        self.board.clearCachedVariables()
+                    break
+
+        # raise NotImplementedError()
 
     """---------------------+
     |  Auxiliary functions  |
     +---------------------"""
 
     def getBoardCoords(self, pos):
-        return (int(min(7, max(0, (pos[0] - 
-                        self.graphics.boardUpperLeftCoords[0])
-                            / self.graphics.boardSpacing))),
-                int(min(7, max(0, (pos[1] - 
-                        self.graphics.boardUpperLeftCoords[1])
-                            / self.graphics.boardSpacing)))
+        return (int(min(7, max(0, (pos[0] -
+                                   self.graphics.boardUpperLeftCoords[0])
+                               / self.graphics.boardSpacing))),
+                int(min(7, max(0, (pos[1] -
+                                   self.graphics.boardUpperLeftCoords[1])
+                               / self.graphics.boardSpacing)))
                 )
 
     def computeEatenPieces(self, movement):
@@ -266,15 +282,15 @@ class GameLoop:
 
         gamePaused = (self.state == "pause")
         isPlayerTurn = (self.state == "playerTurn" or
-                self.state == "pause" and self.stateBeforePause == "playerTurn" or
-                self.state == "anim" and self.stateAfterAnimation == "playerTurn" or
-                self.state == "gameOver")
+                        self.state == "pause" and self.stateBeforePause == "playerTurn" or
+                        self.state == "anim" and self.stateAfterAnimation == "playerTurn" or
+                        self.state == "gameOver")
 
-        #--------------------------------------+
+        # --------------------------------------+
         # REMOVE ALL OF THESE STUBS when their |
         # actual functions are implemented,    |
         # replacing them with actual values.   |
-        #--------------------------------------+
+        # --------------------------------------+
 
         # Reminder: gameEnded is None if the game is not over, or the string
         # constants ENDGAME_WIN or ENDGAME_LOSE if the game is over and the
@@ -290,10 +306,14 @@ class GameLoop:
         # Don't increment it in both loops! Only once.
         stub_turnNumber = 1
 
-        self.timeDelta = self.graphics.updateAndDraw(hoverPosition, 
-                selectedPiece, hoverButton, gamePaused, 
-                stub_turnNumber, isPlayerTurn, stub_gameEnded, 
-                stub_scorePlayer, stub_scoreOpponent)
+        self.timeDelta = self.graphics.updateAndDraw(hoverPosition,
+                                                     selectedPiece,
+                                                     hoverButton, gamePaused,
+                                                     stub_turnNumber,
+                                                     isPlayerTurn,
+                                                     stub_gameEnded,
+                                                     stub_scorePlayer,
+                                                     stub_scoreOpponent)
 
     """------------------+
     |  Game Controllers  |
@@ -318,7 +338,7 @@ class GameLoop:
     def terminateGame(self):
         pygame.quit()
         sys.exit()
-    
+
     def restartGame(self):
         raise gameRestartException()
 
@@ -333,13 +353,16 @@ class GameLoop:
             self.updateMainGame()
             if self.exitedGame: return
 
+
 class gameRestartException(BaseException):
     pass
+
 
 def main():
     graphicsBackend = GraphicsBackend()
     game = GameLoop(graphicsBackend, 2, "")
     game.mainLoop()
+
 
 if __name__ == "__main__":
     main()
