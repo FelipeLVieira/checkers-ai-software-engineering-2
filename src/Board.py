@@ -703,7 +703,7 @@ class Board:
         for x in range(8):
             for y in range(8):
                 if self.matrix[x][y].occupant is not None and\
-                                self.matrix[x][y].occupant.color is RED:
+                                self.matrix[x][y].occupant.color is WHITE:
                         numberOfPieces = numberOfPieces + 1
         return numberOfPieces
 
@@ -712,7 +712,7 @@ class Board:
         for x in range(8):
             for y in range(8):
                 if self.matrix[x][y].occupant is not None and\
-                                self.matrix[x][y].occupant.color is WHITE:
+                                self.matrix[x][y].occupant.color is RED:
                         numberOfPieces = numberOfPieces + 1
         return numberOfPieces
 
