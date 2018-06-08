@@ -282,8 +282,8 @@ class GameLoop:
         stub_gameEnded = None
 
         # The player and opponent's score is the number of pieces they each have.
-        stub_scorePlayer = 12
-        stub_scoreOpponent = 12
+        scorePlayer = self.board.getNumberOfPlayerPieces()
+        scoreOpponent = self.board.getNumberOfOpponentPieces()
         # This is the turn number. It should be incremented after the
         # (human) player finishes playing.
         # (or after the AI finishes, doesn't really make a difference)
@@ -293,7 +293,7 @@ class GameLoop:
         self.timeDelta = self.graphics.updateAndDraw(hoverPosition, 
                 selectedPiece, hoverButton, gamePaused, 
                 stub_turnNumber, isPlayerTurn, stub_gameEnded, 
-                stub_scorePlayer, stub_scoreOpponent)
+                scorePlayer, scoreOpponent)
 
     """------------------+
     |  Game Controllers  |

@@ -683,6 +683,25 @@ class Board:
                 self.legalMovesEndSquare.append(
                     move[-1])
 
+    def getNumberOfPlayerPieces(self):
+        numberOfPieces = 0
+        for x in range(8):
+            for y in range(8):
+                if self.matrix[x][y].occupant is not None and\
+                                self.matrix[x][y].occupant.color is RED:
+                        numberOfPieces = numberOfPieces + 1
+        return numberOfPieces
+
+    def getNumberOfOpponentPieces(self):
+        numberOfPieces = 0
+        for x in range(8):
+            for y in range(8):
+                if self.matrix[x][y].occupant is not None and\
+                                self.matrix[x][y].occupant.color is WHITE:
+                        numberOfPieces = numberOfPieces + 1
+        return numberOfPieces
+
+
     def verifyWinCondition(self):
         self.isPlayerRedLost = True
         self.isPlayerWhiteLost = True
