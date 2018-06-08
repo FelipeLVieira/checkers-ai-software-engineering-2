@@ -169,7 +169,7 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
     # Profiling code
     if parentCall:
         prof = cProfile.Profile()
-        prof.enable()
+        #prof.enable()
         
         board = copy.deepcopy(board)
         board.clearMovementStats()
@@ -258,7 +258,7 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
                 break
         #print("AI.py::minimaxAB: (d{}) values={}, maximizing={}".format(depth, values, maximizing))
         if not parentCall: return bestValue
-        print("AI.py::minimaxAB: (parent) Best value is {}".format(bestValue))
+        #print("AI.py::minimaxAB: (parent) Best value is {}".format(bestValue))
 
 
     # Case 2: minimizing step
@@ -308,14 +308,14 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
                 break
         #print("AI.py::minimaxAB: (d{}) values={}, maximizing={}".format(depth, values, maximizing))
         if not parentCall: return worstValue
-    print("AI.py::minimaxAB: appending result {}".format(legalMoveSet[chosenNode]))
+    #print("AI.py::minimaxAB: appending result {}".format(legalMoveSet[chosenNode]))
     returnPointer.append(legalMoveSet[chosenNode])
-    prof.disable()
-    stream = io.StringIO()
-    sortby = 'cumulative'
-    ps = pstats.Stats(prof, stream=stream).sort_stats(sortby)
-    ps.print_stats()
-    print(stream.getvalue())
+    #prof.disable()
+    #stream = io.StringIO()
+    #sortby = 'cumulative'
+    #ps = pstats.Stats(prof, stream=stream).sort_stats(sortby)
+    #ps.print_stats()
+    #print(stream.getvalue())
 
 
 minimaxHyperParameters = [

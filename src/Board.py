@@ -45,6 +45,9 @@ class Board:
         self.mouseClick = None
         self.mousePos = None
 
+        self.jumpedPieces = None
+        self.movedPath = None
+
         self.finishMoveExec = True
 
         self.isPlayerRedLost = False
@@ -127,7 +130,6 @@ class Board:
         Takes a set of coordinates as arguments and returns self.matrix[x][y]
         This can be faster than writing something like self.matrix[coords[0]][coords[1]]
         """
-        print("location coordinate", coordinate)
 
         if not coordinate:
             return
@@ -202,7 +204,6 @@ class Board:
                 if (self.matrix[x][y].occupant is not None
                         and self.matrix[x][
                             y].occupant.color is self.playerTurn):
-                    # print((x, y))
                     for move in self.theoreticalLegalMoves((x, y)):
                         if move not in self.fullLegalMoveSet:
                             self.fullLegalMoveSet.append(move)
@@ -450,6 +451,12 @@ class Board:
 
         return filteredBestMoves
 
+    def clickOnLegalMoveCoord(self):
+        for move in self.legalMoveSet:
+            if self.mouseClick in move:
+                return True
+        return False
+
     def coordToTuple(self, coordinate):
         if isinstance(coordinate, Coordinate):
             tup = (coordinate.x, coordinate.y)
@@ -511,13 +518,16 @@ class Board:
             self.matrix[endCoordinate[0]][endCoordinate[1]].occupant = \
                 self.matrix[startCoordinate[0]][
                     startCoordinate[1]].occupant
+            # print(self.matrix[endCoordinate[0]][endCoordinate[1]].occupant)
             self.removePiece(startCoordinate)
+            self.selectedPieceCoordinate = endCoordinate
         self.king(endCoordinate)
         if not blind: self.verifyDrawCondition()
 
     def getPiecesWithLegalMoves(self):
         piecesWithLegalMoves = []
-        for move in self.legalMoveSet:
+        auxLegalMoveSet = self.getAllLegalMoves()
+        for move in auxLegalMoveSet:
             if move[0] not in piecesWithLegalMoves:
                 piecesWithLegalMoves.append(move[0])
         return piecesWithLegalMoves
@@ -553,121 +563,69 @@ class Board:
         # if self.legalMoveSet is None:
         # raise RuntimeError("Board.py::Board:executeMove: executeMove called without having computed legal moves.")
         # return
-
+        moveIsComplete = True
         # Execute a complete move based on a move parameter
-        if selectedMove:
-            captures = 0
-            kingCaptures = 0
-            for coord in selectedMove:
-                if self.location(coord).occupant:
-                    if self.location(coord).occupant.color != self.playerTurn:
-                        # Track captured piece count for AI's heuristic
-                        captures += 1
-                        if self.location(coord).occupant.king:
-                            kingCaptures += 1
-
-                        self.removePiece(coord)
-            self.movePiece(selectedMove[0],
-                           selectedMove[-1], blind)
-            # For AI.
-            self.captureCache[self.playerTurn].append(captures)
-            self.kingCaptureCache[self.playerTurn].append(kingCaptures)
-            return
-
-        # Logic for handle player multiple jumps
-        self.finishMoveExec = False
-
-        jumpCount = self.getLegalMoveSetJumps
-
-        for move in self.legalMoveSet:
-            for coord in move:
-                if self.location(coord).occupant:
-                    if self.location(coord).occupant.color != self.playerTurn:
-                        jumpCount += 1
-                        break
+        if not selectedMove:
+            possibleMoves = list(filter(lambda m: self.mouseClick in m,
+                                        self.legalMoveSet))
+            completeMoves = list(filter(lambda m: m[-1] == self.mouseClick,
+                                        possibleMoves))
+            if completeMoves:
+                selectedMove = completeMoves[0]
             else:
-                break
+                clippedMoves = list(map(lambda m: m[:m.index(self.mouseClick)],
+                                        possibleMoves))
+                moveIsComplete = False
+                selectedMove = clippedMoves[0]
+        if not blind:
+            self.movedPath = selectedMove
+            self.jumpedPieces = self.computeEatenPieces(selectedMove)
+        captures = 0
+        kingCaptures = 0
+        for coord in selectedMove:
+            if self.location(coord).occupant:
+                if self.location(coord).occupant.color != self.playerTurn:
+                    # Track captured piece count for AI's heuristic
+                    captures += 1
+                    if self.location(coord).occupant.king:
+                        kingCaptures += 1
 
-        # If the legalMoveSet has no pieces to capture, return as it is
-        if jumpCount == 0:
-            self.movePiece(self.selectedPieceCoordinate, self.mouseClick)
-            self.finishMoveExec = True
-            return
+                    self.removePiece(coord)
+        self.movePiece(selectedMove[0],
+                       selectedMove[-1], blind)
+        # For AI.
+        self.captureCache[self.playerTurn].append(captures)
+        self.kingCaptureCache[self.playerTurn].append(kingCaptures)
+        return moveIsComplete
 
-        # Move the selected piece
-        self.movePiece(self.selectedPieceCoordinate, self.mouseClick)
-
-        # Updates selectedPieceCoordinate position
-        self.selectedPieceCoordinate = self.mouseClick
-
-        # Refine the legalMoveSet and gets the captured piece coordinate
-        jumpedPieces = self.filterLegalMoves()
-
-        # Remove the captured piece(s)
-        for piece in jumpedPieces:
-            self.removePiece(piece)
-
-        return self.getLegalMoveSetJumps() == 0
-
-    def filterLegalMoves(self):
-
-        auxPartialFiltered = []
-        pieceJumpedCoord = None
-        pieceToBeRemovedCoord = []
-        for move in self.legalMoveSet:
-            i = 0
-            while i < len(move):
-                nextSquare = move[i]
-                if self.location(nextSquare).occupant:
-                    if self.location(
-                            nextSquare).occupant.color != self.playerTurn:
-                        pieceToBeRemovedCoord.append(nextSquare)
-
-                if self.location(nextSquare).occupant:
-                    if self.location(
-                            nextSquare).occupant.color == self.playerTurn:
-                        if self.location(nextSquare) == self.location(
-                                self.mouseClick):
-                            auxPartialFiltered.append(move)
-                            pieceJumpedCoord = None
-                            break
-                i += 1
-
-        filteredLegalMoves = []
-
-        for move in auxPartialFiltered:
-            i = 0
-            nextSquare = move[i]
-            while i < len(move):
-                if self.location(nextSquare).occupant:
-                    if self.location(
-                            nextSquare).occupant.color == self.playerTurn:
-                        break
-                i += 1
-                nextSquare = move[i]
-            filteredLegalMoves.append(move[i:])
-
-        self.legalMoveSet = filteredLegalMoves
-        return pieceToBeRemovedCoord
+    def computeEatenPieces(self, movement):
+        eatenPieces = []
+        for coord in movement:
+            if (self.location(coord).occupant
+                    and self.location(coord).occupant.color
+                    is not self.playerTurn):
+                eatenPieces.append(coord)
+        return eatenPieces
 
     def getLegalMoveSetJumps(self):
         jumpCount = 0
         for move in self.legalMoveSet:
             for coord in move:
-                if self.location(coord).occupant:
-                    if self.location(coord).occupant.color != self.playerTurn:
-                        jumpCount += 1
-                        break
+                if self.location(coord).occupant and self.location(
+                        coord).occupant.color != self.playerTurn:
+                    jumpCount += 1
+                    break
             else:
                 break
+        #print("jumpcount", jumpCount)
         return jumpCount
+
     def validTargetCoordinate(self):
         validSquares = []
         jumpCount = 0
         for move in self.legalMoveSet:
             i = 0
             while i < len(move):
-                print(i)
                 nextSquare = move[i]
                 if self.location(nextSquare).occupant:
                     if self.location(
@@ -702,20 +660,19 @@ class Board:
         numberOfPieces = 0
         for x in range(8):
             for y in range(8):
-                if self.matrix[x][y].occupant is not None and\
-                                self.matrix[x][y].occupant.color is RED:
-                        numberOfPieces = numberOfPieces + 1
+                if self.matrix[x][y].occupant is not None and \
+                        self.matrix[x][y].occupant.color is RED:
+                    numberOfPieces = numberOfPieces + 1
         return numberOfPieces
 
     def getNumberOfOpponentPieces(self):
         numberOfPieces = 0
         for x in range(8):
             for y in range(8):
-                if self.matrix[x][y].occupant is not None and\
-                                self.matrix[x][y].occupant.color is WHITE:
-                        numberOfPieces = numberOfPieces + 1
+                if self.matrix[x][y].occupant is not None and \
+                        self.matrix[x][y].occupant.color is WHITE:
+                    numberOfPieces = numberOfPieces + 1
         return numberOfPieces
-
 
     def verifyWinCondition(self):
         self.isPlayerRedLost = True
@@ -878,6 +835,8 @@ class Board:
         self.fullLegalMoveSet = []
         self.mouseClick = None
         self.selectedPieceCoordinate = None
+        self.jumpedPieces = None
+        self.movedPath = None
         return True
 
     """---------------------------------------------+

@@ -4,6 +4,7 @@ from Board import *
 from Constants import *
 from pygame.locals import *
 import AI
+import cProfile, pstats, io
 
 
 class GameLoop:
@@ -24,14 +25,13 @@ class GameLoop:
         self.hoverPiece = None
         self.hoverButton = 0
         self.selectedPiece = None
+        self.profiler = cProfile.Profile()
 
         # Last timeDelta from last graphics update
         self.timeDelta = 0.
 
         # Player's turn switcher
         self.board.playerTurn = WHITE
-
-        self.turnNumber = 1
 
         # Game state variables
         self.exitedGame = False
@@ -120,11 +120,10 @@ class GameLoop:
         playing."""
         AIResult = self.aiPlayer.updateAndCheckCompletion(self.timeDelta)
         if AIResult:
-            eatenPieces = self.computeEatenPieces(AIResult)
+            eatenPieces = self.board.computeEatenPieces(AIResult)
             self.board.executeMove(AIResult)
             self.board.clearCachedVariables()
             self.graphics.registerMove(self.board, AIResult, eatenPieces)
-            self.turnNumber += 1
             self.state = "anim"
             self.stateAfterAnimation = "playerTurn"
             return
@@ -174,6 +173,7 @@ class GameLoop:
 
             elif event.type == EVENT_PATH_END:
                 self.graphics.endPath()
+                print("Animation ended!")
                 # Set next game state
                 self.state = self.stateAfterAnimation
 
@@ -231,25 +231,40 @@ class GameLoop:
         set stateAfterAnimation to the correct state before proceeding.
         ("playerTurn" if the movement is incomplete, "AITurn otherwise")"""
 
-        boardCoords = self.getBoardCoords(pos)
-        square = derefer(self.board.matrix, boardCoords)
+        self.board.mouseClick = self.getBoardCoords(pos)
+        square = derefer(self.board.matrix, self.board.mouseClick)
+        print("Mouse click", self.board.mouseClick)
+        print("Selected piece coord", self.board.selectedPieceCoordinate)
 
         if square.occupant and square.occupant.color is self.board.playerTurn:
-            self.board.selectedPieceCoordinate = boardCoords
-            self.board.legalMoveSet = self.board.getLegalMoves(boardCoords)
+
+            self.board.selectedPieceCoordinate = self.board.mouseClick
+
+            self.board.legalMoveSet = self.board.getLegalMoves(
+                self.board.mouseClick)
+
             if not self.board.legalMoveSet:
                 self.graphics.showPiecesWithLegalMoves(
-                        self.board.getPiecesWithLegalMoves())
+                    self.board.getPiecesWithLegalMoves())
             else:
                 self.graphics.clearPossibleMoves()
                 self.graphics.setPossibleMoves(self.board.legalMoveSet)
-        else:
-            for move in self.board.legalMoveSet:
-                if boardCoords in move:
-                    finishedMoveExec = self.board.executeMove()
-                    if finishedMoveExec:
-                        self.board.clearCachedVariables()
-                    break
+
+        elif self.board.legalMoveSet and self.board.clickOnLegalMoveCoord():
+            finishMoveExec = self.board.executeMove()
+            self.graphics.clearPossibleMoves()
+            print(self.board.movedPath)
+            self.graphics.registerMove(self.board, self.board.movedPath,
+                                       self.board.jumpedPieces)
+            if finishMoveExec:
+                self.board.clearCachedVariables()
+                self.stateAfterAnimation = "AITurn"
+                self.endTurn()
+                self.aiPlayer.play()
+            else:
+                self.stateAfterAnimation = "playerTurn"
+            self.state = "anim"
+
 
         # raise NotImplementedError()
 
@@ -265,13 +280,6 @@ class GameLoop:
                                    self.graphics.boardUpperLeftCoords[1])
                                / self.graphics.boardSpacing)))
                 )
-
-    def computeEatenPieces(self, movement):
-        """Maybe this should be in Board.py, @Firebase?
-        Takes in a movement and returns a list of the pieces (coordinates)
-        that will be eaten in that movement.
-        Necessary for Graphics.registerMove."""
-        raise NotImplementedError()
 
     """-----------------+
     |  Screen Updaters  |
@@ -301,13 +309,12 @@ class GameLoop:
         stub_gameEnded = None
 
         # The player and opponent's score is the number of pieces they each have.
-        scorePlayer = self.board.getNumberOfPlayerPieces()
-        scoreOpponent = self.board.getNumberOfOpponentPieces()
+        stub_scorePlayer = 12
+        stub_scoreOpponent = 12
         # This is the turn number. It should be incremented after the
         # (human) player finishes playing.
         # (or after the AI finishes, doesn't really make a difference)
         # Don't increment it in both loops! Only once.
-<<<<<<< HEAD
         stub_turnNumber = 1
 
         self.timeDelta = self.graphics.updateAndDraw(hoverPosition,
@@ -318,12 +325,6 @@ class GameLoop:
                                                      stub_gameEnded,
                                                      stub_scorePlayer,
                                                      stub_scoreOpponent)
-=======
-        self.timeDelta = self.graphics.updateAndDraw(hoverPosition,
-                selectedPiece, hoverButton, gamePaused, 
-                self.turnNumber, isPlayerTurn, stub_gameEnded,
-                scorePlayer, scoreOpponent)
->>>>>>> 3a4e7e14384b55a4f0526beea8bb66c6a28df1d7
 
     """------------------+
     |  Game Controllers  |

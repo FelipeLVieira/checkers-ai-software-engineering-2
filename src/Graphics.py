@@ -5,6 +5,7 @@ import math
 import sys
 import copy
 from Constants import *
+import cProfile
 
 # For testing only
 import random
@@ -34,6 +35,7 @@ class Graphics:
         self.windowWidth = graphicsBackend.windowWidth
         self.windowHeight = graphicsBackend.windowHeight
         self.screen = graphicsBackend.screen
+
 
         self.board = copy.deepcopy(board)
         self.auxBoard = None
@@ -236,6 +238,7 @@ class Graphics:
         self.board.removePiece(event.coords)
 
     def registerMove(self, newBoard, movement, eatenPieces):
+        print("Graphics.py::Graphics:registerMove: movement={}".format(movement))
         pieceColor = self.board.location(movement[0]).occupant.color
         self.maskedPiece = movement[0]
         path = [PathNode(self.mapToScrCoords(movement[0]), 1)]
@@ -272,8 +275,13 @@ class Graphics:
         if arcing and arcLength > 0:
             self.appendNode(path, nextCoord, True, True, arcLength)
 
+
+
         path[-1].eventOnComplete = pygame.event.Event(pygame.USEREVENT,
                     eventType=EVENT_PATH_END)
+
+        for c in path:
+            print("event:", c.coords, c.speed, c.accelerate, c.decelerate, c.eventOnComplete)
 
         # Instance the moving piece
         if pieceColor is RED:
