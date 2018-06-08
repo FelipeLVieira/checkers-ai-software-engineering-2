@@ -315,16 +315,11 @@ class GameLoop:
         # (human) player finishes playing.
         # (or after the AI finishes, doesn't really make a difference)
         # Don't increment it in both loops! Only once.
-        stub_turnNumber = 1
 
         self.timeDelta = self.graphics.updateAndDraw(hoverPosition,
-                                                     selectedPiece,
-                                                     hoverButton, gamePaused,
-                                                     stub_turnNumber,
-                                                     isPlayerTurn,
-                                                     stub_gameEnded,
-                                                     stub_scorePlayer,
-                                                     stub_scoreOpponent)
+                selectedPiece, hoverButton, gamePaused, 
+                self.turnNumber, isPlayerTurn, stub_gameEnded,
+                scorePlayer, scoreOpponent)
 
     """------------------+
     |  Game Controllers  |

@@ -660,18 +660,18 @@ class Board:
         numberOfPieces = 0
         for x in range(8):
             for y in range(8):
-                if self.matrix[x][y].occupant is not None and \
-                        self.matrix[x][y].occupant.color is RED:
-                    numberOfPieces = numberOfPieces + 1
+                if self.matrix[x][y].occupant is not None and\
+                                self.matrix[x][y].occupant.color is WHITE:
+                        numberOfPieces = numberOfPieces + 1
         return numberOfPieces
 
     def getNumberOfOpponentPieces(self):
         numberOfPieces = 0
         for x in range(8):
             for y in range(8):
-                if self.matrix[x][y].occupant is not None and \
-                        self.matrix[x][y].occupant.color is WHITE:
-                    numberOfPieces = numberOfPieces + 1
+                if self.matrix[x][y].occupant is not None and\
+                                self.matrix[x][y].occupant.color is RED:
+                        numberOfPieces = numberOfPieces + 1
         return numberOfPieces
 
     def verifyWinCondition(self):
@@ -679,11 +679,11 @@ class Board:
         self.isPlayerWhiteLost = True
         for x in range(8):
             for y in range(8):
-                if self.matrix[x][y].occupant is not None and self.matrix[x][
-                    y].occupant.color is RED:
+                if self.matrix[x][y].occupant is not None and\
+                                self.matrix[x][y].occupant.color is RED and self.getLegalMoves((x,y)):
                     self.isPlayerRedLost = False
-                elif self.matrix[x][y].occupant is not None and self.matrix[x][
-                    y].occupant.color is WHITE:
+                elif self.matrix[x][y].occupant is not None and\
+                                self.matrix[x][y].occupant.color is WHITE and self.getLegalMoves((x,y)):
                     self.isPlayerWhiteLost = False
                 if self.isPlayerRedLost is False and self.isPlayerWhiteLost is False:
                     break
