@@ -31,6 +31,8 @@ class GameLoop:
         # Player's turn switcher
         self.board.playerTurn = WHITE
 
+        self.turnNumber = 1
+
         # Game state variables
         self.exitedGame = False
         self.states = {
@@ -122,6 +124,7 @@ class GameLoop:
             self.board.executeMove(AIResult)
             self.board.clearCachedVariables()
             self.graphics.registerMove(self.board, AIResult, eatenPieces)
+            self.turnNumber += 1
             self.state = "anim"
             self.stateAfterAnimation = "playerTurn"
             return
@@ -298,12 +301,13 @@ class GameLoop:
         stub_gameEnded = None
 
         # The player and opponent's score is the number of pieces they each have.
-        stub_scorePlayer = 12
-        stub_scoreOpponent = 12
+        scorePlayer = self.board.getNumberOfPlayerPieces()
+        scoreOpponent = self.board.getNumberOfOpponentPieces()
         # This is the turn number. It should be incremented after the
         # (human) player finishes playing.
         # (or after the AI finishes, doesn't really make a difference)
         # Don't increment it in both loops! Only once.
+<<<<<<< HEAD
         stub_turnNumber = 1
 
         self.timeDelta = self.graphics.updateAndDraw(hoverPosition,
@@ -314,6 +318,12 @@ class GameLoop:
                                                      stub_gameEnded,
                                                      stub_scorePlayer,
                                                      stub_scoreOpponent)
+=======
+        self.timeDelta = self.graphics.updateAndDraw(hoverPosition,
+                selectedPiece, hoverButton, gamePaused, 
+                self.turnNumber, isPlayerTurn, stub_gameEnded,
+                scorePlayer, scoreOpponent)
+>>>>>>> 3a4e7e14384b55a4f0526beea8bb66c6a28df1d7
 
     """------------------+
     |  Game Controllers  |
