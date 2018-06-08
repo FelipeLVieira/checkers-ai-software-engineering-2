@@ -128,6 +128,7 @@ class GameLoop:
             self.graphics.registerMove(self.board, AIResult, eatenPieces)
             self.state = "anim"
             self.stateAfterAnimation = "playerTurn"
+            self.endTurn()
             return
 
         for event in pygame.event.get():

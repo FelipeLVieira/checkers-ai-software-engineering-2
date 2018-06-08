@@ -618,7 +618,9 @@ class Motion:
     def loadNextNode(self):
         """Loads the next node in the path, consuming it. Also fires the
            current node's event, if there's any."""
-        if self.nextEvent is not None: pygame.event.post(self.nextEvent)
+        if self.nextEvent is not None:
+            pygame.event.post(self.nextEvent)
+            print("Motion: event posted.")
 
         self.coord1 = self.coord2
 
