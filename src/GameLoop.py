@@ -178,7 +178,18 @@ class GameLoop:
         (e.g. BUTTON_INGAME_HOVER_PAUSE)
         Remember to never check region identifiers for non-visible regions!
         (e.g. pause buttons, when game is not paused...)"""
-        raise NotImplementedError() 
+        raise NotImplementedError()
+        # I know, the function is called handleClick and we are not clicking.
+        # But it's a pure function and it works in this case, so it makes
+        # sense to use it.
+        region = self.handleClick(pos)
+
+        if region is REGION_BOARD:
+            self.hoverButton = 0
+            self.hoverPiece = self.getBoardCoords(pos)
+        else:
+            self.hoverPiece = None
+            self.hoverButton = region
 
     def handleClick(self, pos):
         """Determines the region where the mouse was clicked and returns it."""
@@ -192,7 +203,6 @@ class GameLoop:
         for key, region in regions[self.state].items():
             if region.collidepoint(pos):
                 return key
-
 
     def handleBoardClick(self, pos):
         """Given the mouse was clicked within the board, determine the
@@ -211,6 +221,16 @@ class GameLoop:
         ("playerTurn" if the movement is incomplete, "AITurn otherwise")"""
         raise NotImplementedError()
 
+    """---------------------+
+    |  Auxiliary functions  |
+    +---------------------"""
+
+    def getBoardCoords(self, pos):
+        return (min(0, max(7, (pos[0] - graphics.boardUpperLeftCoords) / 
+                            graphics.boardSpacing)),
+                min(0, max(7, (pos[1] - graphics.boardUpperLeftCoords) / 
+                            graphics.boardSpacing))
+                )
 
     """-----------------+
     |  Screen Updaters  |
