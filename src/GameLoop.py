@@ -178,7 +178,6 @@ class GameLoop:
         (e.g. BUTTON_INGAME_HOVER_PAUSE)
         Remember to never check region identifiers for non-visible regions!
         (e.g. pause buttons, when game is not paused...)"""
-        raise NotImplementedError()
         # I know, the function is called handleClick and we are not clicking.
         # But it's a pure function and it works in this case, so it makes
         # sense to use it.
