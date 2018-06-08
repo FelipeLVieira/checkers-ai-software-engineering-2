@@ -117,15 +117,16 @@ class Graphics:
                 BUTTON_PAUSE_HOVER_RESTART: pygame.Rect(
                         self.pauseRestartButtonCoords, (279, 54)),
                 BUTTON_PAUSE_HOVER_EXIT: pygame.Rect(
-                        self.pauseExitButtonCoords, (279, 54)),
+                        self.pauseExitButtonCoords, (279, 54))
+                }
 
         self.gameOverRegions = {
                 BUTTON_END_HOVER_RESTART: pygame.Rect(
                         tplsum(self.endRestartButtonRelCoords, (640, 360)),
-                        (278, 58)
+                        (278, 58)),
                 BUTTON_END_HOVER_EXIT: pygame.Rect(
                         tplsum(self.endExitButtonRelCoords, (640, 360)),
-                        (278, 58)
+                        (278, 58)),
                 BUTTON_INGAME_HOVER_EXIT: pygame.Rect(
                         self.exitButtonCoords, (82, 82))
                 }
@@ -429,7 +430,7 @@ class Graphics:
             self.ingameButtonHover.blitAt(self.screen, 
                     self.UIButtonsHoverCoords[hoverButton])
         elif hoverButton in self.endOverlayButtonsRelCoords: pass
-        else: raise RuntimeError("Graphics.py::Graphics:drawHoverPiece: Invalid UI button `{}'".format(hoverButton))
+        else: raise RuntimeError("Graphics.py::Graphics:drawHoverButton: Invalid UI button `{}'".format(hoverButton))
 
     def updateAndDrawSidebarText(self, isPlayerTurn, turnNumber, playerScore, opponentScore):
         if isPlayerTurn:

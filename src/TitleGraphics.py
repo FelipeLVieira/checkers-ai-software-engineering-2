@@ -1,6 +1,7 @@
 import pygame
 from Graphics import *
 from Constants import *
+import copy
 
 class TitleGraphics:
     def __init__(self, graphicsBackend):
@@ -83,6 +84,7 @@ class TitleGraphics:
                 PathNode((640, 252), 400, accelerate=False, decelerate=True)
                 ]
         self.titleMotion = EasingMotion(self.titlePath)
+        self.titleMotionBackup = copy.deepcopy(self.titleMotion)
         
         # UI object containers
         self.textObjects = {
@@ -131,6 +133,9 @@ class TitleGraphics:
         # Misc
         self.playerNameUnderlineRect = pygame.Rect((480, 355), (322, 2))
         self.maxPlayerNameWidth = 314
+   
+    def resetTitleMotion(self):
+        self.titleMotion = copy.deepcopy(self.titleMotionBackup)
     
     def updateAndDraw(self, difficulty, hoverButton, playerName, textCursorPos):
         self.timeDelta = self.clock.tick(self.fps) / 1000.

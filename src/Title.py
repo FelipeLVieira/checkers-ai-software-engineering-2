@@ -57,11 +57,21 @@ class Title:
             self.cursorPos = -1
             return
         if area == "startButton":
-            # The game begins here
-            # TODO: Change this to jump to the game loop,
-            # passing the relevant parameters.
-            gameLoop = GameLoop.GameLoop(self.graphicsBackend,
-                    self.selectedDifficultyButton, self.playerName).main()
+            # The game begins here.
+            # This loop ensures the game can be restarted as many times as the
+            # player desires, but will exit and go back to the titleScreen
+            # when the player exits.
+            while(True):
+                try:
+                    gameLoop = GameLoop.GameLoop(self.graphicsBackend,
+                            self.selectedDifficultyButton, self.playerName)\
+                                    .mainLoop()
+                    break
+                except GameLoop.gameRestartException:
+                    continue
+            # This makes the title text reset its descending animation and
+            # play it from start when the player returns to the title screen.
+            self.titleGraphics.resetTitleMotion()
         elif area.startswith("diffButton"):
             self.selectedDifficultyButton = int(area[-1:]) - 1
         elif area == "playerNameBox":

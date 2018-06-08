@@ -12,6 +12,11 @@ class GameLoop:
         self.board = Board()
         self.graphics = Graphics(graphicsBackend, self.board, playerName)
         self.aiPlayer = AI.AIPlayer(self.board, RED, difficultyLevel)
+        # Cache parameters for when we need to restart the game
+        self.graphicsBackend = graphicsBackend
+        self.difficultyLevel = difficultyLevel
+        self.playerName = playerName
+
         self.done = False
 
         self.mousePos = None
@@ -29,11 +34,11 @@ class GameLoop:
         # Game state variables
         self.exitedGame = False
         self.states = {
-                "playerTurn": playerTurnEventLoop,
-                "AITurn": AITurnEventLoop,
-                "pause": pauseEventLoop,
-                "gameOver": gameOverEventLoop,
-                "anim": waitForAnimationEventLoop
+                "playerTurn": self.playerTurnEventLoop,
+                "AITurn": self.AITurnEventLoop,
+                "pause": self.pauseEventLoop,
+                "gameOver": self.gameOverEventLoop,
+                "anim": self.waitForAnimationEventLoop
                 }
         self.state = "playerTurn"
         self.stateBeforePause = None
@@ -79,6 +84,7 @@ class GameLoop:
                 
                 if clickedRegion == BUTTON_PAUSE_HOVER_CONTINUE:
                     self.state = self.stateBeforePause
+                    self.hoverButton = 0
                     
                 elif clickedRegion == BUTTON_PAUSE_HOVER_RESTART:
                     self.restartGame()
@@ -106,6 +112,7 @@ class GameLoop:
                 elif clickedRegion == BUTTON_INGAME_HOVER_PAUSE:
                     self.stateBeforePause = "playerTurn"
                     self.state = "pause"
+                    self.hoverButton = 0
                     
                 elif clickedRegion == BUTTON_INGAME_HOVER_EXIT:
                     self.exitedGame = True
@@ -115,9 +122,13 @@ class GameLoop:
         playing."""
         AIResult = self.aiPlayer.updateAndCheckCompletion(self.timeDelta)
         if AIResult:
-            self.graphics.registerMove(AIResult)
+            eatenPieces = self.computeEatenPieces(AIResult)
+            self.board.executeMove(AIResult)
+            self.board.clearCachedVariables()
+            self.graphics.registerMove(self.board, AIResult, eatenPieces)
             self.state = "anim"
             self.stateAfterAnimation = "playerTurn"
+            return
             
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -132,6 +143,7 @@ class GameLoop:
                 if clickedRegion == BUTTON_INGAME_HOVER_PAUSE:
                     self.stateBeforePause = "AITurn"
                     self.state = "pause"
+                    self.hoverButton = 0
                     
                 elif clickedRegion == BUTTON_INGAME_HOVER_EXIT:
                     self.exitedGame = True
@@ -152,6 +164,7 @@ class GameLoop:
                 if clickedRegion == BUTTON_INGAME_HOVER_PAUSE:
                     self.stateBeforePause = "anim"
                     self.state = "pause"
+                    self.hoverButton = 0
                 
                 elif clickedRegion == BUTTON_INGAME_HOVER_EXIT:
                     self.exitedGame = True
@@ -202,6 +215,7 @@ class GameLoop:
         for key, region in regions[self.state].items():
             if region.collidepoint(pos):
                 return key
+        return 0
 
     def handleBoardClick(self, pos):
         """Given the mouse was clicked within the board, determine the
@@ -225,11 +239,20 @@ class GameLoop:
     +---------------------"""
 
     def getBoardCoords(self, pos):
-        return (min(0, max(7, (pos[0] - graphics.boardUpperLeftCoords[0]) / 
-                            graphics.boardSpacing)),
-                min(0, max(7, (pos[1] - graphics.boardUpperLeftCoords[0]) / 
-                            graphics.boardSpacing))
+        return (int(min(7, max(0, (pos[0] - 
+                        self.graphics.boardUpperLeftCoords[0])
+                            / self.graphics.boardSpacing))),
+                int(min(7, max(0, (pos[1] - 
+                        self.graphics.boardUpperLeftCoords[1])
+                            / self.graphics.boardSpacing)))
                 )
+
+    def computeEatenPieces(self, movement):
+        """Maybe this should be in Board.py, @Firebase?
+        Takes in a movement and returns a list of the pieces (coordinates)
+        that will be eaten in that movement.
+        Necessary for Graphics.registerMove."""
+        raise NotImplementedError()
 
     """-----------------+
     |  Screen Updaters  |
@@ -253,10 +276,10 @@ class GameLoop:
         # replacing them with actual values.   |
         #--------------------------------------+
 
-        # Reminder: gameEnded is False if the game is not over, or the string
+        # Reminder: gameEnded is None if the game is not over, or the string
         # constants ENDGAME_WIN or ENDGAME_LOSE if the game is over and the
         # (human) player has won or lost, respectively.
-        stub_gameEnded = False
+        stub_gameEnded = None
 
         # The player and opponent's score is the number of pieces they each have.
         stub_scorePlayer = 12
@@ -297,22 +320,26 @@ class GameLoop:
         sys.exit()
     
     def restartGame(self):
-        raise NotImplementedError()
+        raise gameRestartException()
 
     """--------------+
     |      Main      |
     +--------------"""
 
-    def main(self):
+    def mainLoop(self):
 
         while True:
             self.states[self.state]()
             self.updateMainGame()
+            if self.exitedGame: return
+
+class gameRestartException(BaseException):
+    pass
 
 def main():
     graphicsBackend = GraphicsBackend()
     game = GameLoop(graphicsBackend, 2, "")
-    game.main()
+    game.mainLoop()
 
 if __name__ == "__main__":
     main()
