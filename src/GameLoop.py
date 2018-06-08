@@ -30,6 +30,8 @@ class GameLoop:
         # Last timeDelta from last graphics update
         self.timeDelta = 0.
 
+        self.turnNumber = 1
+
         # Player's turn switcher
         self.board.playerTurn = WHITE
 
@@ -311,6 +313,9 @@ class GameLoop:
         # The player and opponent's score is the number of pieces they each have.
         stub_scorePlayer = 12
         stub_scoreOpponent = 12
+        scorePlayer = self.board.getNumberOfPlayerPieces()
+        scoreOpponent = self.board.getNumberOfOpponentPieces()
+
         # This is the turn number. It should be incremented after the
         # (human) player finishes playing.
         # (or after the AI finishes, doesn't really make a difference)
