@@ -135,7 +135,7 @@ class Graphics:
 
         # Other values
         self.boardSpacing = 82
-        self.pieceBaseMoveSpeed = 320
+        self.pieceBaseMoveSpeed = 460
         self.endOverlayDimensions = (600, 210)
         
         # Motion paths
@@ -227,6 +227,8 @@ class Graphics:
         self.movingPiece = None
         self.maskedPiece = None
 
+        self.pieceIsMoving = False
+
     def setupWindow(self):
         pygame.init()
         pygame.display.set_caption(self.caption)
@@ -234,8 +236,8 @@ class Graphics:
 
 
 
-    def vanishPiece(self, event):
-        self.board.removePiece(event.coords)
+    def vanishPiece(self, coords):
+        self.board.removePiece(coords)
 
     def registerMove(self, newBoard, movement, eatenPieces):
         print("Graphics.py::Graphics:registerMove: movement={}".format(movement))
@@ -248,11 +250,11 @@ class Graphics:
         # The arc length expresses how many squares are jumped in the arc;
         # this is used to calculate the actual movement speed
         arcLength = 0
-        for coord in movement:
+        for coord in movement[1:]:
             if coord not in eatenPieces:
                 if not arcing:
                     # Exit the capture node with a decelerated movement
-                    self.appendNode(path, coord, False, True, 1)
+                    self.appendNode(path, coord, False, True, 2)
                     # Start an arc - an arc is a node that jumps over multiple
                     # coordinates
                     arcing = True
@@ -265,11 +267,10 @@ class Graphics:
                 if arcing and arcLength > 0:
                     # End the current arc before adding the capture node
                     self.appendNode(path, nextCoord, True, True, arcLength)
-                    arcing = False
+                arcing = False
 
-                event = pygame.event.Event(pygame.USEREVENT, 
-                        eventType=EVENT_PIECE_VANISH, coords=coord)
-                self.appendNode(path, coord, True, False, 1, event)
+                event = (self.vanishPiece, (coord,))
+                self.appendNode(path, coord, True, False, 2, event)
 
         # End an unfinished arc
         if arcing and arcLength > 0:
@@ -277,12 +278,11 @@ class Graphics:
 
 
 
-        path[-1].eventOnComplete = pygame.event.Event(pygame.USEREVENT,
-                    eventType=EVENT_PATH_END)
-
+        path[-1].eventOnComplete = (self.endPath, ())
+        
         for c in path:
             print("event:", c.coords, c.speed, c.accelerate, c.decelerate, c.eventOnComplete)
-
+        
         # Instance the moving piece
         if pieceColor is RED:
             self.movingPiece = (self.redPiece, EasingMotion(path))
@@ -290,14 +290,18 @@ class Graphics:
             self.movingPiece = (self.whitePiece, EasingMotion(path))
         else:
             raise RuntimeError("Graphics.py::Graphics:registerMove: invalid piece color `{}'.".format(pieceColor))
-
+        
+        self.pieceIsMoving = True
+        
         self.auxBoard = copy.deepcopy(newBoard)
 
 
     def endPath(self):
         self.maskedPiece = None
         self.movingPiece = None
+        self.pieceIsMoving = False
         self.board = self.auxBoard
+        print("Graphics::Graphic:endPath: called")
 
     def updateAndDraw(self, hoverPosition, selectedPiece, hoverButton, 
             gamePaused, turnNumber, isPlayerTurn, gameEnded, playerScore, 
@@ -345,7 +349,7 @@ class Graphics:
                                 self.mapToScrCoords((col, row)))
 
                         if self.board.matrix[col][row].occupant.king:
-                            self.kingwhitePiece.blitAt(self.screen,
+                            self.kingWhitePiece.blitAt(self.screen,
                                     self.mapToScrCoords((col, row)))
 
                     else: raise RuntimeError("Graphics.py::Graphics:drawBoardPieces: Invalid piece color `{}'".format(self.board.matrix[col][row].occupant.color))
@@ -394,12 +398,11 @@ class Graphics:
                             self.screen, self.mapToScrCoords((x, y)))
 
     def updateAndDrawMovingPiece(self, gamePaused, timeDelta):
-        if isinstance(self.movingPiece, tuple):
+        if self.movingPiece:
             if not gamePaused:
                 self.movingPiece[1].update(timeDelta)
-            #print(self.movingPiece[1].currentPos)
-            self.movingPiece[0].blitAt(self.screen,
-                    self.movingPiece[1].currentPos)
+        if self.movingPiece:
+            self.movingPiece[0].blitAt(self.screen, self.movingPiece[1].currentPos)
 
     def drawHoverPiece(self, hoverPiece):
         if (isinstance(hoverPiece, tuple)):
@@ -619,8 +622,8 @@ class Motion:
         """Loads the next node in the path, consuming it. Also fires the
            current node's event, if there's any."""
         if self.nextEvent is not None:
-            pygame.event.post(self.nextEvent)
-            print("Motion: event posted.")
+            # Execute function [0] using tuple [1] as arguments
+            self.nextEvent[0](*self.nextEvent[1])
 
         self.coord1 = self.coord2
 

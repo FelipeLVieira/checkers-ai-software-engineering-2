@@ -168,7 +168,7 @@ class Board:
     def getLegalMoves(self, coordinate):
         """Returns the legal moves for a piece."""
         # Calculate legal move set if it hasn't been calculated yet
-        if self.fullLegalMoveSet is None: self.getAllLegalMoves()
+        if not self.fullLegalMoveSet: self.getAllLegalMoves()
 
         # Select in the legal move set, where the first coordinate is the
         # desired piece's coordinate

@@ -128,6 +128,7 @@ class GameLoop:
             self.graphics.registerMove(self.board, AIResult, eatenPieces)
             self.state = "anim"
             self.stateAfterAnimation = "playerTurn"
+            self.turnNumber += 1
             self.endTurn()
             return
 
@@ -169,16 +170,8 @@ class GameLoop:
 
                 elif clickedRegion == BUTTON_INGAME_HOVER_EXIT:
                     self.exitedGame = True
-
-            # Trap animation-triggered events
-            elif event.type == EVENT_PIECE_VANISH:
-                self.graphics.vanishPiece(event)
-
-            elif event.type == EVENT_PATH_END:
-                self.graphics.endPath()
-                print("Animation ended!")
-                # Set next game state
-                self.state = self.stateAfterAnimation
+        if not self.graphics.pieceIsMoving:
+            self.state = self.stateAfterAnimation
 
     """--------------------------+ 
     |  Event handling functions  |
