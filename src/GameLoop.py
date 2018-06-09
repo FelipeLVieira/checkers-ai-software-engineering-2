@@ -356,8 +356,6 @@ class GameLoop:
             return False
         if self.board.playerTurn is WHITE:
             self.board.playerTurn = RED
-            self.ai.play()
-            
         else:
             self.board.playerTurn = WHITE
         return True
