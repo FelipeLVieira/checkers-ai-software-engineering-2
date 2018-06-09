@@ -123,22 +123,22 @@ def heuristic(board, playerColor, endGame):
     attenuation = 1.0
 
     heur = 2 * ((2 * board.kingCache[playerColor]) ** 2 - 
-            0.6 * ((2 * board.kingCache[opponentColor]) ** 2))
+            1.1 * ((2 * board.kingCache[opponentColor]) ** 2))
     for e in board.captureCache[playerColor]:
-        heur += 2.4 * (e ** 2) * attenuation
-        attenuation *= 0.66
+        heur += 2.1 * (e ** 2) * attenuation
+        attenuation *= 0.7
     attenuation = 1.0
     for e in board.captureCache[opponentColor]:
-        heur -= 1.6 * (e ** 2) * attenuation
-        attenuation *= 0.66
+        heur -= 2.4 * (e ** 2) * attenuation
+        attenuation *= 0.7
     attenuation = 1.0
     for e in board.kingCaptureCache[playerColor]:
-        heur -= 2.4 * ((2 * e) ** 2) * attenuation
-        attenuation *= 0.66
+        heur += 2.1 * ((2 * e) ** 2) * attenuation
+        attenuation *= 0.7
     attenuation = 1.0
     for e in board.kingCaptureCache[opponentColor]:
-        heur -= 1.6 * ((2 * e) ** 2) * attenuation
-        attenuation *= 0.66
+        heur -= 2.4 * ((2 * e) ** 2) * attenuation
+        attenuation *= 0.7
 
     return heur
 
@@ -172,14 +172,9 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
         board = copy.deepcopy(board)
         board.clearMovementStats()
        
-    # Get a list of all legal moves
-    legalMoveSet = board.getAllLegalMoves()
-
     # If we're at the limit of our tree, use the heuristic to guess
     if depth == 0:
         return heuristicFunc(board, AIColor, False)
-    elif len(legalMoveSet) == 0:
-        return heuristicFunc(board, AIColor, True)
     
     # Blind the AI randomly
     if (not parentCall
@@ -188,6 +183,10 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
         if rng.rand() < stubbornnessTable[depth]:
             return heuristicFunc(board, AIColor, False)
             
+    # Get a list of all legal moves
+    legalMoveSet = board.getAllLegalMoves()
+    if len(legalMoveSet) == 0:
+        return heuristicFunc(board, AIColor, True)
 
     nodeIndex = -1
     chosenNode = None
@@ -199,8 +198,17 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
     for move in legalMoveSet:
         childBoard = Board.Board(board)
         childBoard.executeMove(move, blind=True)
-        heuristic = (heuristicFunc(childBoard, AIColor, False) 
-                + rng.rand() * randomOffset)
+        if depth > 3:
+            heuristic = minimaxAB(Board.Board(childBoard), 1, AIColor, None,
+                        maximizing=not maximizing, alpha=alpha, beta=beta, 
+                        parentCall=False, 
+                        stubbornnessTable=stubbornnessTable, 
+                        randomOffset=randomOffset,
+                        heuristicFunc=heuristicFunc, prof=prof,
+                        treeCutFactor=treeCutFactor)
+        else: 
+            heuristic = (heuristicFunc(childBoard, AIColor, False) 
+                    + rng.rand() * randomOffset)
         childBoard.playerTurn = contextColor(AIColor, not maximizing)
         nodes.append((childBoard, heuristic))
     
