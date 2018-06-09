@@ -37,6 +37,7 @@ class GameLoop:
 
         # Game state variables
         self.exitedGame = False
+        self.gameEnded = None
         self.states = {
             "playerTurn": self.playerTurnEventLoop,
             "AITurn": self.AITurnEventLoop,
@@ -255,8 +256,8 @@ class GameLoop:
             if finishMoveExec:
                 self.board.clearCachedVariables()
                 self.stateAfterAnimation = "AITurn"
-                self.endTurn()
-                self.aiPlayer.play()
+                if self.endTurn():
+                    self.aiPlayer.play()
             else:
                 self.stateAfterAnimation = "playerTurn"
             self.state = "anim"
@@ -302,11 +303,11 @@ class GameLoop:
         # Reminder: gameEnded is None if the game is not over, or the string
         # constants ENDGAME_WIN or ENDGAME_LOSE if the game is over and the
         # (human) player has won or lost, respectively.
-        stub_gameEnded = None
+        if self.state == "gameOver":
+            gameEnded = self.gameEnded
+        else: gameEnded = None
 
         # The player and opponent's score is the number of pieces they each have.
-        stub_scorePlayer = 12
-        stub_scoreOpponent = 12
         scorePlayer = self.board.getNumberOfPlayerPieces()
         scoreOpponent = self.board.getNumberOfOpponentPieces()
 
@@ -317,7 +318,7 @@ class GameLoop:
 
         self.timeDelta = self.graphics.updateAndDraw(hoverPosition,
                 selectedPiece, hoverButton, gamePaused, 
-                self.turnNumber, isPlayerTurn, stub_gameEnded,
+                self.turnNumber, isPlayerTurn, gameEnded,
                 scorePlayer, scoreOpponent)
 
     """------------------+
@@ -329,16 +330,27 @@ class GameLoop:
 
     def endTurn(self):
         if self.checkForEndgame():
-            return True
-
-    def checkForEndgame(self):
-
+            return False
         if self.board.playerTurn is WHITE:
             self.board.playerTurn = RED
         else:
             self.board.playerTurn = WHITE
-
         return True
+
+    def checkForEndgame(self):
+        endGame = self.board.checkWinCondition()
+        if not endGame:
+            endGame = self.board.isDraw
+        print(endGame)
+        if endGame:
+            self.gameEnded = {
+                    RED: ENDGAME_LOSE,
+                    WHITE: ENDGAME_WIN,
+                    True: ENDGAME_DRAW
+                    }[endGame]
+            self.stateAfterAnimation = "gameOver"
+            return True
+        return False
 
     def terminateGame(self):
         pygame.quit()

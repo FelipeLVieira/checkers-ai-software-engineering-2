@@ -674,6 +674,23 @@ class Board:
                         numberOfPieces = numberOfPieces + 1
         return numberOfPieces
 
+    def checkWinCondition(self):
+        playerTurnCache = self.playerTurn
+        
+        self.playerTurn = WHITE
+        whitePlayerLost = not bool(self.getAllLegalMoves())
+        self.clearCachedVariables()
+        
+        self.playerTurn = RED
+        redPlayerLost = not bool(self.getAllLegalMoves())
+        self.clearCachedVariables()
+        
+        self.playerTurn = playerTurnCache
+        
+        if whitePlayerLost: return RED
+        elif redPlayerLost: return WHITE
+        return None
+
     def verifyWinCondition(self):
         self.isPlayerRedLost = True
         self.isPlayerWhiteLost = True
@@ -759,7 +776,10 @@ class Board:
         self.kingRedCounterAux = self.kingRedCounter
         self.whiteCounterAux = self.whiteCounter
         self.redCounterAux = self.redCounter
-
+        
+        """-------------------------------------------------------------+
+        |  VitinhoCarneiro: The below comment makes me cringe so hard.  |
+        +-------------------------------------------------------------"""
         'DEIXAR numberOfPlays IGUAL A 4 POIS ASSIM CONTABILIZA 5 MOVES'
         if self.numberOfPlays == 20 or self.numberOfPlays2 == 4:
             self.isDraw = True
@@ -921,6 +941,10 @@ def bounded(tpl, minm, maxm):
 def tplsum(t1, t2):
     """Returns the sum of two tuples."""
     return (t1[0] + t2[0], t1[1] + t2[1])
+
+def tplsub(t1, t2):
+    """Returns the difference of two tuples."""
+    return (t1[0] - t2[0], t1[1] + t2[1])
 
 
 def derefer(matrix, coords):

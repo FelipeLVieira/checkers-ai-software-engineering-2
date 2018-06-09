@@ -47,6 +47,7 @@ PAUSE_RESTART = "Reiniciar jogo"
 PAUSE_QUIT = "Sair"
 ENDGAME_WIN = "Você ganhou!"
 ENDGAME_LOSE = "Você perdeu..."
+ENDGAME_DRAW = "Empate!"
 
 TITLE_LINE1 = ""
 TITLE_LINE2 = "Damas"

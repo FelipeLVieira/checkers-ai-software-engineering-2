@@ -104,6 +104,12 @@ class Graphics:
         self.boardUpperLeftCoords = (139, 37)
         self.endOverlayFinalCoords = ()
         
+
+        # Other values
+        self.boardSpacing = 82
+        self.pieceBaseMoveSpeed = 460
+        self.endOverlayDimensions = (600, 210)
+        
         # Screen regions
         self.regions = {
                 REGION_BOARD: pygame.Rect(self.boardUpperLeftCoords, (656, 656)),
@@ -124,20 +130,19 @@ class Graphics:
 
         self.gameOverRegions = {
                 BUTTON_END_HOVER_RESTART: pygame.Rect(
-                        tplsum(self.endRestartButtonRelCoords, (640, 360)),
+                        tplsum(tplsum(self.endRestartButtonRelCoords, 
+                                tplscale(self.endOverlayDimensions, -0.5)), 
+                                        (640, 360)),
                         (278, 58)),
                 BUTTON_END_HOVER_EXIT: pygame.Rect(
-                        tplsum(self.endExitButtonRelCoords, (640, 360)),
+                        tplsum(tplsum(self.endExitButtonRelCoords, 
+                                tplscale(self.endOverlayDimensions, -0.5)), 
+                                        (640, 360)),
                         (278, 58)),
                 BUTTON_INGAME_HOVER_EXIT: pygame.Rect(
                         self.exitButtonCoords, (82, 82))
                 }
 
-        # Other values
-        self.boardSpacing = 82
-        self.pieceBaseMoveSpeed = 460
-        self.endOverlayDimensions = (600, 210)
-        
         # Motion paths
         self.endOverlayMotion = EasingMotion([
                 PathNode((640, -210), 1),
@@ -228,12 +233,6 @@ class Graphics:
         self.maskedPiece = None
 
         self.pieceIsMoving = False
-
-    def setupWindow(self):
-        pygame.init()
-        pygame.display.set_caption(self.caption)
-
-
 
 
     def vanishPiece(self, coords):
@@ -450,8 +449,8 @@ class Graphics:
             self.textObjects["turnText"].update(WAITSTRING)
         #self.textObjects["upperScore"].update(str(12 - self.board.whiteCounterAux))
         #self.textObjects["lowerScore"].update(str(12 - self.board.redCounterAux))
-        self.textObjects["upperScore"].update(str(playerScore))
-        self.textObjects["lowerScore"].update(str(opponentScore))
+        self.textObjects["upperScore"].update(str(opponentScore))
+        self.textObjects["lowerScore"].update(str(playerScore))
         for (key, o) in self.textObjects.items():
             o.blitAt(self.screen)
 
@@ -472,12 +471,12 @@ class Graphics:
         endOverlayCorner = tplsum(self.endOverlayMotion.currentPos, 
                 tplscale(self.endOverlayDimensions, -0.5))
         self.endOverlay.blitAt(self.screen, endOverlayCorner)
+        for key, text in self.endGameTextObjects.items():
+            text.blitAt(self.screen, tplsum(endOverlayCorner, text.coords))
         if hoverButton in self.endOverlayButtonsRelCoords:
             self.endOverlayButtonHover.blitAt(self.screen, tplsum(
                     self.endOverlayButtonsRelCoords[hoverButton],
                     endOverlayCorner))
-        for key, text in self.endGameTextObjects.items():
-            text.blitAt(self.screen, tplsum(endOverlayCorner, text.coords))
     
     def mapToScrCoords(self, coords):
         """Maps board coordinates to screen coordinates."""
