@@ -311,34 +311,15 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
 
 
 minimaxHyperParameters = [
-        {"heuristicFunc": heuristic, "depth": 2, "stubbornnessTable": None,
+        {"heuristicFunc": heuristic, "depth": 2, "stubbornnessTable": [0, 0.4, 0],
             "randomOffset": 0.1, "treeCutFactor": 1.},
         {"heuristicFunc": heuristic, "depth": 3, "stubbornnessTable": None,
             "randomOffset": 0.05, "treeCutFactor": 1.},
         {"heuristicFunc": heuristic, "depth": 4,
             "stubbornnessTable": None,
-            "randomOffset": 0.02, "treeCutFactor": 1.5},
-        {"heuristicFunc": heuristic, "depth": 5, "stubbornnessTable": None,
-            "randomOffset": 0.01, "treeCutFactor": 2.},
-        {"heuristicFunc": heuristic, "depth": 6, 
-            "stubbornnessTable": [0, 0.5, 0, 0, 0, 0, 0],
-            "randomOffset": 0.01, "treeCutFactor": 2.7}
+            "randomOffset": 0.02, "treeCutFactor": 1},
         ]
 
-"""minimaxHyperParameters = [
-        {"heuristicFunc": heuristic, "depth": 2, "stubbornnessTable": None,
-            "randomOffset": 0.08, "treeCutFactor": 1.},
-        {"heuristicFunc": heuristic, "depth": 3, "stubbornnessTable": None,
-            "randomOffset": 0.05, "treeCutFactor": 1.},
-        {"heuristicFunc": heuristic, "depth": 5,
-            "stubbornnessTable": None,
-            "randomOffset": 0.02, "treeCutFactor": 3.},
-        {"heuristicFunc": heuristic, "depth": 4, "stubbornnessTable": None,
-            "randomOffset": 0.01, "treeCutFactor": 2.},
-        {"heuristicFunc": heuristic, "depth": 5, "stubbornnessTable": None,
-            "randomOffset": 0.01, "treeCutFactor": 3.}
-        ]
-"""
 class AIPlayer:
     # The Board object the AI is playing in.
     board = None

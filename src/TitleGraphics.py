@@ -28,26 +28,20 @@ class TitleGraphics:
         self.titleLineSpacing = 120
         self.playerNameBaselineCoords = (640, 347)
         self.diffLabelBaselineCoords = (640, 424)
-        self.diff1BaselineCoords = (296, 485)
-        self.diff2BaselineCoords = (468, 485)
-        self.diff3BaselineCoords = (641, 485)
-        self.diff4BaselineCoords = (813, 485)
-        self.diff5BaselineCoords = (985, 485)
+        self.diff1BaselineCoords = (468, 485)
+        self.diff2BaselineCoords = (641, 485)
+        self.diff3BaselineCoords = (813, 485)
         self.startBaselineCoords = (640, 605)
         self.buttonsHoverCoords = {
-                "diffButton1": (222, 441),
-                "diffButton2": (394, 441),
-                "diffButton3": (567, 441),
-                "diffButton4": (739, 441),
-                "diffButton5": (911, 441),
+                "diffButton1": (394, 441),
+                "diffButton2": (567, 441),
+                "diffButton3": (739, 441),
                 "startButton": (502, 549)
                 }
         self.diffButtonsSelectedCoords = [
-                (219, 438),
                 (391, 438),
                 (564, 438),
                 (736, 438),
-                (908, 438)
                 ]
         self.startButtonHoverCoords = (502, 549)
 
@@ -70,10 +64,6 @@ class TitleGraphics:
                     self.buttonsHoverCoords["diffButton2"], (148, 70)),
                 "diffButton3": pygame.Rect(
                     self.buttonsHoverCoords["diffButton3"], (148, 70)),
-                "diffButton4": pygame.Rect(
-                    self.buttonsHoverCoords["diffButton4"], (148, 70)),
-                "diffButton5": pygame.Rect(
-                    self.buttonsHoverCoords["diffButton5"], (148, 70)),
                 "startButton": pygame.Rect(
                     self.buttonsHoverCoords["startButton"], (276, 92)),
                 }
@@ -114,14 +104,6 @@ class TitleGraphics:
                         color=self.diffTextColor),
                 "titleDifficulty3": DynamicTextElement(TITLE_DIFFICULTY3, 
                         self.diff3BaselineCoords, 
-                        alignment=FONT_ALIGN_CENTER, fontSize=22,
-                        color=self.diffTextColor),
-                "titleDifficulty4": DynamicTextElement(TITLE_DIFFICULTY4, 
-                        self.diff4BaselineCoords, 
-                        alignment=FONT_ALIGN_CENTER, fontSize=22,
-                        color=self.diffTextColor),
-                "titleDifficulty5": DynamicTextElement(TITLE_DIFFICULTY5, 
-                        self.diff5BaselineCoords, 
                         alignment=FONT_ALIGN_CENTER, fontSize=22,
                         color=self.diffTextColor),
                 "startGame": TextElement(TITLE_START, 

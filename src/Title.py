@@ -17,8 +17,8 @@ class Title:
        
        # The button currently being hovered
        self.hoverButton = None
-       # The difficulty level selected. From 0 to 4, starts at 2.
-       self.selectedDifficultyButton = 2
+       # The difficulty level selected. From 0 to 2, starts at 1.
+       self.selectedDifficultyButton = 1
 
     def titleLoop(self):
         pygame.key.set_repeat(400, 40)
