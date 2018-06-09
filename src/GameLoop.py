@@ -38,6 +38,8 @@ class GameLoop:
         # Game state variables
         self.exitedGame = False
         self.gameEnded = None
+        self.forceMove = None
+        self.forcedMove = False
         self.states = {
             "playerTurn": self.playerTurnEventLoop,
             "AITurn": self.AITurnEventLoop,
@@ -97,6 +99,14 @@ class GameLoop:
     def playerTurnEventLoop(self):
         """State "playerTurn": runs whenever the game is running and it's the
         (human) player's turn."""
+        if self.forceMove and not self.forcedMove:
+            self.board.mouseClick = self.forceMove
+            self.grabLegalMoves()
+            self.forcedMove = True
+            print("Forcing move {}".format(self.forceMove))
+            print("self.mousePos: {}".format(self.board.mouseClick))
+            print("Legal moves: {}".format(self.board.legalMoveSet))
+            print("All legal moves: {}".format(self.board.fullLegalMoveSet))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.terminateGame()
@@ -233,37 +243,48 @@ class GameLoop:
         print("Mouse click", self.board.mouseClick)
         print("Selected piece coord", self.board.selectedPieceCoordinate)
 
-        if square.occupant and square.occupant.color is self.board.playerTurn:
-
-            self.board.selectedPieceCoordinate = self.board.mouseClick
-
-            self.board.legalMoveSet = self.board.getLegalMoves(
-                self.board.mouseClick)
-
-            if not self.board.legalMoveSet:
-                self.graphics.showPiecesWithLegalMoves(
-                    self.board.getPiecesWithLegalMoves())
-            else:
-                self.graphics.clearPossibleMoves()
-                self.graphics.setPossibleMoves(self.board.legalMoveSet)
+        if (square.occupant and square.occupant.color is self.board.playerTurn
+                and not self.forceMove):
+            self.grabLegalMoves()
 
         elif self.board.legalMoveSet and self.board.clickOnLegalMoveCoord():
-            finishMoveExec = self.board.executeMove()
-            self.graphics.clearPossibleMoves()
-            print(self.board.movedPath)
-            self.graphics.registerMove(self.board, self.board.movedPath,
-                                       self.board.jumpedPieces)
+            finishMoveExec = self.executeMovement()
             if finishMoveExec:
                 self.board.clearCachedVariables()
                 self.stateAfterAnimation = "AITurn"
+                self.forceMove = None
                 if self.endTurn():
                     self.aiPlayer.play()
             else:
                 self.stateAfterAnimation = "playerTurn"
+                self.forceMove = self.board.movedPath[-1]
+                self.forcedMove = False
             self.state = "anim"
 
 
         # raise NotImplementedError()
+
+    def executeMovement(self):
+        finishMoveExec = self.board.executeMove()
+        self.graphics.clearPossibleMoves()
+        print(self.board.movedPath)
+        self.graphics.registerMove(self.board, self.board.movedPath,
+                                   self.board.jumpedPieces)
+        return finishMoveExec
+
+    def grabLegalMoves(self):
+        self.board.selectedPieceCoordinate = self.board.mouseClick
+
+        legalMoves = self.board.getLegalMoves(
+            self.board.mouseClick)
+
+        if not legalMoves:
+            self.graphics.showPiecesWithLegalMoves(
+                self.board.getPiecesWithLegalMoves())
+        else:
+            self.board.legalMoveSet = legalMoves
+            self.graphics.clearPossibleMoves()
+            self.graphics.setPossibleMoves(self.board.legalMoveSet)
 
     """---------------------+
     |  Auxiliary functions  |

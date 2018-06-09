@@ -13,8 +13,14 @@ def lookup(matrix, index):
 
 class Board:
     def __init__(self, board=None):
-        # This allows us to make a copy of the board for the AI to safely
-        # recurse on.
+        # Movement stat caches for AI heuristic
+        self.captureCache = {RED: [], WHITE: []}
+        self.kingCache = {RED: 0, WHITE: 0}
+        self.kingCaptureCache = {RED: [], WHITE: []}
+
+        # Indicates which player is currently playing.
+        self.playerTurn = WHITE
+
         # Load the board matrix
         if isinstance(board, Board):
             self.matrix = []
@@ -26,18 +32,25 @@ class Board:
                     else:
                         self.matrix[-1].append(Square(e.black, Piece(
                             e.occupant.color, e.occupant.king)))
+            self.playerTurn = board.playerTurn
+            # Movement stat caches for AI heuristic
+            self.captureCache = copy.deepcopy(board.captureCache)
+            self.kingCache = copy.deepcopy(board.kingCache)
+            self.kingCaptureCache = copy.deepcopy(board.kingCaptureCache)
         elif isinstance(board, list):
             self.matrix = self.boardFromStrings(board)
         else:
             self.matrix = self.newBoard()
+            # Movement stat caches for AI heuristic
+            self.captureCache = {RED: [], WHITE: []}
+            self.kingCache = {RED: 0, WHITE: 0}
+            self.kingCaptureCache = {RED: [], WHITE: []}
 
         # Cache of list of legal moves for the board in this turn
         # Must be set to None at the end of a turn.
         self.legalMoveSet = None
         self.fullLegalMoveSet = None
 
-        # Indicates which player is currently playing.
-        self.playerTurn = WHITE
 
         # Cache of selected piece
         self.selectedPieceCoordinate = None
@@ -64,10 +77,6 @@ class Board:
         self.numberOfPlays = 0
         self.numberOfPlays2 = 0
 
-        # Movement stat caches for AI heuristic
-        self.captureCache = {RED: [], WHITE: []}
-        self.kingCache = {RED: 0, WHITE: 0}
-        self.kingCaptureCache = {RED: [], WHITE: []}
 
     def clearMovementStats(self):
         self.captureCache = {RED: [], WHITE: []}
@@ -172,6 +181,7 @@ class Board:
 
         # Select in the legal move set, where the first coordinate is the
         # desired piece's coordinate
+        print(self.fullLegalMoveSet, coordinate, self.fullLegalMoveSet[0] == coordinate)
         self.legalMoveSet = list(
             filter(
                 lambda m: m[0] == coordinate,
@@ -453,7 +463,8 @@ class Board:
 
     def clickOnLegalMoveCoord(self):
         for move in self.legalMoveSet:
-            if self.mouseClick in move:
+            if self.mouseClick in move and not derefer(
+                    self.matrix, self.mouseClick).occupant:
                 return True
         return False
 
@@ -573,10 +584,15 @@ class Board:
             if completeMoves:
                 selectedMove = completeMoves[0]
             else:
-                clippedMoves = list(map(lambda m: m[:m.index(self.mouseClick)],
+                clippedMoves = list(map(lambda m: m[:m.index(self.mouseClick) + 1],
                                         possibleMoves))
                 moveIsComplete = False
                 selectedMove = clippedMoves[0]
+                self.fullLegalMoveSet = list(map(lambda m: m[m.index(
+                                self.mouseClick):],
+                        possibleMoves))
+                print(self.fullLegalMoveSet)
+
         if not blind:
             self.movedPath = selectedMove
             self.jumpedPieces = self.computeEatenPieces(selectedMove)
@@ -944,7 +960,7 @@ def tplsum(t1, t2):
 
 def tplsub(t1, t2):
     """Returns the difference of two tuples."""
-    return (t1[0] - t2[0], t1[1] + t2[1])
+    return (t1[0] - t2[0], t1[1] - t2[1])
 
 
 def derefer(matrix, coords):

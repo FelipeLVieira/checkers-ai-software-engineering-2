@@ -241,6 +241,7 @@ class Graphics:
     def registerMove(self, newBoard, movement, eatenPieces):
         print("Graphics.py::Graphics:registerMove: movement={}".format(movement))
         pieceColor = self.board.location(movement[0]).occupant.color
+        king = self.board.location(movement[0]).occupant.king
         self.maskedPiece = movement[0]
         path = [PathNode(self.mapToScrCoords(movement[0]), 1)]
         # The path always begins as an arc of length zero
@@ -283,10 +284,20 @@ class Graphics:
             print("event:", c.coords, c.speed, c.accelerate, c.decelerate, c.eventOnComplete)
         
         # Instance the moving piece
-        if pieceColor is RED:
-            self.movingPiece = (self.redPiece, EasingMotion(path))
-        elif pieceColor is WHITE:
-            self.movingPiece = (self.whitePiece, EasingMotion(path))
+        if king:
+            if pieceColor is RED:
+                self.movingPiece = (self.redPiece, EasingMotion(path),
+                        self.kingRedPiece)
+            elif pieceColor is WHITE:
+                self.movingPiece = (self.whitePiece, EasingMotion(path), 
+                        self.kingWhitePiece)
+        elif pieceColor is RED or pieceColor is WHITE:
+            if pieceColor is RED:
+                self.movingPiece = (self.redPiece, EasingMotion(path),
+                        None)
+            elif pieceColor is WHITE:
+                self.movingPiece = (self.whitePiece, EasingMotion(path), 
+                        None)
         else:
             raise RuntimeError("Graphics.py::Graphics:registerMove: invalid piece color `{}'.".format(pieceColor))
         
@@ -402,6 +413,9 @@ class Graphics:
                 self.movingPiece[1].update(timeDelta)
         if self.movingPiece:
             self.movingPiece[0].blitAt(self.screen, self.movingPiece[1].currentPos)
+            if self.movingPiece[2]:
+                self.movingPiece[2].blitAt(self.screen, self.movingPiece[1].currentPos)
+
 
     def drawHoverPiece(self, hoverPiece):
         if (isinstance(hoverPiece, tuple)):

@@ -121,6 +121,15 @@ def heuristic(board, playerColor, endGame):
 
     opponentColor = contextColor(playerColor, False)
     attenuation = 1.0
+    """
+    print("AI::heuristic: playerColor is {}".format(playerColor))
+    print("AI::heuristic: board.kingCache[playerColor] is {}".format(board.kingCache[playerColor]))
+    print("AI::heuristic: board.kingCache[opponentColor] is {}".format(board.kingCache[opponentColor]))
+    print("AI::heuristic: board.captureCache[playerColor] is {}".format(board.captureCache[playerColor]))
+    print("AI::heuristic: board.kingCaptureCache[playerColor] is {}".format(board.kingCaptureCache[playerColor]))
+    print("AI::heuristic: board.captureCache[opponentColor] is {}".format(board.captureCache[opponentColor]))
+    print("AI::heuristic: board.kingCaptureCache[opponentColor] is {}".format(board.kingCaptureCache[opponentColor]))
+    """
     heur = 2 * ((2 * board.kingCache[playerColor]) ** 2 - 
             0.6 * ((2 * board.kingCache[opponentColor]) ** 2))
     for e in board.captureCache[playerColor]:
@@ -131,13 +140,15 @@ def heuristic(board, playerColor, endGame):
         heur -= 1.6 * (e ** 2) * attenuation
         attenuation *= 0.66
     attenuation = 1.0
-    for e in board.kingCaptureCache[opponentColor]:
+    for e in board.kingCaptureCache[playerColor]:
         heur -= 2.4 * ((2 * e) ** 2) * attenuation
         attenuation *= 0.66
     attenuation = 1.0
     for e in board.captureCache[opponentColor]:
         heur -= 1.6 * ((2 * e) ** 2) * attenuation
         attenuation *= 0.66
+
+    #print("AI::heuristic: heuristic is {}".format(heur))
 
     return heur
 
@@ -201,7 +212,8 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
     for move in legalMoveSet:
         childBoard = Board.Board(board)
         childBoard.executeMove(move, blind=True)
-        heuristic = heuristicFunc(childBoard, AIColor, False)
+        heuristic = (heuristicFunc(childBoard, AIColor, False) 
+                + rng.rand() * randomOffset)
         childBoard.playerTurn = contextColor(AIColor, not maximizing)
         nodes.append((childBoard, heuristic))
     
@@ -258,7 +270,7 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
                 break
         #print("AI.py::minimaxAB: (d{}) values={}, maximizing={}".format(depth, values, maximizing))
         if not parentCall: return bestValue
-        #print("AI.py::minimaxAB: (parent) Best value is {}".format(bestValue))
+        print("AI.py::minimaxAB: (parent) Best value is {}".format(bestValue))
 
 
     # Case 2: minimizing step
@@ -325,9 +337,9 @@ minimaxHyperParameters = [
             "randomOffset": 0.05, "treeCutFactor": 1.},
         {"heuristicFunc": heuristic, "depth": 4,
             "stubbornnessTable": None,
-            "randomOffset": 0.02, "treeCutFactor": 1.8},
+            "randomOffset": 0.02, "treeCutFactor": 1.5},
         {"heuristicFunc": heuristic, "depth": 5, "stubbornnessTable": None,
-            "randomOffset": 0.01, "treeCutFactor": 2.4},
+            "randomOffset": 0.01, "treeCutFactor": 2.},
         {"heuristicFunc": heuristic, "depth": 6, 
             "stubbornnessTable": [0, 0.5, 0, 0, 0, 0, 0],
             "randomOffset": 0.01, "treeCutFactor": 2.7}
