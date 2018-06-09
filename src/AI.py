@@ -121,15 +121,7 @@ def heuristic(board, playerColor, endGame):
 
     opponentColor = contextColor(playerColor, False)
     attenuation = 1.0
-    """
-    print("AI::heuristic: playerColor is {}".format(playerColor))
-    print("AI::heuristic: board.kingCache[playerColor] is {}".format(board.kingCache[playerColor]))
-    print("AI::heuristic: board.kingCache[opponentColor] is {}".format(board.kingCache[opponentColor]))
-    print("AI::heuristic: board.captureCache[playerColor] is {}".format(board.captureCache[playerColor]))
-    print("AI::heuristic: board.kingCaptureCache[playerColor] is {}".format(board.kingCaptureCache[playerColor]))
-    print("AI::heuristic: board.captureCache[opponentColor] is {}".format(board.captureCache[opponentColor]))
-    print("AI::heuristic: board.kingCaptureCache[opponentColor] is {}".format(board.kingCaptureCache[opponentColor]))
-    """
+
     heur = 2 * ((2 * board.kingCache[playerColor]) ** 2 - 
             0.6 * ((2 * board.kingCache[opponentColor]) ** 2))
     for e in board.captureCache[playerColor]:
@@ -144,11 +136,9 @@ def heuristic(board, playerColor, endGame):
         heur -= 2.4 * ((2 * e) ** 2) * attenuation
         attenuation *= 0.66
     attenuation = 1.0
-    for e in board.captureCache[opponentColor]:
+    for e in board.kingCaptureCache[opponentColor]:
         heur -= 1.6 * ((2 * e) ** 2) * attenuation
         attenuation *= 0.66
-
-    #print("AI::heuristic: heuristic is {}".format(heur))
 
     return heur
 
@@ -179,9 +169,6 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
        the game; a higher value means the AI is in a better position."""
     # Profiling code
     if parentCall:
-        prof = cProfile.Profile()
-        #prof.enable()
-        
         board = copy.deepcopy(board)
         board.clearMovementStats()
        
@@ -320,14 +307,7 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
                 break
         #print("AI.py::minimaxAB: (d{}) values={}, maximizing={}".format(depth, values, maximizing))
         if not parentCall: return worstValue
-    #print("AI.py::minimaxAB: appending result {}".format(legalMoveSet[chosenNode]))
     returnPointer.append(legalMoveSet[chosenNode])
-    #prof.disable()
-    #stream = io.StringIO()
-    #sortby = 'cumulative'
-    #ps = pstats.Stats(prof, stream=stream).sort_stats(sortby)
-    #ps.print_stats()
-    #print(stream.getvalue())
 
 
 minimaxHyperParameters = [

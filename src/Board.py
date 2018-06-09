@@ -51,7 +51,6 @@ class Board:
         self.legalMoveSet = None
         self.fullLegalMoveSet = None
 
-
         # Cache of selected piece
         self.selectedPieceCoordinate = None
         # Cache of mouse click
@@ -60,7 +59,6 @@ class Board:
 
         self.jumpedPieces = None
         self.movedPath = None
-
         self.finishMoveExec = True
 
         self.isPlayerRedLost = False
@@ -76,7 +74,6 @@ class Board:
         self.whiteCounter = 0
         self.numberOfPlays = 0
         self.numberOfPlays2 = 0
-
 
     def clearMovementStats(self):
         self.captureCache = {RED: [], WHITE: []}
@@ -188,6 +185,7 @@ class Board:
                 self.fullLegalMoveSet))
 
         """
+
         print("getLegalMoves self.legalMoveSet before filter:",
               self.legalMoveSet)
         self.legalMoveSet = self.getBestMoves()
@@ -307,6 +305,7 @@ class Board:
         return moveList
 
     """--------------------------------------------------------------------"""
+
 
     def theoreticalKingLegalMoves(self, pieceCoords, alreadyEaten=False,
                                   delta=None, startColor=None):
@@ -529,7 +528,6 @@ class Board:
             self.matrix[endCoordinate[0]][endCoordinate[1]].occupant = \
                 self.matrix[startCoordinate[0]][
                     startCoordinate[1]].occupant
-            # print(self.matrix[endCoordinate[0]][endCoordinate[1]].occupant)
             self.removePiece(startCoordinate)
             self.selectedPieceCoordinate = endCoordinate
         self.king(endCoordinate)
@@ -787,7 +785,7 @@ class Board:
             self.numberOfPlays2 = self.numberOfPlays2 + 1
         else:
             self.numberOfPlays2 = 0
-        # print(str(self.numberOfPlays) + ', ' + str(self.numberOfPlays2))
+
         self.kingWhiteCounterAux = self.kingWhiteCounter
         self.kingRedCounterAux = self.kingRedCounter
         self.whiteCounterAux = self.whiteCounter
@@ -949,8 +947,8 @@ class Board:
 
 def bounded(tpl, minm, maxm):
     """Checks if the values in a tuple are within given bounds."""
-    if (tpl[0] < minm or tpl[0] > maxm): return False
-    if (tpl[1] < minm or tpl[1] > maxm): return False
+    if(tpl[0] < minm or tpl[0] > maxm): return False
+    if(tpl[1] < minm or tpl[1] > maxm): return False
     return True
 
 

@@ -11,6 +11,7 @@ class GameLoop:
     def __init__(self, graphicsBackend, difficultyLevel, playerName):
 
         self.board = Board()
+
         self.graphics = Graphics(graphicsBackend, self.board, playerName)
         self.aiPlayer = AI.AIPlayer(self.board, RED, difficultyLevel)
         # Cache parameters for when we need to restart the game
@@ -299,6 +300,7 @@ class GameLoop:
                                / self.graphics.boardSpacing)))
                 )
 
+
     """-----------------+
     |  Screen Updaters  |
     +-----------------"""
@@ -354,6 +356,8 @@ class GameLoop:
             return False
         if self.board.playerTurn is WHITE:
             self.board.playerTurn = RED
+            self.ai.play()
+            
         else:
             self.board.playerTurn = WHITE
         return True

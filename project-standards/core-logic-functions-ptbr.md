@@ -2,6 +2,7 @@
 
 ## Lógica do método getLegalMoves
 
+
 Recupera todos os movimentos possíveis do jogador através do método "getAllLegalMoves".
 São cacheados todos os movimentos gerados.
 Em seguida, são filtrados os melhores movimentos para a peça selecionada através do método
