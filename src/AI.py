@@ -7,24 +7,6 @@ import copy
 import cProfile, pstats, io
 from math import ceil
 
-class mockBoard:
-    def __init__(self, moveDivision):
-        self.moveDivision = moveDivision
-        self.selectedPos = None
-
-    def getAllLegalMoves(self):
-        if isinstance(self.moveDivision, list):
-            return self.moveDivision
-        return []
-
-    def executeMove(self, move):
-        self.moveDivision = move
-
-def mockHeuristic(board, playerColor):
-    return board.moveDivision
-
-
-
 class rngWrapper:
     """Wrapper class to ensure the RNG is properly seeded, and only once."""
     def __init__(self):
@@ -38,48 +20,6 @@ class rngWrapper:
 
 # Global rngWrapper object for the minimax function
 rng = rngWrapper()
-
-
-def test_simple():
-    tree = [
-            [
-                [2., 3.],
-                [2.5]
-            ],
-            [
-                [4.]
-            ]
-           ]
-    board = mockBoard(tree)
-    result = []
-    minimaxAB(board, 8, RED, result, randomOffset=0, heuristicFunc=mockHeuristic)
-    assert result[0] is tree[1]
-
-def test_two():
-    tree = [
-            [
-                [2., 3.],
-                [
-                    [4., 6.],
-                    [1., -1.]
-                ]
-            ],
-            [
-                [4.],
-                [
-                    [-1.],
-                    [
-                        [10., 5.]
-                    ]
-                ]
-            ]
-           ]
-    board = mockBoard(tree)
-    result = []
-    minimaxAB(board, 8, RED, result, randomOffset=0, heuristicFunc=mockHeuristic)
-    assert result[0] is tree[0]
-
-
 
 def contextColor(color, maximizing):
     '''Gives the minimax context color based on the AI's color.'''
@@ -97,7 +37,7 @@ def heuristic(board, playerColor, endGame, depth):
     opponentColor = contextColor(playerColor, False)
 
     heur = 2 * ((2 * board.kingCache[playerColor]) ** 2 - 
-            3 * ((2 * board.kingCache[opponentColor]) ** 2))
+            3 * ((2 * board.kingCache[opponentColor]) ** 2)) + 96
     
     playerPieces = 0
     opponentPieces = 0
@@ -115,14 +55,14 @@ def heuristic(board, playerColor, endGame, depth):
                         playerHeur += 20
                     else:
                         playerHeur += 2 * row
-                        if row == 0: playerHeur += 1
+                        if row == 0: playerHeur += 2
                 else: 
                     opponentPieces += 1
                     if board.matrix[col][row].occupant.king:
                         opponentHeur -= 32
                     else:
                         opponentHeur -= 17.5 - row * 2.5
-                        if row == 7: opponentHeur -= 1
+                        if row == 7: opponentHeur -= 2.5
     
     heur += playerHeur * playerPieces + opponentHeur * opponentPieces
     
