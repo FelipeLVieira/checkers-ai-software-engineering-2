@@ -2,53 +2,30 @@
 
 ## Lógica do método getLegalMoves
 
-Método que varre o tabuleiro procurando pelas peças do turno do jogador e chamando
-o método **getRawMovesByPiece**, que pega os movimentos de todas as peças sem levar
-em consideração as outras peças
 
-Em seguida, é chamado o método **getBestMoves**, a fim de aplicar a
-"Lei da Maioria" do jogo.
+Recupera todos os movimentos possíveis do jogador através do método "getAllLegalMoves".
+São cacheados todos os movimentos gerados.
+Em seguida, são filtrados os melhores movimentos para a peça selecionada através do método
+"getBestMoves", aplicando também a "Lei da Maioria".
+São retornados os movimentos filtrados para o GameLoop, bem como permanecem cacheados para uso posterior.
 
-O vetor então com todos os possíveis melhores movimentos é retornado ao **GameLoop.py**
+## Lógica do método getAllLegalMoves
 
-Sequencia de chamada dos métodos:
--> getLegalMoves
-                -> getLegalMovesByPiece
-                                        -> getRegularMovesByPiece
-                                        -> getJumpsByPiece
-                ->getBestMoves
+Varre o tabuleiro pegando todos os movimentos possíveis de todas as peças do turno atual do jogador no tabuleiro
 
 ## Lógica do método getLegalMovesByPiece
 
-Inicia chamando o método **getRegularMovesByPiece**, solicitando os movimentos simples da peça, 
-sendo ela peça normal ou dama, caso houverem.
+É feito um loop em todo o tabuleiro procurando as peças do turno do jogador atual e aplicado
+a função "theoreticalLegalMoves".
+Em seguida é aplicada a função "moveRank" para rankear os melhores movimentos daquela lista gerada.
+São retornados todos os movimentos de uma peça e concatenados nos movimentos das outras peças
 
-Em seguida, é chamado o método **getJumpsByPiece**, onde são passados os movimentos simples para
-detectar se existem pulos (no caso de dama) e se existem peças para serem puladas ao redor da peça
-(normal ou dama).
+## Lógica do método theoreticalLegalMoves
 
-Por fim, os movimentos detectados para a peça são retornados.
+Checa todos os movimentos válidos com e sem capturas, chamando a função "possibleCaptures" para
+verificar recursivamente as possíveis capturas.
+Caso a peça seja uma dama, chama o método "theoreticalKingLegalMoves".
 
-Sequencia de chamada dos métodos:
--> getLegalMovesByPiece
-                        -> getRegularMovesByPiece
-                        -> getJumpsByPiece
+## Lógica do método theoreticalKingLegalMoves
 
-## getRegularMovesByPiece
-
-- Checar movimentos simples da peça e adicionar na lista de movimentos
-- Expandir movimentos da lista de movimentos, caso for dama
-
-## Lógica do método getJumpsByPiece
-
-- O método inicia o algoritmo verificando se a peça pode pular para as quatro direções.
-- Para cada direção que a peça puder pular, é duplicado o movimento inicial (copy.deepcopy(move)),
-são adicionadas as duas coordenadas de pulo (a coordenada da peça que será pulada 
-e a coordenada após a peça pular) e o movimento então é colocado na fila (moveQueue).
-- De posse dos movimentos potenciais em pular mais, é iniciado um while que irá funcionar
-enquanto houverem movimentos a serem expandidos na fila. Os movimentos que não puderem
-ser expandidos são adicionados na lista de retorno para o **getLegalMovesByPiece**.
-
-## getBestMoves
-
-- Verifica quais são os melhores movimentos para uma peça com base no retorno do **getLegalMoves**, caso houver.
+Retorna todas as jogadas válidas de uma peça de dama.

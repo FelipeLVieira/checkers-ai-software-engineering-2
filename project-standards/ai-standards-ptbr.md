@@ -33,4 +33,4 @@ Ela tem as seguintes funções relevantes:
 - Jogar: Recebe um tabuleiro e inicia a thread de minimax, se ela já não estiver rodando. Retorna um erro se estiver.
 - Update: Deve ser chamada todo frame, após a jogada ser iniciada, até que retorne resultado. Recebe a diferença de tempo entre o update anterior e o atual; checa se a thread completou, e caso a thread já tenha completado, retorna o resultado se o "tempo mínimo de pensamento" já passou.
 
-Os parâmetros desta classe são a cor das peças da IA, o tempo mínimo de pensamento em segundos, e opcionalmente os hiperparâmetros do Minimax.
+Os parâmetros desta classe são o tabuleiro de jogo, a cor das peças da IA, e o nível de dificuldade da IA.

@@ -12,7 +12,7 @@ class mockBoard:
         self.moveDivision = moveDivision
         self.selectedPos = None
 
-    def getLegalMoves(self):
+    def getAllLegalMoves(self):
         if isinstance(self.moveDivision, list):
             return self.moveDivision
         return []
@@ -89,56 +89,65 @@ def contextColor(color, maximizing):
     raise RuntimeError("Graphics.py::contextColor(): invalid color `{}'."
             .format(color))
 
-def heuristic(board, playerColor, endGame):
+def heuristic(board, playerColor, endGame, depth):
     """Outputs a number that describes the state of the game.
        In other words, a number that correlates with how well the player
        indicated by playerColor is doing."""
 
-    """Piece count will not be used for heuristic anymore.
-    myPieces = 0
-    opponentPieces = 0
-    myKings = 0
-    opponentKings = 0
+    opponentColor = contextColor(playerColor, False)
 
+    heur = 2 * ((2 * board.kingCache[playerColor]) ** 2 - 
+            3 * ((2 * board.kingCache[opponentColor]) ** 2))
+    
+    playerPieces = 0
+    opponentPieces = 0
+    playerHeur = 0
+    opponentHeur = 0
+
+    # Piece count will not be used for heuristic anymore.
+    # EDIT: It will. \_(>,<)_/
     for col in range(8):
         for row in range(8):
             if board.matrix[col][row].occupant is not None:
                 if board.matrix[col][row].occupant.color == playerColor:
+                    playerPieces += 1
                     if board.matrix[col][row].occupant.king:
-                        myKings += 1
-                    myPieces += 1
+                        playerHeur += 20
+                    else:
+                        playerHeur += 2 * row
+                        if row == 0: playerHeur += 1
                 else: 
-                    if board.matrix[col][row].occupant.king:
-                        opponentKings += 1
                     opponentPieces += 1
-    """
-
+                    if board.matrix[col][row].occupant.king:
+                        opponentHeur -= 32
+                    else:
+                        opponentHeur -= 17.5 - row * 2.5
+                        if row == 7: opponentHeur -= 1
+    
+    heur += playerHeur * playerPieces + opponentHeur * opponentPieces
+    
     if endGame:
         if board.playerTurn == playerColor:
-            return -100000000000.
+            return -100000000000. / depth
         else: 
-            return 100000000000.
+            return 100000000000. / depth
 
-    opponentColor = contextColor(playerColor, False)
     attenuation = 1.0
-    heur = 2 * ((2 * board.kingCache[playerColor]) ** 2 - 
-            0.6 * ((2 * board.kingCache[opponentColor]) ** 2))
     for e in board.captureCache[playerColor]:
-        heur += 2.4 * (e ** 2) * attenuation
-        attenuation *= 0.66
+        heur += 2.1 * (e ** 2) * attenuation
+        attenuation *= 0.85
     attenuation = 1.0
     for e in board.captureCache[opponentColor]:
-        heur -= 1.6 * (e ** 2) * attenuation
-        attenuation *= 0.66
+        heur -= 2.4 * (e ** 2) * attenuation
+        attenuation *= 0.85
+    attenuation = 1.0
+    for e in board.kingCaptureCache[playerColor]:
+        heur += 2.1 * (e ** 2) * attenuation
+        attenuation *= 0.85
     attenuation = 1.0
     for e in board.kingCaptureCache[opponentColor]:
-        heur -= 2.4 * ((2 * e) ** 2) * attenuation
-        attenuation *= 0.66
-    attenuation = 1.0
-    for e in board.captureCache[opponentColor]:
-        heur -= 1.6 * ((2 * e) ** 2) * attenuation
-        attenuation *= 0.66
-
+        heur -= 2.4 * (e ** 2) * attenuation
+        attenuation *= 0.85
     return heur
 
     """
@@ -155,7 +164,7 @@ def heuristic(board, playerColor, endGame):
 def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
         alpha=float("-inf"), beta=float("+inf"), parentCall=True,
         stubbornnessTable=None, randomOffset=0.05, heuristicFunc=heuristic, 
-        rng=rng, prof=None, treeCutFactor=2.):
+        rng=rng, prof=None, treeCutFactor=1., enemyTreeCutFactor=4.):
     """Implements the minimax algorithm.
        The below variables are tuning knobs:
        - depth controls how far into the future the algorithm looks.
@@ -166,30 +175,27 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
        - heuristicFun is a pointer to the heuristic function. It takes a Board
        object and the AI's color, and returns a value expressing the state of
        the game; a higher value means the AI is in a better position."""
+
     # Profiling code
     if parentCall:
-        prof = cProfile.Profile()
-        prof.enable()
-        
         board = copy.deepcopy(board)
-        board.clearMovementStats()
+        #board.clearMovementStats()
        
-    # Get a list of all legal moves
-    legalMoveSet = board.getAllLegalMoves()
-
     # If we're at the limit of our tree, use the heuristic to guess
     if depth == 0:
-        return heuristicFunc(board, AIColor, False)
-    elif len(legalMoveSet) == 0:
-        return heuristicFunc(board, AIColor, True)
+        return heuristicFunc(board, AIColor, False, depth)
     
     # Blind the AI randomly
     if (not parentCall
             and (isinstance(stubbornnessTable, list)
                     or isinstance(stubbornnessTable, tuple))):
         if rng.rand() < stubbornnessTable[depth]:
-            return heuristicFunc(board, AIColor, False)
+            return heuristicFunc(board, AIColor, False, depth)
             
+    # Get a list of all legal moves
+    legalMoveSet = board.getAllLegalMoves()
+    if len(legalMoveSet) == 0:
+        return heuristicFunc(board, AIColor, True, depth)
 
     nodeIndex = -1
     chosenNode = None
@@ -201,7 +207,17 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
     for move in legalMoveSet:
         childBoard = Board.Board(board)
         childBoard.executeMove(move, blind=True)
-        heuristic = heuristicFunc(childBoard, AIColor, False)
+        if depth > 3:
+            heuristic = minimaxAB(Board.Board(childBoard), 1, AIColor, None,
+                        maximizing=not maximizing, alpha=alpha, beta=beta, 
+                        parentCall=False, 
+                        stubbornnessTable=stubbornnessTable, 
+                        randomOffset=randomOffset,
+                        heuristicFunc=heuristicFunc, prof=prof,
+                        treeCutFactor=treeCutFactor)
+        else: 
+            heuristic = (heuristicFunc(childBoard, AIColor, False, depth) 
+                    + rng.rand() * randomOffset)
         childBoard.playerTurn = contextColor(AIColor, not maximizing)
         nodes.append((childBoard, heuristic))
     
@@ -210,7 +226,7 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
         bestValue = float("-inf")
         # Debug
         #values = []
-        nodes = sorted(nodes, key=lambda x: x[1])
+        nodes = sorted(nodes, key=lambda x: -x[1])
         for node in nodes:
             nodeIndex += 1
             # Cut the tree in half if an admissible heuristic has been found
@@ -238,14 +254,14 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
                             stubbornnessTable=stubbornnessTable, 
                             randomOffset=randomOffset,
                             heuristicFunc=heuristicFunc, prof=prof,
-                            treeCutFactor=treeCutFactor)
+                            treeCutFactor=treeCutFactor,
+                            enemyTreeCutFactor=enemyTreeCutFactor)
                     + rng.rand() * randomOffset)
-            #print("AI.py::minimaxAB: d{}, got {} from {}".format(depth, childValue, move))
 
+            #print("AI.py::minimaxAB: d{}, got {} from {}".format(depth, childValue, move))
+            # Debug
             #values.append(childValue)
-            if ((childValue > bestValue - 0.15 and (chosenNodeHeuristic is None
-                                    or node[1] > chosenNodeHeuristic))
-                    or childValue > bestValue + 0.45):
+            if (childValue > (bestValue + 0.25)):
                 bestValue = childValue
                 chosenNode = nodeIndex
                 chosenNodeHeuristic = node[1]
@@ -256,7 +272,7 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
             if beta + 0.49 <= alpha: 
                 #print("AI.py::minimaxAB: (d{}) beta={}, alpha={}, pruning".format(depth, beta, alpha))
                 break
-        #print("AI.py::minimaxAB: (d{}) values={}, maximizing={}".format(depth, values, maximizing))
+        #print("AI.py::minimaxAB: (d{}) heuristics={}, values={}, maximizing={}".format(depth, list(map(lambda x: x[1], nodes)), values, maximizing))
         if not parentCall: return bestValue
         print("AI.py::minimaxAB: (parent) Best value is {}".format(bestValue))
 
@@ -265,12 +281,12 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
     else:
         worstValue = float("+inf")
         # Debug
-        #values = []
-        nodes = sorted(nodes, key=lambda x: -x[1])
+        # values = []
+        nodes = sorted(nodes, key=lambda x: x[1])
         for node in nodes:
             nodeIndex += 1
             # Cut the tree in half if an admissible heuristic has been found
-            if (len(nodes) > 2 and nodeIndex >= ceil(len(nodes) / treeCutFactor) 
+            if (len(nodes) > 2 and nodeIndex >= ceil(len(nodes) / enemyTreeCutFactor) 
                     and worstValue <= 0.2): break
 
             # This makes the AI randomly "not see" a move based on its
@@ -289,13 +305,13 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
                             stubbornnessTable=stubbornnessTable, 
                             randomOffset=randomOffset,
                             heuristicFunc=heuristicFunc, prof=prof,
-                            treeCutFactor=treeCutFactor)
+                            treeCutFactor=treeCutFactor,
+                            enemyTreeCutFactor=enemyTreeCutFactor)
                     + rng.rand() * randomOffset)
-
+            
+            # Debug
             #values.append(childValue)
-            if ((childValue < worstValue + 0.15 and (chosenNodeHeuristic is None
-                                    or node[1] < chosenNodeHeuristic))
-                    or childValue < worstValue - 0.45):
+            if (childValue < (worstValue - 0.25)):
                 worstValue = childValue
                 chosenNode = nodeIndex
                 chosenNodeHeuristic = node[1]
@@ -306,47 +322,22 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
             if beta + 0.49 <= alpha: 
                 #print("AI.py::minimaxAB: (d{}) beta={}, alpha={}, pruning".format(depth, beta, alpha))
                 break
-        #print("AI.py::minimaxAB: (d{}) values={}, maximizing={}".format(depth, values, maximizing))
+        # Debug
+        # print("AI.py::minimaxAB: (d{}) heuristics={}, values={}, maximizing={}".format(depth, list(map(lambda x: x[1], nodes)), values, maximizing))
         if not parentCall: return worstValue
-    print("AI.py::minimaxAB: appending result {}".format(legalMoveSet[chosenNode]))
     returnPointer.append(legalMoveSet[chosenNode])
-    prof.disable()
-    stream = io.StringIO()
-    sortby = 'cumulative'
-    ps = pstats.Stats(prof, stream=stream).sort_stats(sortby)
-    ps.print_stats()
-    print(stream.getvalue())
 
 
 minimaxHyperParameters = [
-        {"heuristicFunc": heuristic, "depth": 2, "stubbornnessTable": None,
-            "randomOffset": 0.1, "treeCutFactor": 1.},
+        {"heuristicFunc": heuristic, "depth": 2, "stubbornnessTable": [0, 0.4, 0],
+            "randomOffset": 0.1, "treeCutFactor": 2., "enemyTreeCutFactor": 2.},
         {"heuristicFunc": heuristic, "depth": 3, "stubbornnessTable": None,
-            "randomOffset": 0.05, "treeCutFactor": 1.},
-        {"heuristicFunc": heuristic, "depth": 4,
-            "stubbornnessTable": None,
-            "randomOffset": 0.02, "treeCutFactor": 1.8},
-        {"heuristicFunc": heuristic, "depth": 5, "stubbornnessTable": None,
-            "randomOffset": 0.01, "treeCutFactor": 2.4},
-        {"heuristicFunc": heuristic, "depth": 6, 
-            "stubbornnessTable": [0, 0.5, 0, 0, 0, 0, 0],
-            "randomOffset": 0.01, "treeCutFactor": 2.7}
-        ]
-
-"""minimaxHyperParameters = [
-        {"heuristicFunc": heuristic, "depth": 2, "stubbornnessTable": None,
-            "randomOffset": 0.08, "treeCutFactor": 1.},
-        {"heuristicFunc": heuristic, "depth": 3, "stubbornnessTable": None,
-            "randomOffset": 0.05, "treeCutFactor": 1.},
+            "randomOffset": 0.05, "treeCutFactor": 1., "enemyTreeCutFactor": 1.},
         {"heuristicFunc": heuristic, "depth": 5,
             "stubbornnessTable": None,
-            "randomOffset": 0.02, "treeCutFactor": 3.},
-        {"heuristicFunc": heuristic, "depth": 4, "stubbornnessTable": None,
-            "randomOffset": 0.01, "treeCutFactor": 2.},
-        {"heuristicFunc": heuristic, "depth": 5, "stubbornnessTable": None,
-            "randomOffset": 0.01, "treeCutFactor": 3.}
+            "randomOffset": 0.02, "treeCutFactor": 1, "enemyTreeCutFactor": 1.},
         ]
-"""
+
 class AIPlayer:
     # The Board object the AI is playing in.
     board = None
@@ -399,6 +390,8 @@ class AIPlayer:
                 ["randomOffset"]
         self.treeCutFactor = minimaxHyperParameters[difficulty]\
                 ["treeCutFactor"]
+        self.enemyTreeCutFactor = minimaxHyperParameters[difficulty]\
+                ["enemyTreeCutFactor"]
 
         self.minimaxThread = None
         self.minimaxResult = []

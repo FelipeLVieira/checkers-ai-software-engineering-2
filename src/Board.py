@@ -13,8 +13,14 @@ def lookup(matrix, index):
 
 class Board:
     def __init__(self, board=None):
-        # This allows us to make a copy of the board for the AI to safely
-        # recurse on.
+        # Movement stat caches for AI heuristic
+        self.captureCache = {RED: [], WHITE: []}
+        self.kingCache = {RED: 0, WHITE: 0}
+        self.kingCaptureCache = {RED: [], WHITE: []}
+
+        # Indicates which player is currently playing.
+        self.playerTurn = WHITE
+
         # Load the board matrix
         if isinstance(board, Board):
             self.matrix = []
@@ -25,19 +31,25 @@ class Board:
                         self.matrix[-1].append(Square(e.black, None))
                     else:
                         self.matrix[-1].append(Square(e.black, Piece(
-                                e.occupant.color, e.occupant.king)))
+                            e.occupant.color, e.occupant.king)))
+            self.playerTurn = board.playerTurn
+            # Movement stat caches for AI heuristic
+            self.captureCache = copy.deepcopy(board.captureCache)
+            self.kingCache = copy.deepcopy(board.kingCache)
+            self.kingCaptureCache = copy.deepcopy(board.kingCaptureCache)
         elif isinstance(board, list):
             self.matrix = self.boardFromStrings(board)
         else:
             self.matrix = self.newBoard()
+            # Movement stat caches for AI heuristic
+            self.captureCache = {RED: [], WHITE: []}
+            self.kingCache = {RED: 0, WHITE: 0}
+            self.kingCaptureCache = {RED: [], WHITE: []}
 
         # Cache of list of legal moves for the board in this turn
         # Must be set to None at the end of a turn.
         self.legalMoveSet = None
-
-        # Indicates which player is currently playing.
-        self.playerTurn = WHITE
-        
+        self.fullLegalMoveSet = None
 
         # Cache of selected piece
         self.selectedPieceCoordinate = None
@@ -45,6 +57,8 @@ class Board:
         self.mouseClick = None
         self.mousePos = None
 
+        self.jumpedPieces = None
+        self.movedPath = None
         self.finishMoveExec = True
 
         self.isPlayerRedLost = False
@@ -60,11 +74,6 @@ class Board:
         self.whiteCounter = 0
         self.numberOfPlays = 0
         self.numberOfPlays2 = 0
-
-        # Movement stat caches for AI heuristic
-        self.captureCache = {RED: [], WHITE: []}
-        self.kingCache = {RED: 0, WHITE: 0}
-        self.kingCaptureCache = {RED: [], WHITE: []}
 
     def clearMovementStats(self):
         self.captureCache = {RED: [], WHITE: []}
@@ -130,7 +139,11 @@ class Board:
 
         if not coordinate:
             return
-        return self.matrix[coordinate[0]][coordinate[1]]
+        try:
+            if coordinate.x and coordinate.y is not None:
+                return self.matrix[coordinate.x][coordinate.y]
+        except:
+            return self.matrix[coordinate[0]][coordinate[1]]
 
     def canJumpDirection(self, direction, coordinate):
         """
@@ -161,18 +174,24 @@ class Board:
     def getLegalMoves(self, coordinate):
         """Returns the legal moves for a piece."""
         # Calculate legal move set if it hasn't been calculated yet
-        if self.legalMoveSet is None: self.getAllLegalMoves()
+        if not self.fullLegalMoveSet: self.getAllLegalMoves()
 
         # Select in the legal move set, where the first coordinate is the
         # desired piece's coordinate
+        print(self.fullLegalMoveSet, coordinate, self.fullLegalMoveSet[0] == coordinate)
         self.legalMoveSet = list(
-            filter(lambda m: m[0] == coordinate, self.legalMoveSet))
+            filter(
+                lambda m: m[0] == coordinate,
+                self.fullLegalMoveSet))
+
+        """
 
         print("getLegalMoves self.legalMoveSet before filter:",
               self.legalMoveSet)
         self.legalMoveSet = self.getBestMoves()
         print("getLegalMoves self.legalMoveSet after filter:",
-              self.legalMoveSet)
+               self.legalMoveSet)
+        """
 
         return self.legalMoveSet
 
@@ -181,7 +200,7 @@ class Board:
     def getAllLegalMoves(self):
         """Computes legal moves for all of the player's pieces on the
         board."""
-        self.legalMoveSet = []
+        self.fullLegalMoveSet = []
         # The highest move rank encountered.
         # The rank of a move is given by the number of captures it makes.
         highestMoveRank = -1
@@ -193,10 +212,9 @@ class Board:
                 if (self.matrix[x][y].occupant is not None
                         and self.matrix[x][
                             y].occupant.color is self.playerTurn):
-                    # print((x, y))
                     for move in self.theoreticalLegalMoves((x, y)):
-                        if move not in self.legalMoveSet:
-                            self.legalMoveSet.append(move)
+                        if move not in self.fullLegalMoveSet:
+                            self.fullLegalMoveSet.append(move)
 
                             rank = self.moveRank(move)
                             if highestMoveRank < rank: highestMoveRank = rank
@@ -210,20 +228,20 @@ class Board:
         # print("BoardLogic.py::Board:getAllLegalMoves: Highest move rank is {}".format(highestMoveRank))
 
         illegalMoves = []
-        for move in self.legalMoveSet:
+        for move in self.fullLegalMoveSet:
             if self.moveRank(move) < highestMoveRank:
                 # print("BoardLogic.py::Board:getAllLegalMoves: Move {} has rank {} < {}, dropping.".format(move, self.moveRank(move), highestMoveRank))
                 illegalMoves.append(move)
 
-        for move in illegalMoves: self.legalMoveSet.remove(move)
+        for move in illegalMoves: self.fullLegalMoveSet.remove(move)
 
         # For debugging only... comment this later
         # print("BoardLogic.py::Board:getAllLegalMoves: Legal moves:")
         # for move in self.legalMoveSet: print(move)
 
-        #print("return self.legalMoveSet from getAllLegalMoves",
+        # print("return self.legalMoveSet from getAllLegalMoves",
         #      self.legalMoveSet)
-        return self.legalMoveSet
+        return self.fullLegalMoveSet
 
     """-----------------------------------------+
     |  AUXILIARY MOVEMENT EVALUATION FUNCTIONS  |
@@ -273,8 +291,8 @@ class Board:
 
                 # Otherwise, it's possibly a capture move. Deal with it.
                 for move in self.possibleCaptures(square.occupant.color,
-                                              pieceCoords, delta,
-                                              pieceCoords):
+                                                  pieceCoords, delta,
+                                                  pieceCoords):
                     moveList.append(move)
                     # print("Evaluated capture move {} for delta {}.".format(move, delta))
 
@@ -288,7 +306,9 @@ class Board:
 
     """--------------------------------------------------------------------"""
 
-    def theoreticalKingLegalMoves(self, pieceCoords, alreadyEaten=False, delta=None, startColor=None):
+
+    def theoreticalKingLegalMoves(self, pieceCoords, alreadyEaten=False,
+                                  delta=None, startColor=None):
         """Returns the possible moves for a king if there were no
         higher-ranked moves possible."""
         # Dereference the coordinates to get the square object
@@ -296,7 +316,7 @@ class Board:
         if startColor is None:
             startColor = square.occupant.color
         moveList = []
-        
+
         if delta:
             deltas = [delta]
         else:
@@ -318,23 +338,23 @@ class Board:
                     # Otherwise, it's possibly a capture move. Deal with it.
                     if not alreadyEaten:
                         for move in self.possibleCaptures(startColor,
-                                                          newPieceCoords, delta,
+                                                          newPieceCoords,
+                                                          delta,
                                                           pieceCoords):
                             fullMove = copy.deepcopy(currentMove)[:-1]
                             fullMove.extend(move)
                             moveList.append(fullMove)
                             extraJumps = self.theoreticalKingLegalMoves(
-                                    fullMove[-1], alreadyEaten=True, 
-                                    delta=tplsub(fullMove[-1], fullMove[-2]),
-                                    startColor=startColor)
-
-                            #print("Board::theoreticalKingLegalMoves:extraJumps:")
+                                fullMove[-1], alreadyEaten=True,
+                                delta=tplsub(fullMove[-1], fullMove[-2]),
+                                startColor=startColor)
+                            # print("Board::theoreticalKingLegalMoves:extraJumps:")
                             for extraJump in extraJumps:
-                                #print(extraJump)
+                                # print(extraJump)
                                 extendedMove = copy.deepcopy(fullMove)[:-1]
                                 extendedMove.extend(extraJump)
                                 moveList.append(extendedMove)
-                            
+
                     # A capture move ends the chain.
                     break
                 else:
@@ -344,7 +364,7 @@ class Board:
                     moveList.append(currentMoveCopy)
                 newPieceCoords = deltaCoord
                 deltaCoord = tplsum(deltaCoord, delta)
-                
+
         # print("Theoretical legal moves for {}:".format(pieceCoords))
         # for move in moveList: print(move)
         return moveList
@@ -406,7 +426,7 @@ class Board:
     +-------------------------------"""
 
     def getBestMoves(self):
-        if not self.legalMoveSet:
+        if self.legalMoveSet is None:
             return
 
         jumpCounter = 0
@@ -439,6 +459,13 @@ class Board:
             jumpCounter = 0
 
         return filteredBestMoves
+
+    def clickOnLegalMoveCoord(self):
+        for move in self.legalMoveSet:
+            if self.mouseClick in move and not derefer(
+                    self.matrix, self.mouseClick).occupant:
+                return True
+        return False
 
     def coordToTuple(self, coordinate):
         if isinstance(coordinate, Coordinate):
@@ -502,12 +529,14 @@ class Board:
                 self.matrix[startCoordinate[0]][
                     startCoordinate[1]].occupant
             self.removePiece(startCoordinate)
+            self.selectedPieceCoordinate = endCoordinate
         self.king(endCoordinate)
         if not blind: self.verifyDrawCondition()
 
     def getPiecesWithLegalMoves(self):
         piecesWithLegalMoves = []
-        for move in self.legalMoveSet:
+        auxLegalMoveSet = self.getAllLegalMoves()
+        for move in auxLegalMoveSet:
             if move[0] not in piecesWithLegalMoves:
                 piecesWithLegalMoves.append(move[0])
         return piecesWithLegalMoves
@@ -540,110 +569,70 @@ class Board:
                     print("(", coord[0], coord[1], ") ")
 
     def executeMove(self, selectedMove=None, blind=False):
-        #if self.legalMoveSet is None:
-            #raise RuntimeError("Board.py::Board:executeMove: executeMove called without having computed legal moves.")
-            #return
+        # if self.legalMoveSet is None:
+        # raise RuntimeError("Board.py::Board:executeMove: executeMove called without having computed legal moves.")
+        # return
+        moveIsComplete = True
+        # Execute a complete move based on a move parameter
+        if not selectedMove:
+            possibleMoves = list(filter(lambda m: self.mouseClick in m,
+                                        self.legalMoveSet))
+            completeMoves = list(filter(lambda m: m[-1] == self.mouseClick,
+                                        possibleMoves))
+            if completeMoves:
+                selectedMove = completeMoves[0]
+            else:
+                clippedMoves = list(map(lambda m: m[:m.index(self.mouseClick) + 1],
+                                        possibleMoves))
+                moveIsComplete = False
+                selectedMove = clippedMoves[0]
+                self.fullLegalMoveSet = list(map(lambda m: m[m.index(
+                                self.mouseClick):],
+                        possibleMoves))
+                print(self.fullLegalMoveSet)
 
+        if not blind:
+            self.movedPath = selectedMove
+            self.jumpedPieces = self.computeEatenPieces(selectedMove)
         captures = 0
         kingCaptures = 0
-        # Execute a complete move based on a move parameter
-        if selectedMove:
-            for coord in selectedMove:
-                if self.location(coord).occupant:
-                    if self.location(coord).occupant.color != self.playerTurn:
-                        # Track captured piece count for AI's heuristic
-                        captures += 1
-                        if self.location(coord).occupant.king:
-                            kingCaptures += 1
-                        
-                        self.removePiece(coord)
-            
-            self.movePiece(selectedMove[0],
-                           selectedMove[-1], blind)
-            # For AI.
-            self.captureCache[self.playerTurn].append(captures)
-            self.kingCaptureCache[self.playerTurn].append(kingCaptures)
-            return
+        for coord in selectedMove:
+            if self.location(coord).occupant:
+                if self.location(coord).occupant.color != self.playerTurn:
+                    # Track captured piece count for AI's heuristic
+                    captures += 1
+                    if self.location(coord).occupant.king:
+                        kingCaptures += 1
 
-        # Logic for handle player multiple jumps
-        self.finishMoveExec = False
+                    self.removePiece(coord)
+        self.movePiece(selectedMove[0],
+                       selectedMove[-1], blind)
+        # For AI.
+        self.captureCache[self.playerTurn].append(captures)
+        self.kingCaptureCache[self.playerTurn].append(kingCaptures)
+        return moveIsComplete
 
-        jumpCount = False
+    def computeEatenPieces(self, movement):
+        eatenPieces = []
+        for coord in movement:
+            if (self.location(coord).occupant
+                    and self.location(coord).occupant.color
+                    is not self.playerTurn):
+                eatenPieces.append(coord)
+        return eatenPieces
 
+    def getLegalMoveSetJumps(self):
+        jumpCount = 0
         for move in self.legalMoveSet:
             for coord in move:
-                if self.location(coord).occupant:
-                    if self.location(coord).occupant.color != self.playerTurn:
-                        jumpCount += 1
-                        break
+                if self.location(coord).occupant and self.location(
+                        coord).occupant.color != self.playerTurn:
+                    jumpCount += 1
+                    break
             else:
                 break
-
-        # If the legalMoveSet has no pieces to capture, return as it is
-        if jumpCount == 0:
-            self.movePiece(self.selectedPieceCoordinate, self.mouseClick)
-            self.finishMoveExec = True
-            return
-
-        # Move the selected piece
-        self.movePiece(self.selectedPieceCoordinate, self.mouseClick)
-
-        # Updates selectedPieceCoordinate position
-        self.selectedPieceCoordinate = self.mouseClick
-
-        # Refine the legalMoveSet and gets the captured piece coordinate
-        jumpedPieces = self.filterLegalMoves()
-
-        # Remove the captured piece(s)
-        for piece in jumpedPieces:
-            self.removePiece(piece)
-
-        for move in self.legalMoveSet:
-            if len(move) == 1:
-                self.finishMoveExec = True
-
-        return
-
-    def filterLegalMoves(self):
-
-        auxPartialFiltered = []
-        pieceJumpedCoord = None
-        pieceToBeRemovedCoord = []
-        for move in self.legalMoveSet:
-            i = 0
-            while i < len(move):
-                nextSquare = move[i]
-                if self.location(nextSquare).occupant:
-                    if self.location(
-                            nextSquare).occupant.color != self.playerTurn:
-                        pieceToBeRemovedCoord.append(nextSquare)
-
-                if self.location(nextSquare).occupant:
-                    if self.location(
-                            nextSquare).occupant.color == self.playerTurn:
-                        if self.location(nextSquare) == self.location(
-                                self.mouseClick):
-                            auxPartialFiltered.append(move)
-                            pieceJumpedCoord = None
-                            break
-                i += 1
-
-        filteredLegalMoves = []
-
-        for move in auxPartialFiltered:
-            i = 0
-            nextSquare = move[i]
-            while i < len(move):
-                if self.location(nextSquare).occupant:
-                    if self.location(
-                            nextSquare).occupant.color == self.playerTurn:
-                        break
-                i += 1
-                nextSquare = move[i]
-            filteredLegalMoves.append(move[i:])
-
-        self.legalMoveSet = filteredLegalMoves
-        return pieceToBeRemovedCoord
+        #print("jumpcount", jumpCount)
+        return jumpCount
 
     def validTargetCoordinate(self):
         validSquares = []
@@ -651,7 +640,6 @@ class Board:
         for move in self.legalMoveSet:
             i = 0
             while i < len(move):
-                print(i)
                 nextSquare = move[i]
                 if self.location(nextSquare).occupant:
                     if self.location(
@@ -659,7 +647,8 @@ class Board:
                         jumpCount += 1
                         i += 1
                         continue
-                if jumpCount == 1 and self.location(nextSquare).occupant is None:
+                if jumpCount == 1 and self.location(
+                        nextSquare).occupant is None:
                     validSquares.append(nextSquare)
                 i += 1
         if jumpCount == 0:
@@ -681,16 +670,51 @@ class Board:
                 self.legalMovesEndSquare.append(
                     move[-1])
 
+    def getNumberOfPlayerPieces(self):
+        numberOfPieces = 0
+        for x in range(8):
+            for y in range(8):
+                if self.matrix[x][y].occupant is not None and\
+                                self.matrix[x][y].occupant.color is WHITE:
+                        numberOfPieces = numberOfPieces + 1
+        return numberOfPieces
+
+    def getNumberOfOpponentPieces(self):
+        numberOfPieces = 0
+        for x in range(8):
+            for y in range(8):
+                if self.matrix[x][y].occupant is not None and\
+                                self.matrix[x][y].occupant.color is RED:
+                        numberOfPieces = numberOfPieces + 1
+        return numberOfPieces
+
+    def checkWinCondition(self):
+        playerTurnCache = self.playerTurn
+        
+        self.playerTurn = WHITE
+        whitePlayerLost = not bool(self.getAllLegalMoves())
+        self.clearCachedVariables()
+        
+        self.playerTurn = RED
+        redPlayerLost = not bool(self.getAllLegalMoves())
+        self.clearCachedVariables()
+        
+        self.playerTurn = playerTurnCache
+        
+        if whitePlayerLost: return RED
+        elif redPlayerLost: return WHITE
+        return None
+
     def verifyWinCondition(self):
         self.isPlayerRedLost = True
         self.isPlayerWhiteLost = True
         for x in range(8):
             for y in range(8):
-                if self.matrix[x][y].occupant is not None and self.matrix[x][
-                    y].occupant.color is RED:
+                if self.matrix[x][y].occupant is not None and\
+                                self.matrix[x][y].occupant.color is RED and self.getLegalMoves((x,y)):
                     self.isPlayerRedLost = False
-                elif self.matrix[x][y].occupant is not None and self.matrix[x][
-                    y].occupant.color is WHITE:
+                elif self.matrix[x][y].occupant is not None and\
+                                self.matrix[x][y].occupant.color is WHITE and self.getLegalMoves((x,y)):
                     self.isPlayerWhiteLost = False
                 if self.isPlayerRedLost is False and self.isPlayerWhiteLost is False:
                     break
@@ -761,12 +785,15 @@ class Board:
             self.numberOfPlays2 = self.numberOfPlays2 + 1
         else:
             self.numberOfPlays2 = 0
-        #print(str(self.numberOfPlays) + ', ' + str(self.numberOfPlays2))
+
         self.kingWhiteCounterAux = self.kingWhiteCounter
         self.kingRedCounterAux = self.kingRedCounter
         self.whiteCounterAux = self.whiteCounter
         self.redCounterAux = self.redCounter
-
+        
+        """-------------------------------------------------------------+
+        |  VitinhoCarneiro: The below comment makes me cringe so hard.  |
+        +-------------------------------------------------------------"""
         'DEIXAR numberOfPlays IGUAL A 4 POIS ASSIM CONTABILIZA 5 MOVES'
         if self.numberOfPlays == 20 or self.numberOfPlays2 == 4:
             self.isDraw = True
@@ -814,55 +841,6 @@ class Board:
                 # For AI's heuristic.
                 self.kingCache[self.location(coordinate).occupant.color] += 1
 
-    """<PLEASE REMOVE THESE FUNCTIONS AFTERWARDS.
-    THEY ARE EXPERIMENTAL FUNCTIONS THAT NEED TO BE KEPT DURING AI
-    TESTING AND REFINEMENT, FOR THIS BRANCH DOES NOT HAVE PROPER GRAPHICS
-    SUPPORT AND THE INTEGRATION BRANCH IS STILL NOT PLAYABLE.>"""
-    def drawBoardSquares(self, graphics):
-        """
-            Takes a board object and draws all of its squares to the display
-            """
-        for x in range(8):
-            for y in range(8):
-                pygame.draw.rect(graphics.screen,
-                                 self.matrix[x][y].occupant.color,
-                                 (x * graphics.squareSize,
-                                  y * graphics.squareSize, graphics.squareSize,
-                                  graphics.squareSize), )
-
-    def drawBoardPieces(self, screen, redPiece, whitePiece):
-        for x in range(8):
-            for y in range(8):
-                if self.matrix[x][y].occupant is not None and self.matrix[x][
-                    y].occupant.color is RED:
-                    screen.blit(redPiece, (x * 90, y * 90))
-
-                if self.matrix[x][y].occupant is not None and self.matrix[x][
-                    y].occupant.color is WHITE:
-                    screen.blit(whitePiece, (x * 90, y * 90))
-
-    def drawBoardKings(self, screen, kingPiece):
-        for x in range(8):
-            for y in range(8):
-                if self.matrix[x][y].occupant is not None and self.matrix[x][
-                    y].occupant.king:
-                    screen.blit(kingPiece, (x * 90, y * 90))
-
-    def highlightLegalMoves(self, screen, goldPiece):
-        if self.selectedPieceCoordinate is not None and self.legalMoveSet is not None:
-
-            for movePath in self.legalMoveSet:
-                for coordinate in movePath:
-                    if coordinate is not None and not self.location(
-                            coordinate).occupant:
-                        screen.blit(goldPiece,
-                                    (coordinate[0] * 90, coordinate[1] * 90))
-    """</PLEASE REMOVE THESE FUNCTIONS AFTERWARDS.
-    THEY ARE EXPERIMENTAL FUNCTIONS THAT NEED TO BE KEPT DURING AI
-    TESTING AND REFINEMENT, FOR THIS BRANCH DOES NOT HAVE PROPER GRAPHICS
-    SUPPORT AND THE INTEGRATION BRANCH IS STILL NOT PLAYABLE.>"""
-
-
     def pixelCoords(self, coordinate, squareSize, pieceSize):
         """
             Takes in a tuple of board coordinates (x,y)
@@ -872,12 +850,12 @@ class Board:
             coordinate[0] * squareSize + pieceSize,
             coordinate[1] * squareSize + pieceSize)
 
-    def boardCoords(self, pixelCoordinate, squareSize):
+    def boardCoords(self, coords, boardSpacing, boardUpperLeftCoords):
         """
            Does the reverse of pixel_coords(). Takes in a tuple of of pixel coordinates and returns what square they are in.
         """
-        return (int(pixelCoordinate[0] / squareSize),
-                int(pixelCoordinate[1] / squareSize))
+        return (int((coords[0] * boardSpacing + boardUpperLeftCoords[0])),
+                int((coords[1] * boardSpacing + boardUpperLeftCoords[1])))
 
     def pixelToSquarePosition(self, pixelCoordinate, squareSize):
         """
@@ -887,9 +865,12 @@ class Board:
                 pixelCoordinate[1] / squareSize)
 
     def clearCachedVariables(self):
-        self.legalMoveSet = None
+        self.legalMoveSet = []
+        self.fullLegalMoveSet = []
         self.mouseClick = None
         self.selectedPieceCoordinate = None
+        self.jumpedPieces = None
+        self.movedPath = None
         return True
 
     """---------------------------------------------+
