@@ -365,6 +365,11 @@ class Graphics:
                     else: raise RuntimeError("Graphics.py::Graphics:drawBoardPieces: Invalid piece color `{}'".format(self.board.matrix[col][row].occupant.color))
 
     def setPossibleMoves(self, selPossibleMoves):
+        print(max(list(map(len, selPossibleMoves))))
+        transposedSelPossibleMoves = [
+                [selPossibleMoves[i][j] for i in range(len(selPossibleMoves)) 
+                        if len(selPossibleMoves[i]) > j] 
+                for j in range(max(map(len, selPossibleMoves)))]
         for path in selPossibleMoves:
             for c in range(len(path)):
                 if (path[c] is not None 

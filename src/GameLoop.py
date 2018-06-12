@@ -242,12 +242,11 @@ class GameLoop:
         self.board.mouseClick = self.getBoardCoords(pos)
         square = derefer(self.board.matrix, self.board.mouseClick)
         print("Mouse click", self.board.mouseClick)
-        print("Selected piece coord", self.board.selectedPieceCoordinate)
 
         if (square.occupant and square.occupant.color is self.board.playerTurn
                 and not self.forceMove):
             self.grabLegalMoves()
-
+	
         elif self.board.legalMoveSet and self.board.clickOnLegalMoveCoord():
             finishMoveExec = self.executeMovement()
             if finishMoveExec:
@@ -262,6 +261,7 @@ class GameLoop:
                 self.forcedMove = False
             self.state = "anim"
 
+        print("Selected piece coord", self.board.selectedPieceCoordinate)
 
         # raise NotImplementedError()
 
