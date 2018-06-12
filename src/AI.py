@@ -98,6 +98,11 @@ def heuristic(board, playerColor, endGame, depth):
 
     heur = 2 * ((2 * board.kingCache[playerColor]) ** 2 - 
             3 * ((2 * board.kingCache[opponentColor]) ** 2))
+    
+    playerPieces = 0
+    opponentPieces = 0
+    playerHeur = 0
+    opponentHeur = 0
 
     # Piece count will not be used for heuristic anymore.
     # EDIT: It will. \_(>,<)_/
@@ -105,19 +110,22 @@ def heuristic(board, playerColor, endGame, depth):
         for row in range(8):
             if board.matrix[col][row].occupant is not None:
                 if board.matrix[col][row].occupant.color == playerColor:
+                    playerPieces += 1
                     if board.matrix[col][row].occupant.king:
-                        heur += 7
+                        playerHeur += 20
                     else:
-                        heur += row
-                        if row == 0: heur += 1
+                        playerHeur += 2 * row
+                        if row == 0: playerHeur += 1
                 else: 
+                    opponentPieces += 1
                     if board.matrix[col][row].occupant.king:
-                        heur -= 7
+                        opponentHeur -= 32
                     else:
-                        heur -= 7 - row
-                        if row == 7: heur -= 1
+                        opponentHeur -= 17.5 - row * 2.5
+                        if row == 7: opponentHeur -= 1
     
-
+    heur += playerHeur * playerPieces + opponentHeur * opponentPieces
+    
     if endGame:
         if board.playerTurn == playerColor:
             return -100000000000. / depth
@@ -253,9 +261,7 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
             #print("AI.py::minimaxAB: d{}, got {} from {}".format(depth, childValue, move))
             # Debug
             #values.append(childValue)
-            if ((childValue > bestValue - 0.15 and (chosenNodeHeuristic is None
-                                    or node[1] > chosenNodeHeuristic))
-                    or childValue > bestValue + 0.45):
+            if (childValue > (bestValue + 0.25)):
                 bestValue = childValue
                 chosenNode = nodeIndex
                 chosenNodeHeuristic = node[1]
@@ -305,9 +311,7 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
             
             # Debug
             #values.append(childValue)
-            if ((childValue < worstValue + 0.15 and (chosenNodeHeuristic is None
-                                    or node[1] < chosenNodeHeuristic))
-                    or childValue < worstValue - 0.45):
+            if (childValue < (worstValue - 0.25)):
                 worstValue = childValue
                 chosenNode = nodeIndex
                 chosenNodeHeuristic = node[1]
