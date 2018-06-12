@@ -1,10 +1,7 @@
 from GameLoop import *
 
 class FakeAIPlayer(AI.AIPlayer):
-    def __init__(self):
-        pass
-
-    def play(self):
+    def play():
         return
 
 class TestingGameLoop(GameLoop):
@@ -12,9 +9,11 @@ class TestingGameLoop(GameLoop):
         GameLoop.__init__(self, graphicsBackend, difficultyLevel, playerName)
         self.board = Board(boardDesc)
         self.graphics = Graphics(graphicsBackend, self.board, playerName)
-        self.aiPlayer = FakeAIPlayer()
+        self.aiPlayer = AI.AIPlayer(self.board, RED, difficultyLevel)
 
     def mainLoop(self):
+        for i in self.board.boardToStrings():
+            print(i)
         while self.state == "playerTurn" or self.state == "anim":
             self.states[self.state]()
             self.updateMainGame()
