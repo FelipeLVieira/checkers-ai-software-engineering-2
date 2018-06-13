@@ -274,6 +274,7 @@ class GameLoop:
         return finishMoveExec
 
     def grabLegalMoves(self):
+        oldSelectedPiece = self.board.selectedPieceCoordinate
         self.board.selectedPieceCoordinate = self.board.mouseClick
 
         legalMoves = self.board.getLegalMoves(
@@ -282,6 +283,8 @@ class GameLoop:
         if not legalMoves:
             self.graphics.showPiecesWithLegalMoves(
                 self.board.getPiecesWithLegalMoves())
+            self.board.selectedPieceCoordinate = oldSelectedPiece
+            if oldSelectedPiece: self.board.getLegalMoves(oldSelectedPiece)
         else:
             self.board.legalMoveSet = legalMoves
             self.graphics.clearPossibleMoves()

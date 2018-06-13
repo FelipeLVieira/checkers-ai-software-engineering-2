@@ -345,7 +345,7 @@ class Board:
                             fullMove.extend(move)
                             moveList.append(fullMove)
                             extraJumps = self.theoreticalKingLegalMoves(
-                                fullMove[-1], alreadyEaten=True,
+                                fullMove[-1], alreadyEaten=False,
                                 delta=tplsub(fullMove[-1], fullMove[-2]),
                                 startColor=startColor)
                             # print("Board::theoreticalKingLegalMoves:extraJumps:")
