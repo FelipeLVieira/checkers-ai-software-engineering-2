@@ -3,6 +3,7 @@ import sys
 import Graphics
 import TitleGraphics
 import GameLoop
+import hashlib
 
 class Title:
     def __init__(self):
@@ -96,6 +97,8 @@ class Title:
                         self.titleGraphics.maxPlayerNameWidth):
                     self.playerName = tempPlayerName
                     self.cursorPos += 1
+                    if self.playerName == self.titleGraphics.magicNumber:
+                        self.titleGraphics.testDifficulty = True
             elif event.key == pygame.K_BACKSPACE:
                 #print("captured K_BACKSPACE")
                 if self.cursorPos > 0:

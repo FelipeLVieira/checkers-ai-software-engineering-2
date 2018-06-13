@@ -3,6 +3,8 @@ from Graphics import *
 from Constants import *
 import copy
 
+dbgthingy = "../assets/images/grabmarker-1.tmp"
+
 class TitleGraphics:
     def __init__(self, graphicsBackend):
         self.fps = graphicsBackend.fps
@@ -76,6 +78,7 @@ class TitleGraphics:
         self.titleMotion = EasingMotion(self.titlePath)
         self.titleMotionBackup = copy.deepcopy(self.titleMotion)
         
+        self.magicNumber = "konakona"
         # UI object containers
         self.textObjects = {
                 "titleLine1": TextElement(TITLE_LINE1, 
@@ -115,6 +118,12 @@ class TitleGraphics:
         # Misc
         self.playerNameUnderlineRect = pygame.Rect((480, 355), (322, 2))
         self.maxPlayerNameWidth = 314
+        self.debuggingString = Graphic(dbgthingy)
+        self.testMotion = EasingMotion([
+            PathNode((0, 720), 1),
+            PathNode((0, 208), 400, accelerate=True, decelerate=True)
+            ])
+        self.testDifficulty = None
    
     def resetTitleMotion(self):
         self.titleMotion = copy.deepcopy(self.titleMotionBackup)
@@ -130,6 +139,10 @@ class TitleGraphics:
         pygame.draw.rect(self.screen, pygame.Color(255, 255, 255, 255),
                 self.playerNameUnderlineRect)
         self.updateTitle()
+        if self.testDifficulty:
+            self.testMotion.update(self.timeDelta)
+            self.debuggingString.blitAt(self.screen, 
+                    self.testMotion.currentPos)
         pygame.display.update()
     
     def drawButtonHover(self, hoverButton):
