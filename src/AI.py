@@ -7,24 +7,6 @@ import copy
 import cProfile, pstats, io
 from math import ceil
 
-class mockBoard:
-    def __init__(self, moveDivision):
-        self.moveDivision = moveDivision
-        self.selectedPos = None
-
-    def getAllLegalMoves(self):
-        if isinstance(self.moveDivision, list):
-            return self.moveDivision
-        return []
-
-    def executeMove(self, move):
-        self.moveDivision = move
-
-def mockHeuristic(board, playerColor):
-    return board.moveDivision
-
-
-
 class rngWrapper:
     """Wrapper class to ensure the RNG is properly seeded, and only once."""
     def __init__(self):
@@ -38,48 +20,6 @@ class rngWrapper:
 
 # Global rngWrapper object for the minimax function
 rng = rngWrapper()
-
-
-def test_simple():
-    tree = [
-            [
-                [2., 3.],
-                [2.5]
-            ],
-            [
-                [4.]
-            ]
-           ]
-    board = mockBoard(tree)
-    result = []
-    minimaxAB(board, 8, RED, result, randomOffset=0, heuristicFunc=mockHeuristic)
-    assert result[0] is tree[1]
-
-def test_two():
-    tree = [
-            [
-                [2., 3.],
-                [
-                    [4., 6.],
-                    [1., -1.]
-                ]
-            ],
-            [
-                [4.],
-                [
-                    [-1.],
-                    [
-                        [10., 5.]
-                    ]
-                ]
-            ]
-           ]
-    board = mockBoard(tree)
-    result = []
-    minimaxAB(board, 8, RED, result, randomOffset=0, heuristicFunc=mockHeuristic)
-    assert result[0] is tree[0]
-
-
 
 def contextColor(color, maximizing):
     '''Gives the minimax context color based on the AI's color.'''
@@ -274,7 +214,7 @@ def minimaxAB(board, depth, AIColor, returnPointer, maximizing=True,
                 break
         #print("AI.py::minimaxAB: (d{}) heuristics={}, values={}, maximizing={}".format(depth, list(map(lambda x: x[1], nodes)), values, maximizing))
         if not parentCall: return bestValue
-        print("AI.py::minimaxAB: (parent) Best value is {}".format(bestValue))
+        #print("AI.py::minimaxAB: (parent) Best value is {}".format(bestValue))
 
 
     # Case 2: minimizing step
@@ -420,7 +360,7 @@ class AIPlayer:
     def updateAndCheckCompletion(self, timeDelta):
         self.waitTimer -= timeDelta
         if not (self.waitTimer > 0 or self.isThinking()):
-            print("AI.py::AIPlayer.updateAndCheckCompletion: waitTimer={}, minimaxThread={}, isAlive={}, minimaxResult={}, returning".format(self.waitTimer, self.minimaxThread, self.minimaxThread.is_alive(), self.minimaxResult))
+            #print("AI.py::AIPlayer.updateAndCheckCompletion: waitTimer={}, minimaxThread={}, isAlive={}, minimaxResult={}, returning".format(self.waitTimer, self.minimaxThread, self.minimaxThread.is_alive(), self.minimaxResult))
             return self.minimaxResult[0]
         return False
 

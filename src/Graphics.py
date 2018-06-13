@@ -239,7 +239,7 @@ class Graphics:
         self.board.removePiece(coords)
 
     def registerMove(self, newBoard, movement, eatenPieces):
-        print("Graphics.py::Graphics:registerMove: movement={}".format(movement))
+        #print("Graphics.py::Graphics:registerMove: movement={}".format(movement))
         pieceColor = self.board.location(movement[0]).occupant.color
         king = self.board.location(movement[0]).occupant.king
         self.maskedPiece = movement[0]
@@ -280,8 +280,8 @@ class Graphics:
 
         path[-1].eventOnComplete = (self.endPath, ())
         
-        for c in path:
-            print("event:", c.coords, c.speed, c.accelerate, c.decelerate, c.eventOnComplete)
+        #for c in path:
+            #print("event:", c.coords, c.speed, c.accelerate, c.decelerate, c.eventOnComplete)
         
         # Instance the moving piece
         if king:
@@ -311,7 +311,7 @@ class Graphics:
         self.movingPiece = None
         self.pieceIsMoving = False
         self.board = self.auxBoard
-        print("Graphics::Graphic:endPath: called")
+        #print("Graphics::Graphic:endPath: called")
 
     def updateAndDraw(self, hoverPosition, selectedPiece, hoverButton, 
             gamePaused, turnNumber, isPlayerTurn, gameEnded, playerScore, 
@@ -365,7 +365,7 @@ class Graphics:
                     else: raise RuntimeError("Graphics.py::Graphics:drawBoardPieces: Invalid piece color `{}'".format(self.board.matrix[col][row].occupant.color))
 
     def setPossibleMoves(self, selPossibleMoves):
-        print(max(list(map(len, selPossibleMoves))))
+        #print(max(list(map(len, selPossibleMoves))))
         transposedSelPossibleMoves = [
                 [selPossibleMoves[i][j] for i in range(len(selPossibleMoves)) 
                         if len(selPossibleMoves[i]) > j] 

@@ -104,10 +104,10 @@ class GameLoop:
             self.board.mouseClick = self.forceMove
             self.grabLegalMoves()
             self.forcedMove = True
-            print("Forcing move {}".format(self.forceMove))
-            print("self.mousePos: {}".format(self.board.mouseClick))
-            print("Legal moves: {}".format(self.board.legalMoveSet))
-            print("All legal moves: {}".format(self.board.fullLegalMoveSet))
+            #print("Forcing move {}".format(self.forceMove))
+            #print("self.mousePos: {}".format(self.board.mouseClick))
+            #print("Legal moves: {}".format(self.board.legalMoveSet))
+            #print("All legal moves: {}".format(self.board.fullLegalMoveSet))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.terminateGame()
@@ -241,8 +241,8 @@ class GameLoop:
 
         self.board.mouseClick = self.getBoardCoords(pos)
         square = derefer(self.board.matrix, self.board.mouseClick)
-        print("Mouse click", self.board.mouseClick)
-        print("Selected piece coord", self.board.selectedPieceCoordinate)
+        #print("Mouse click", self.board.mouseClick)
+        #print("Selected piece coord", self.board.selectedPieceCoordinate)
 
         if (square.occupant and square.occupant.color is self.board.playerTurn
                 and not self.forceMove):
@@ -268,7 +268,7 @@ class GameLoop:
     def executeMovement(self):
         finishMoveExec = self.board.executeMove()
         self.graphics.clearPossibleMoves()
-        print(self.board.movedPath)
+        #print(self.board.movedPath)
         self.graphics.registerMove(self.board, self.board.movedPath,
                                    self.board.jumpedPieces)
         return finishMoveExec
@@ -364,7 +364,7 @@ class GameLoop:
         endGame = self.board.checkWinCondition()
         if not endGame:
             endGame = self.board.isDraw
-        print(endGame)
+        #print(endGame)
         if endGame:
             self.gameEnded = {
                     RED: ENDGAME_LOSE,
