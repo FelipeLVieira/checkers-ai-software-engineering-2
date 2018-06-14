@@ -3,15 +3,24 @@ from Constants import *
 import Graphics
 
 def test_handleClick1():
+    # VitinhoCarneiro: This variable is unused...
     selectedPiece = []
     boardUpperLeftCoords = (139, 37)
     boardSpacing = 82
+    # VitinhoCarneiro: It would be a good idea to create a mock GraphicsBackend
+    # to avoid having the window open up every time you run a test.
+    # Moreover, you're making pyTest instance multiple GraphicsBackend
+    # instances at the same time, which initializes pygame a bunch of times,
+    # and that can cause problems.
     graphicsBackend = Graphics.GraphicsBackend()
     selectedDifficultyButton = 1
     playerName = ""
 
     gameLoop = GameLoop(graphicsBackend,
                                  selectedDifficultyButton, playerName)
+    # VitinhoCarneiro: Why is this even necessary? handleClick does not handle
+    # individual board pieces, just screen regions.
+    # And you know, there's a thing called a for loop...
     i = 0
     j = 0
     while i < 8:
@@ -150,6 +159,7 @@ def test_getBoardCoords():
 
     gameLoop = GameLoop(graphicsBackend,
                                  selectedDifficultyButton, playerName)
+    # I now see what happened.
     i = 0
     while i < 8:
         j = 0
